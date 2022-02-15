@@ -5,7 +5,7 @@
 ***You must have python 3.7+ for this to work!***
 
 ## Advantages:
-    1) Grabs Pictures.
+    1) Grabs Pictures (v1.2 and older)
     2) Grabs Chrome Passwords.
     3) Grabs Chrome Cookies.
     4) Grab IP.
