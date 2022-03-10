@@ -13,4 +13,3 @@
     
 ## Disadvantages:
     1) Grabber is a little bit slow.
-    ~~2) Require lot of internet when creating grabber to update modules.~~
