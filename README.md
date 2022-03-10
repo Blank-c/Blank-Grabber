@@ -12,5 +12,5 @@
     5) Send Data Through Discord Webhooks.
     
 ## Disadvantages:
-    1) Grabber is slow.
-    2) Require lot of internet when creating grabber to update modules.
+    1) Grabber is a little bit slow.
+    ~~2) Require lot of internet when creating grabber to update modules.~~
