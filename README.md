@@ -15,4 +15,4 @@
     1) Python Grabbers Are slow.
 
 # Suggestions? Issues? Questions?
-[![Click here](https://img.shields.io/badge/Click%20here-blue)](https://github.com/Blank-c/Blank-Grabber/issues)
+[![Click here](https://img.shields.io/badge/Click%20here-blue?style=for-the-badge&logo=appveyor)](https://github.com/Blank-c/Blank-Grabber/issues)
