@@ -14,5 +14,5 @@
 ## Disadvantages:
     1) Python Grabbers Are slow.
 
-# Suggestions? Issues? Questions?
+### Suggestions? Issues? Questions?
 [![Click here](https://img.shields.io/badge/Click%20here-blue?style=for-the-badge&logo=appveyor)](https://github.com/Blank-c/Blank-Grabber/issues)
