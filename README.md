@@ -3,6 +3,7 @@
 
 ## Note
 ***The ones in the releases are older versions***
+
 ***You must have python 3.7+ for this to work!***
 
 ### Advantages:
