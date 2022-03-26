@@ -3,8 +3,6 @@ global yourwebhook, pingme
 ##########################################
 
 yourwebhook= "your webhook goes here" #Enter your webhook
-yourwebhook= "https://discord.com/api/webhooks/927539509590118420/KUet2iBPox6hhN4FNz8xorheKnvEJW7-Zu9kLlIGLqNGQfo1jmgixGtaKfg7XK1jvaEg"
-
 pingme=True #ping you?
 
 ##########################################
