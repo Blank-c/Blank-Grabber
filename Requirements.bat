@@ -6,7 +6,6 @@ pip install --upgrade psutil
 pip install --upgrade pypiwin32
 pip install --upgrade virtualenv
 pip install --upgrade pycryptodome
-pip install --upgrade pyautogui
 pip install --upgrade pillow
 cls
 echo Done! (press any key to exit)
