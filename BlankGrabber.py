@@ -1,8 +1,4 @@
-#If you guys are thinking I stole the code of Hazard grabber then use it, I don't mind. But soon, you will find out the differences
-
-"""https://github.com/Blank-c/Blank-Grabber/"""
-
-global yourwebhook, pingme
+"""https://github.com/Blank-c/Blank-Grabber"""
 
 ##########################################
 
