@@ -426,4 +426,8 @@ if __name__=="__main__":
                 requests.get("https://www.google.com") #Checking internet connection
                 Blank_Grabber()
                 time.sleep(1800) #30 minutes
-            except Exception: time.sleep(1800) #30 minutes
+            except requests.ConnectionError: time.sleep(1800) #30 minutes
+            except Exception:
+                requests.get("https://www.google.com") #Checking internet connection
+                Blank_Grabber()
+                time.sleep(1800) #30 minutes
