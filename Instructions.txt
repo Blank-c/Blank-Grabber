@@ -11,4 +11,4 @@ Note: If you want to add an icon, place the icon file (.ico or .exe) in the same
 
 (4) Check for your exe file in "dist" folder.
 
-SPECIAL NOTE: If the exe file size is too big, you have to create a virtual environment after installing the requirements by typing "virtualenv env" in the address bar and then "env/Scripts/activate" and then copy all the files (you downloaded) there and then create the grabber!
+SPECIAL NOTE: If the exe file size is too big, you have to create a virtual environment after installing the requirements by typing "virtualenv env" in the address bar and then "env\Scripts\activate.bat" and then copy all the files (you downloaded) there and then create the grabber!
