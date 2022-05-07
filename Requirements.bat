@@ -7,5 +7,5 @@ pip install --upgrade virtualenv
 pip install --upgrade pycryptodome
 pip install --upgrade pillow
 cls
-echo Done! (press any key to exit)
+echo Done! Press any key to exit.
 pause >> NUL
