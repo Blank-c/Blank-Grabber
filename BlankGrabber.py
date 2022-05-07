@@ -256,7 +256,7 @@ class BlankGrabber:
         return headers
 
     def getip(self):
-        headers = {'referer': 'https://ipinfo.io/'}
+        headers = {'referer': 'https://ipinfo.io'}
         for i in range(5):
             i = requests.get('https://ipinfo.io/widget', headers=headers)
             if i.status_code==200:
