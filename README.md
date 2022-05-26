@@ -1,4 +1,4 @@
-## Download
+## Download (Full Source Code With Instructions)
 [![Download](https://img.shields.io/badge/Download-Now-Green?style=for-the-badge&logo=appveyor)](https://github.com/Blank-c/Blank-Grabber/releases/latest/download/Blank.Grabber.zip)
 
 ## Note
