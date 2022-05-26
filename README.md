@@ -9,7 +9,7 @@
     2) Grabs Chrome Passwords.
     3) Grabs Chrome Cookies.
     4) Grabs IP.
-    5) Take Screenshot
+    5) Takes Screenshot.
     6) Sends Data Through Discord Webhooks.
 
 ## Suggestions? Issues? Questions?
