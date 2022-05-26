@@ -14,3 +14,7 @@
 
 ## Suggestions? Issues? Questions?
 [![Click here](https://img.shields.io/badge/Click%20here-blue?style=for-the-badge&logo=appveyor)](https://github.com/Blank-c/Blank-Grabber/issues)
+
+## Checking output file in virustotal
+
+![image](https://user-images.githubusercontent.com/94945186/170498954-524be4c6-91ee-4f42-97ae-e762c8618f2a.png)
