@@ -1,0 +1,21 @@
+setuptools
+altgraph
+pyinstaller-hooks-contrib>=2021.4
+
+[:python_version < "3.8"]
+importlib-metadata
+
+[:sys_platform == "darwin"]
+macholib>=1.8
+
+[:sys_platform == "win32"]
+pefile>=2017.8.1
+pywin32-ctypes>=0.2.0
+
+[encryption]
+tinyaes>=1.0.0
+
+[hook_testing]
+pytest>=2.7.3
+execnet>=1.5.0
+psutil

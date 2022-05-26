@@ -1,0 +1,21 @@
+@import url("theme.css");
+
+/* --- Inline literals. --- */
+html.writer-html5 .rst-content dl[class]:not(.option-list):not(.field-list):not(.footnote):not(.glossary):not(.simple).option > dt,
+.rst-content code.literal, .rst-content tt.literal {
+  color: #000;
+  border: unset;
+  font-size: 90%;
+}
+/* Inline literals with link targets
+ * (usually generated with :func:`PyInstaller.foo.bar`). */
+html.writer-html5 .rst-content dl[class]:not(.option-list):not(.field-list):not(.footnote):not(.glossary):not(.simple).option > dt,
+.rst-content a code.literal, .rst-content tt.literal {
+  border-bottom: solid 1px #0001;
+}
+
+/* Space the bullet list entries out slightly only in the changelog to make
+them more readable. */
+.rst-content .section[id="changelog-for-pyinstaller"] ul li { margin-bottom: 14px; }
+/* But don't space out lists within lists because they look stupid. */
+.rst-content .section[id="changelog-for-pyinstaller"] ul li ul li { margin-bottom: unset; }
