@@ -1,0 +1,21 @@
+# Files to not reformat with yapf.
+
+doc/conf.py
+bootloader/*waf*
+bootloader/build
+
+# These are not ours - leave them alone.
+PyInstaller/lib
+tests/unit/test_modulegraph
+bootloader/waflib
+
+# This is a sphinx config file, similar to doc/conf.py
+tests/functional/data/sphinx/conf.py
+
+# yapf wastes a lot of time if it tries to reformat setuptools's build cache.
+build
+
+# These are redundant but speed up file collection.
+doc/_build
+.git
+dist

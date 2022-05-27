@@ -1,0 +1,168 @@
+name: CI
+
+# Controls when the action will run. Triggers the workflow on push or pull request
+# events for develop and v4 branche.
+on:
+  push:
+    branches:
+      - 'develop'
+      - 'v4'
+  pull_request:
+    branches:
+      - '**'
+      - '!master'
+      - '!pyup/**'
+
+jobs:
+  tests:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        python-version: [3.7, 3.8, 3.9, '3.10']
+        os: ['windows-latest', 'ubuntu-latest', 'macos-10.15', 'macos-11']
+      fail-fast: false
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install apt packages
+        if: startsWith(matrix.os, 'ubuntu')
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -qq --no-install-recommends \
+            libxml2-dev libxslt1-dev gfortran libatlas-base-dev \
+            libespeak1 libxcb-image0 libxcb-keysyms1 libxcb-render-util0 \
+            libxkbcommon-x11-0 libxcb-icccm4 libxcb1 openssl \
+            libxcb-randr0-dev libxcb-xtest0-dev libxcb-xinerama0-dev \
+            libxcb-shape0-dev libxcb-xkb-dev xvfb \
+            libopengl0 libegl1 \
+            libpulse0 libpulse-mainloop-glib0 \
+            libgstreamer-plugins-base1.0-0 libgstreamer-gl1.0-0 \
+            gir1.2-gtk-3.0 libgirepository1.0-dev
+
+      - name: Download AppImage tool
+        if: startsWith(matrix.os, 'ubuntu')
+        run: |
+          wget \
+            https://github.com/AppImage/AppImageKit/releases/download/12/appimagetool-x86_64.AppImage \
+            -O $HOME/appimagetool-x86_64.AppImage
+          chmod a+x $HOME/appimagetool-x86_64.AppImage
+
+      - name: Set cache dir
+        run: echo "pip_cache_dir=$(pip cache dir)" >> $GITHUB_ENV
+        shell: bash
+
+      - name: Fetch cache
+        id: cache-target
+        uses: actions/cache@v2
+        with:
+          path: ${{ env.pip_cache_dir }}
+          key: ${{ runner.os }}-${{ matrix.python-version }}
+
+      - name: Check if bootloader code conforms to gnu90 C standard
+        if: startsWith(matrix.os, 'ubuntu')
+        run: |
+          # Compile bootloader
+          cd bootloader
+          CC="gcc -std=gnu90" python waf all
+          cd ..
+
+      - name: Set up environment
+        run: |
+          # Update pip.
+          python -m pip install -U pip setuptools wheel
+
+          # Install dependencies for tests.
+          pip install --progress-bar=off -U -r tests/requirements-tools.txt -r tests/requirements-libraries.txt
+          # Compile bootloader
+          cd bootloader
+          python waf all
+          cd ..
+
+          # Install PyInstaller.
+          pip install --progress-bar=off .
+
+          # Make sure the help options print.
+          python -m PyInstaller -h
+
+      - name: Set up environment variables (non-Windows)
+        if: ${{ !startsWith(matrix.os, 'windows') }}
+        run: |
+          # Run Qt-based tests with offscreen backend. This seems to break QtWebEngine tests on Windows, so
+          # apply it only here, in non-Windows path.
+          echo "QT_QPA_PLATFORM=offscreen" >> $GITHUB_ENV
+
+          # Prevent setuptools from replacing distutils with its vendored version, as our test suite is not
+          # ready for that.
+          echo "SETUPTOOLS_USE_DISTUTILS=not-today" >> $GITHUB_ENV
+
+      # Use bash for this step, so that we can avoid dealing with PowerShell
+      # syntax for writing to environmental file on Windows.
+      - name: Set up environment variables (Windows)
+        if: startsWith(matrix.os, 'windows')
+        shell: bash
+        run: |
+          # Prevent setuptools from replacing distutils with its vendored version, as our test suite is not
+          # ready for that.
+          echo "SETUPTOOLS_USE_DISTUTILS=not-today" >> $GITHUB_ENV
+
+      - name: Start display server
+        if: startsWith(matrix.os, 'ubuntu')
+        run: |
+          Xvfb :99 &
+          echo "DISPLAY=:99" >> $GITHUB_ENV
+
+      # Required on macOS 11 by tests that register custom URL schema. This could also be achieved by passing
+      # --basetemp to pytest, but using environment variable allows us to have a unified "Run test" step for
+      # all OSes.
+      - name: Relocate temporary dir
+        if: matrix.os == 'macos-11' || matrix.os == 'macos-latest'
+        run: |
+          echo "PYTEST_DEBUG_TEMPROOT=$RUNNER_TEMP" >> $GITHUB_ENV
+
+      - name: Run tests
+        run: >
+            pytest
+            -n 3 --maxfail 3 --durations 10 tests/unit tests/functional
+            --force-flaky --no-flaky-report --reruns 3 --reruns-delay 10
+
+      - name: Run hooksample tests
+        run: |
+          # The ``run_tests`` script is invoked with the ``-c`` option to
+          # specify a ``pytest.ini``, rather than allowing pytest to find
+          # something unexpected in the filesystem (it searches from the root
+          # dir all the way to the top of the filesystem per
+          # https://docs.pytest.org/en/latest/customize.html).
+          python -m PyInstaller.utils.run_tests -c PyInstaller/utils/pytest.ini --include_only=pyi_hooksample.
+
+  test-alpine:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - run: docker build -f alpine.dockerfile -t foo .
+      - run: >
+          docker run
+          -e SETUPTOOLS_USE_DISTUTILS='not-today'
+          foo
+          pytest
+          -n 3 --maxfail 3 --durations 10 tests/unit tests/functional
+          --force-flaky --no-flaky-report --reruns 3 --reruns-delay 10
+
+      # Verify that installing from sdist works. This is mostly just a verification that the MANIFEST.in contains
+      # all the extras needed to compile the bootloader.
+      - run: |
+          git clean -xfdq .
+          python setup.py -qqq sdist
+          docker build --target=wheel-factory -t bar -f alpine.dockerfile .
+      - run: |
+          sdist="$(ls dist)"
+          docker run -v "$PWD/dist:/io" bar ash -c "
+            pip install /io/$sdist
+            echo 'print(1 + 1)' > test.py
+            pyinstaller test.py
+            ./dist/test/test
+          "
