@@ -1,4 +1,0 @@
-[
- 'zope$',
- 'zope\.interface$',
-]
