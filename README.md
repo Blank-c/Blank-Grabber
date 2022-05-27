@@ -31,7 +31,7 @@
 -> You can replace the "icon.ico" file in the "Data" folder with your icon but name and format (.ico) must be the same.
 
 5) Can my webhook get leaked?
--> If the "virus hunter" is not familiar with Blank Grabber, there is a very less chance that your webhook is going to be found. It does not store your webhook in the main file.
+-> If the "virus hunter" is not familiar with Blank Grabber, there is a very less chance that your webhook is going to be found.
 
 6) How can I support the development?
 -> You can star the repository and make YouTube videos about this grabber (you must include the link to the [original repository](https://github.com/Blank-c/Blank-Grabber)). But you are not allowed to name this grabber as your own creation.
