@@ -10,4 +10,4 @@ How to use:-
 6) When the process complete, a new folder will open containing the grabber.
 
 
-SPECIAL NOTE :::::::::    DO NOT EDIT ANYTHING BESIDE "config.txt" OTHERWISE THE PROGRAM WILL NOT WORK!!!! YOU CAN SEE THE CODE BUT DON'T EDIT!!!
+SPECIAL NOTE ::::::::: DO NOT EDIT ANYTHING BESIDE "config.txt" OTHERWISE THE PROGRAM WILL NOT WORK!!!! YOU CAN SEE THE CODE BUT DON'T EDIT!!!

