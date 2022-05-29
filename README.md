@@ -9,9 +9,10 @@
     2) Grabs Chrome Passwords.
     3) Grabs Chrome Cookies.
     4) Grabs IP.
-    5) Takes Screenshot.
-    6) Sends Data Through Discord Webhooks.
-    7) Undetectable by most antivirus.
+    5) Grabs System Info.
+    6) Takes Screenshot.
+    7) Sends Data Through Discord Webhooks.
+    8) Undetectable by most antivirus.
 
 ## Checking output file in virustotal
 
