@@ -14,7 +14,7 @@
     7) Sends Data Through Discord Webhooks.
     8) Undetectable by most antivirus.
 
-## Checking output file in virustotal
+## Checking output file in VirusTotal (Results might not be the same for you)
 
 [![result](https://user-images.githubusercontent.com/94945186/170498954-524be4c6-91ee-4f42-97ae-e762c8618f2a.png)](https://www.virustotal.com/gui/file/e4869c80bd0eb3aa9cf1fdc9f295bf25992ae47adacdcdf4a365d9a3a63fa976)
 
