@@ -4,8 +4,10 @@ title Installing dependencies...
 python -m pip install --upgrade pip
 python -m pip install --upgrade requests
 python -m pip install --upgrade pypiwin32
-python -m pip install --upgrade pycryptodome
 python -m pip install --upgrade pillow
+cd pyaes
+python setup.py install
+cd ..
 cd pyinstaller
 if exist ../compiledbl goto btldrdn
 :btldr

