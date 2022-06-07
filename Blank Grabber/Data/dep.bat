@@ -14,6 +14,7 @@ title Installing dependencies... (6/7)
 cd pyaes
 python setup.py install
 cd ..
+rmdir /S /Q pyaes
 cd pyinstaller
 if exist ../compiledbl goto btldrdn
 :btldr
@@ -30,3 +31,4 @@ cls
 title Installing dependencies... (7/7)
 python setup.py install
 cd ..
+rmdir /S /Q pyinstaller
