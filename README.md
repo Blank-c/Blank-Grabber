@@ -24,7 +24,7 @@
 > *It is a message to make the victim think that the file is really corrupt. It will actually work!*
 
 **2) What should be the approximate file size after compiling?**
-> *The approximate file size should be around 9.5 MB. Make sure you are using virtual env otherwise the file may become too large.*
+> *The approximate file size should be around 8.5 MB. Make sure you are using virtual env otherwise the file may become too large.*
 
 **3) How can I change the icon?**
 > *You can replace the "icon.ico" file in the "Data" folder with your icon but name and format (.ico) must be the same.*
