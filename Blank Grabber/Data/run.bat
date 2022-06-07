@@ -2,7 +2,7 @@
 if not exist activate.bat exit
 call activate
 cls
-if exist pyinstaller.zip title Unpacking Files...
+if exist unpack.py title Unpacking Files...
 if exist unpack.py call python unpack.py
 if exist unpack.py del pyaes.zip
 if exist unpack.py del pyinstaller.zip
