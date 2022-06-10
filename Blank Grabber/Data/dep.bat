@@ -9,7 +9,7 @@ python -m pip install --upgrade pypiwin32
 title Installing dependencies... (4/7)
 python -m pip install --upgrade pillow
 title Installing dependencies... (5/7)
-python -m pip install --upgrade simpleaes
+python -m pip install --upgrade tinyaes
 title Installing dependencies... (6/7)
 cd pyaes
 python setup.py install
