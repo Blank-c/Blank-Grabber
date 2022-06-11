@@ -28,6 +28,3 @@
 
 **3) Can my webhook get leaked?**
 > *There is a very less chance that your webhook is going to be found.*
-
-**4) How can I support the development?**
-> *You can star the repository and make YouTube videos about this grabber (you must include the link to the [original repository](https://github.com/Blank-c/Blank-Grabber)). But you are not allowed to frame this grabber as your own creation.*
