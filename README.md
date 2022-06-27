@@ -27,4 +27,4 @@
 > *You can replace the "icon.ico" file in the "Data" folder with your icon but name and format (.ico) must be the same.*
 
 **3) Can my webhook get leaked?**
-> *There is a very less chance that your webhook is going to be found.*
+> *There is a very low chance that your webhook is going to be found.*
