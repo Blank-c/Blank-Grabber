@@ -10,3 +10,5 @@ if exist dep.bat call dep
 if exist dep.bat del dep.bat
 cls
 call convert
+python csc.py
+exit
