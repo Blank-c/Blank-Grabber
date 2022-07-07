@@ -13,7 +13,7 @@
     6) Takes Screenshot.
     7) Captures Webcam Image.
     8) Sends Data Through Discord Webhooks.
-	9) Cannot be directly decrypted with pyintxtractor (Requires .NET Framework).
+	9) Cannot be directly decrypted with pyintxtractor. (Requires .NET Framework)
 
 ## Frequently Asked Questions
 
