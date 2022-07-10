@@ -15,5 +15,5 @@ if exist icon.ico goto icon
 goto noicon
 :done
 cls
-if not exist csc.py title Opening Folder...
-if not exist csc.py explorer.exe dist
+title Opening Folder...
+explorer.exe dist
