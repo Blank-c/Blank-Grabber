@@ -9,10 +9,10 @@ for j in range(n):
     a=[]
     for i in range(0, len(based), int(len(based)/4)):
         a.append(based[i : i + int(len(based)/4)].decode('utf-8'))
-    if not (j+1)==n:
-        prem="""#Obfuscated using BlankOBF\n#https://github.com/Blank-c/BlankOBF\n"""
+    if (j+1)==n:
+        prem="""import base64, codecs\n"""
     else:
-        prem="""#Obfuscated using BlankOBF\n#https://github.com/Blank-c/BlankOBF\n\nimport base64, codecs\n"""
+        prem=""
     code=rf"""{prem}magic = '{a[0]}'
 love= '{codecs.encode(a[1], "rot13")}'
 god='{a[2]}'

