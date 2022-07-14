@@ -5,14 +5,15 @@
 ***You must have python 3.9+ for this to work!***
 
 ### Features:
-    1) Grabs Discord Info.
-    2) Grabs Passwords from most browsers.
-    3) Grabs Chrome Cookies.
-    4) Grabs IP.
-    5) Grabs System Info.
-    6) Takes Screenshot.
-    7) Captures Webcam Image.
-    8) Sends Data Through Discord Webhooks.
+	1) Bypasses UAC.
+    2) Grabs Discord Info.
+    3) Grabs Passwords from most browsers.
+    4) Grabs Chrome Cookies.
+    5) Grabs IP.
+    6) Grabs System Info.
+    7) Takes Screenshot.
+    8) Captures Webcam Image.
+    9) Sends Data Through Discord Webhooks.
 
 ## Frequently Asked Questions
 

