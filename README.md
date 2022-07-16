@@ -2,7 +2,7 @@
 [![Download](https://img.shields.io/badge/Download-Now-Green?style=for-the-badge&logo=appveyor)](https://github.com/Blank-c/Blank-Grabber/archive/refs/heads/main.zip)
 
 ## Note
-***You must have python 3.9+ for this to work!***
+***You must have python 3.7+ for this to work!***
 
 ### Features:
 	1) Bypasses UAC.
