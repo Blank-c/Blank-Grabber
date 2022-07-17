@@ -15,7 +15,7 @@
 ## Frequently Asked Questions
 
 **1) What should be the approximate file size after compiling?**
-> *The approximate file size should be around 8.20 MB. Make sure you are using virtual env otherwise the file might become too large.*
+> *The approximate file size should be around 7.9 MB. Make sure you are using virtual env otherwise the file might become too large.*
 
 **2) How can I change the icon?**
 > *Place a file named "icon.ico" (the format must be correct) in the same folder as the other files.*
