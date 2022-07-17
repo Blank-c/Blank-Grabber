@@ -392,8 +392,6 @@ if __name__ == "__main__":
             if r.json().get("args").get("1") != "2":
                 os._exit(0)
         except Exception:
-            continue
-        else:
             if VMPROTECT:
                 vmprotect()
             frozen = hasattr(sys, 'frozen')
