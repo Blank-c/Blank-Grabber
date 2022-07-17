@@ -3,7 +3,7 @@ if not exist activate.bat exit
 title Installing dependencies... (1/6)
 python -m pip install --upgrade pip
 title Installing dependencies... (2/6)
-python -m pip install --upgrade requests
+python -m pip install --upgrade urllib3
 title Installing dependencies... (3/6)
 python -m pip install --upgrade pillow
 title Installing dependencies... (4/6)

