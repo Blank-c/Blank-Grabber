@@ -19,7 +19,7 @@
 ## Frequently Asked Questions
 
 **1) What is the approximate grabber size after compiling?**
-> *The approximate file size should be around 7.86 MB. Make sure you are using virtual env otherwise the grabber might become too large.*
+> *The approximate file size should be around 7.67 MB. Make sure you are using virtual env otherwise the grabber might become too large.*
 
 **2) How can I change the icon?**
 > *Place a file named "icon.ico" (the format must be correct) in the same folder as the other files.*

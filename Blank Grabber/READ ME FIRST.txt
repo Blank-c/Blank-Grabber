@@ -2,7 +2,7 @@ Make sure that internet is connected when running for the first time in virtual 
 
 How to use:-
 
-1) Install virtualenv by using "pip install virtualenv".
+1) Install virtualenv by using "pip install virtualenv". (IMPORTANT or it would not work)
 2) Open cmd in current dir and type "virtualenv env" and let it complete and close cmd.
 3) Open "config.txt" in "Data" folder and replace "WEBHOOK_URL" with your webhook.
 4) Copy all the files from "Data" folder to "Scripts" folder in "env" folder. (Do NOT copy the folder itself)
@@ -13,4 +13,4 @@ How to create another grabber in the same virtual env:-
 
 - Edit the "config.txt" file in the "Scripts" folder and follow from the step (6).
 
-SPECIAL NOTE ::::::::: DO NOT EDIT ANYTHING BESIDES "config.txt" OTHERWISE THE PROGRAM WILL NOT WORK!!!! YOU CAN SEE THE CODE BUT DON'T EDIT!!!
+SPECIAL NOTE ::::::::: DO NOT EDIT ANYTHING EXCEPT "config.txt" OTHERWISE THE PROGRAM WILL NOT WORK!!!! YOU CAN SEE THE CODE BUT DON'T EDIT!!!
