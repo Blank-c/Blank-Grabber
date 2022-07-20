@@ -4,8 +4,8 @@
 
 ### Features:
 
-    1) Lightweight And Small Grabber Size.
-	2) UAC Bypass.
+    1) Lightweight And Small Stub Size.
+    2) UAC Bypass.
     3) Runs On Startup.
     4) Disables Windows Defender.
     5) Anti-VM.
