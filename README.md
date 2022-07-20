@@ -14,12 +14,12 @@
     10) Sends All Data Through Discord Webhooks.
     (...more)
 
-**Note:** Some customisable options can be found inside [main.py](https://github.com/Blank-c/Blank-Grabber/blob/main/Blank%20Grabber/Data/main.py#L3-L8) file.
+**Note:** Some customisable options can be found inside [main.py](https://github.com/Blank-c/Blank-Grabber/blob/main/Blank%20Grabber/Data/main.py#L4-L8) file.
 
 ## Frequently Asked Questions
 
 **1) What is the approximate grabber size after compiling?**
-> *The approximate file size should be around 7.67 MB. Make sure you are using virtual env otherwise the grabber might become too large.*
+> *The approximate file size should be around 7.67 MB.*
 
 **2) How can I change the icon?**
 > *Place a file named "icon.ico" (the format must be correct) in the same folder as the other files.*
