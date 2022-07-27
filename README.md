@@ -38,4 +38,4 @@
 > *There is a very low chance that your webhook is going to be found.*
 
 **4) How can I contact you?**
-> *You can contact me via [Discord](https://discordapp.com/users/904682505104396329).*
+> *You can contact me via Discord: **Blank?#0886**.*
