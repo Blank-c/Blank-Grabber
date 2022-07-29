@@ -18,7 +18,7 @@
     12) Grabs IP Information.
     13) Grabs System Info.
     14) Captures Screenshot.
-    15) Captures Webcam Image.
+    15) Captures Webcam Image (experimental).
     16) Sends All Data Through Discord Webhooks.
     (...more)
 
