@@ -3,7 +3,7 @@ Make sure that internet is connected when running for the first time in virtual 
 How to use:-
 
 1) Install virtualenv by using "pip install virtualenv". (IMPORTANT or it would not work)
-2) Open cmd in current dir and type "virtualenv env" and let it complete and close cmd.
+2) Type "virtualenv env" in the address bar and let it complete.
 3) Open "config.txt" in "Data" folder and replace "WEBHOOK_URL" with your webhook.
 4) Copy all the files from "Data" folder to "Scripts" folder in "env" folder. (Do NOT copy the folder itself)
 5) Type "run" in the address bar of the "Scripts" folder and wait for the process to complete.
