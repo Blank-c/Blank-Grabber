@@ -26,7 +26,7 @@ _Requires Python 3.9+_
 
 **Note:** Follow the instructions carefully, otherwise the grabber would not be created!
 
-**Note:** Some customisable options can be found inside [main.py](https://github.com/Blank-c/Blank-Grabber/blob/main/Blank%20Grabber/Data/main.py#L4-L8) file.
+**Note:** Some customisable options can be found inside [main.py](https://github.com/Blank-c/Blank-Grabber/blob/main/Blank%20Grabber/Data/main.py#L5-L9) file.
 
 ## Frequently Asked Questions
 
