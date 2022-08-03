@@ -1,27 +1,12 @@
-import os, base64, argparse, ast, codecs, random
+# https://github.com/Blank-c/BlankOBF
 
-class clean():
-    def __init__(self, code):
-        tree = ast.parse(code)
-        for node in ast.walk(tree):
-            if not isinstance(node, (ast.FunctionDef, ast.ClassDef, ast.AsyncFunctionDef)):
-                continue
-            if not len(node.body):
-                continue
-            if not isinstance(node.body[0], ast.Expr):
-                continue
-            if not hasattr(node.body[0], 'value') or not isinstance(node.body[0].value, ast.Str):
-                continue
-            node.body = node.body[1:]
-        self.clean_code = ast.unparse(tree)
+import os, base64, argparse, codecs, random
 
 class Obfuscator:
     def __init__(self, code, level):
         self.code = code
         for _ in range(level):
             self.__obfuscate()
-        cleaner = clean(self.code)
-        self.code = cleaner.clean_code
         self.__obfuscate()
 
     def __encodestring(self, string):

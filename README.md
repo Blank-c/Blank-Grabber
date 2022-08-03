@@ -31,7 +31,7 @@ _Requires Python 3.9+_
 ## Frequently Asked Questions
 
 **1) What is the approximate grabber size after compiling?**
-> *The approximate file size should be around 7.66 MB.*
+> *The approximate file size should be around 7.79 MB.*
 
 **2) How can I change the icon?**
 > *Place a file named "icon.ico" (the format must be correct) in the same folder as the other files.*
