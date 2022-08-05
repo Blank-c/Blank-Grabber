@@ -8,7 +8,7 @@ def checkmodules():
 	if code != 0:
 		clear()
 		print(format1("\u001b[33;1mInstalling virtualenv...") + "\n")
-		os.system("pip install virtualenv")
+		os.system("pip install --quiet --upgrade virtualenv")
 
 def exit():
 	os.system("pause > NUL")

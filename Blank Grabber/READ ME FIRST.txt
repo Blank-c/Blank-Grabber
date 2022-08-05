@@ -2,7 +2,7 @@ Make sure that internet is connected to install dependencies!
 
 How to use:-
 
-Run "BUILD.bat" OR if you want to do it manually, follow the instructions below.
+Run "BUILD.vbs" OR if you want to do it manually, follow the instructions below.
 
 1) Install virtualenv by using "pip install virtualenv". (IMPORTANT or it would not work)
 2) Type "virtualenv env" in the address bar and let it complete.
