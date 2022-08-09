@@ -9,19 +9,23 @@ _*Requires Python 3*_
     1) Lightweight And Small Stub Size.
     2) UAC Bypass.
     3) Runs On Startup.
-    4) Disables Windows Defender.
+    4) Disables Windows Defender and Firewall.
     5) Anti-VM.
-    6) Better Obfuscation.
-    7) Anti-Unpacking Technique.
-    8) Anti-Pyinstaller Detection.
-    9) Grabs Discord Token.
-    10) Grabs Passwords from most browsers.
-    11) Grabs Chrome Cookies.
-    12) Grabs IP Information.
-    13) Grabs System Info.
-    14) Captures Screenshot.
-    15) Captures Webcam Image (experimental).
-    16) Sends All Data Through Discord Webhooks.
+	6) Hide Itself.
+    7) Better Obfuscation.
+    8) Anti-Unpacking Technique.
+	9) Anti-UPX Detection by YARA.
+    10) Anti-Pyinstaller Detection by YARA.
+    11) Grabs Discord Tokens.
+    12) Grabs Passwords from most browsers.
+    13) Grabs Chrome Cookies.
+	14) Grabs Minecraft Session.
+	15) Grabs Roblox Cookies.
+    16) Grabs IP Information.
+    17) Grabs System Info.
+    18) Captures Screenshot.
+    19) Captures Webcam Image (experimental).
+    20) Sends All Data Through Discord Webhooks.
     (...more)
 
 **Note:** Follow the instructions carefully, otherwise the grabber would not be created!
@@ -31,7 +35,7 @@ _*Requires Python 3*_
 ## Frequently Asked Questions
 
 **1) What is the approximate grabber size after compiling?**
-> *The approximate file size should be around 7.79 MB.*
+> *The approximate file size should be around 7.80 MB.*
 
 **2) How can I change the icon?**
 > *Place a file named "icon.ico" (the format must be correct) in the same folder as the other files.*
@@ -40,4 +44,4 @@ _*Requires Python 3*_
 > *There is a very low chance that your webhook is going to be found.*
 
 **4) How can I contact you?**
-> *You can contact me via Discord: **Blank?#0886**.*
+> *You can contact me via [Discord](https://discordlookup.com/user/904682505104396329).*

