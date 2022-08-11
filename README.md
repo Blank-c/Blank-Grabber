@@ -54,7 +54,7 @@
 - *The approximate file size should be around 7.80 MB.*
 
 **2) How can I change the icon?**
-- *Put your icon file with name "icon.ico" in the `Data` folder (or `env\Scripts` folder if exists) before building for the first time*
+- *Put your icon file with name "icon.ico" in the `Data` folder (or `env\Scripts` folder if exists) before building.*
 
 **3) Can my webhook get leaked?**
 - *There is a very low chance that your webhook is going to be found.*
