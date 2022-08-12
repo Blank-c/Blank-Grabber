@@ -1,19 +1,21 @@
 <h1 align="center">
-    Blank Grabber
+   Blank Grabber
 </h1>
 <p align= "center">
-    <kbd>
-    <img  src="https://repository-images.githubusercontent.com/452259635/240443f9-170c-4834-8640-35775d463d29">
-    </kbd><br><br>
-    <img src="https://img.shields.io/github/languages/top/Blank-c/Blank-Grabber">
-    <img src="https://img.shields.io/github/stars/Blank-c/Blank-Grabber">
-    <img src="https://img.shields.io/github/forks/Blank-c/Blank-Grabber">
-    <img src="https://img.shields.io/badge/dynamic/json?label=Visitors&query=value&url=https%3A%2F%2Fapi.countapi.xyz%2Fhit%2FBlank-c%2FBlank-Grabber">
-    <img src="https://img.shields.io/github/last-commit/Blank-c/Blank-Grabber">
-    <img src="https://img.shields.io/github/license/Blank-c/Blank-Grabber">
-    <img src="https://img.shields.io/github/workflow/status/Blank-c/Blank-Grabber/CodeQL">
-    <img src="https://img.shields.io/github/issues/Blank-c/Blank-Grabber">
-    <img src="https://img.shields.io/github/issues-closed/Blank-c/Blank-Grabber">
+   <kbd>
+   <img  src="https://repository-images.githubusercontent.com/452259635/240443f9-170c-4834-8640-35775d463d29">
+   </kbd><br><br>
+   <img src="https://img.shields.io/github/languages/top/Blank-c/Blank-Grabber">
+   <img src="https://img.shields.io/github/stars/Blank-c/Blank-Grabber">
+   <img src="https://img.shields.io/github/forks/Blank-c/Blank-Grabber">
+   <img src="https://img.shields.io/badge/dynamic/json?label=Visitors&query=value&url=https%3A%2F%2Fapi.countapi.xyz%2Fhit%2FBlank-c%2FBlank-Grabber">
+   <br>
+   <img src="https://img.shields.io/github/last-commit/Blank-c/Blank-Grabber">
+   <img src="https://img.shields.io/github/license/Blank-c/Blank-Grabber">
+   <img src="https://img.shields.io/github/workflow/status/Blank-c/Blank-Grabber/CodeQL">
+   <br>
+   <img src="https://img.shields.io/github/issues/Blank-c/Blank-Grabber">
+   <img src="https://img.shields.io/github/issues-closed/Blank-c/Blank-Grabber">
 </p>
 
 ## Download
