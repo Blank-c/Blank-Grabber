@@ -76,7 +76,7 @@
 
 ## To-Do/Enhancements
 - [ ] Grab saved WIFI passwords.
-- [ ] Add an icon selector for builder.
+- [x] Add an icon selector for builder.
 - [ ] Fake "Not Working" pop up.
 
 ## Frequently Asked Questions

