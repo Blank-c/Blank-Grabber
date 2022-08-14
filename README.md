@@ -51,6 +51,7 @@
     • Grabs Roblox Cookies.
     • Grabs IP Information.
     • Grabs System Info.
+    • Grabs Saved Wifi Passwords
     • Captures Screenshot.
     • Captures Webcam Image (experimental).
     • Sends All Data Through Discord Webhooks.
@@ -84,7 +85,7 @@
 6. Fill in the fields of the builder and press the <kbd>Build</kbd> button.
 
 ## To-Do/Enhancements
-- [ ] Grab saved WIFI passwords.
+- [x] Grab saved WIFI passwords.
 - [x] Add an icon selector for builder.
 - [ ] Fake "Not Working" pop up.
 

