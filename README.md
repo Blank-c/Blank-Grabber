@@ -94,9 +94,9 @@
 - [Can my webhook get leaked?](#can-my-webhook-get-leaked)
 - [How can I contact you?](#how-can-i-contact-you)
 
-#### What is the approximate stub size after building?
+#### What is the stub size after building?
 
-The approximate size of the stub should be around 7.80 MB.
+The size of the stub depends on your system. For most of the systems, its < 8mb.
 
 #### Can my webhook get leaked?
 
