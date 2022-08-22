@@ -66,11 +66,11 @@
 | **Startup** | Runs the stub on Windows starup. |
 | **Hide** | Hide the stub when someone runs it. |
 
-**Supports:** *Windows 10 and up.*
+**Supports:** *Windows 10*
 
 ## Requirements
 **To build the stub, you need:**
-- Windows 10/11.
+- Windows 10.
 - Python 3.
 - An active internet connection.
 
