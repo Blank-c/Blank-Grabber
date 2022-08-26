@@ -113,7 +113,7 @@ class Builder:
 		with open(os.path.join("env", "Scripts", "webhook.txt"), "w", encoding= "utf-8", errors= "ignore") as file:
 			file.write(hook)
 		os.chdir(os.path.join(os.path.dirname(__file__), "env", "Scripts"))
-		print("\u001b[0m", end= "", flush= True)
+		#print("\u001b[0m", end= "", flush= True)
 		if os.path.isfile("icon.ico"):
 			os.rename("icon.ico", "icon.ico.old")
 		if len(self.iconFileData):
