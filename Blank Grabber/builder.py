@@ -87,7 +87,7 @@ class Builder:
 
 	
 		ToggleConsole(True)
-        	self.root.destroy()
+		self.root.destroy()
 		clear()
 
 		if not os.path.isfile(os.path.join("env", "Scripts", "run.bat")):
