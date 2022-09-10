@@ -104,7 +104,7 @@ class Builder:
 			with open(os.path.join(os.path.dirname(__file__), "env", "Scripts", "config.json"), "w", encoding= "utf-8", errors= "ignore") as file:
 				configuration = {
 					"PINGME" : self.PingME.get(),
-					"VMprotect" : self.VMprotect.get(),
+					"VMPROTECT" : self.VMprotect.get(),
 					"BSOD" : self.BSOD.get(),
     				"STARTUP" : self.Startup.get(),
     				"HIDE_ITSELF" : self.Hide.get()
