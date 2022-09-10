@@ -85,8 +85,9 @@ class Builder:
 			messagebox.showerror("Error", "Unable to connect to the internet!")
 			return
 
-		self.root.destroy()
+	
 		ToggleConsole(True)
+                self.root.destroy()
 		clear()
 
 		if not os.path.isfile(os.path.join("env", "Scripts", "run.bat")):
