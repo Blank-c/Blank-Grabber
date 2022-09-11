@@ -90,7 +90,7 @@
 - [ ] Fake "Not Working" pop up.
 
 ## Frequently Asked Questions
-- [What is the approximate stub size after building?](#what-is-the-approximate-stub-size-after-building)
+- [What is the stub size after building?](#what-is-the-stub-size-after-building)
 - [Can my webhook get leaked?](#can-my-webhook-get-leaked)
 - [How can I contact you?](#how-can-i-contact-you)
 
