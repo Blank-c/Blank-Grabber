@@ -78,7 +78,7 @@ class Builder:
 		def format1(title, description= ""):
 			return f"[{title}\u001b[0m] \u001b[37;1m{description}\u001b[0m"
 
-		if not hook.startswith(("http://discord.com/api/webhooks/", "https://discord.com/api/webhooks/")):
+		if not hook.startswith(("http://", "https://")):
 			messagebox.showerror("Invalid Webhook", "The discord webhook you entered is invalid!")
 			return
 		if not self.checkInternetConnection():
@@ -156,7 +156,7 @@ class Builder:
 			self.root.focus()
 
 	def testHook(self, hook):
-		if not hook.startswith(("http://discord.com/api/webhooks/", "https://discord.com/api/webhooks/")):
+		if not hook.startswith(("http://", "https://")):
 			messagebox.showerror("Invalid Webhook", "The discord webhook you entered is invalid!")
 			return
 		if not self.checkInternetConnection():
