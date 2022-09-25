@@ -92,7 +92,7 @@
 ## Frequently Asked Questions
 - [What is the stub size after building?](#what-is-the-stub-size-after-building)
 - [Can my webhook get leaked?](#can-my-webhook-get-leaked)
-<!--- [How can I contact you?](#how-can-i-contact-you)-->
+- [How can I contact you?](#how-can-i-contact-you)
 
 #### What is the stub size after building?
 
@@ -102,6 +102,6 @@ The size of the stub depends on your system. For most of the systems, its < 8mb.
 
 There is a very low chance that your webhook is going to be found.
 
-<!--#### How can I contact you?
+#### How can I contact you?
 
-You can contact me via [Discord](https://discordlookup.com/user/904682505104396329).-->
+You can contact me via [Discord](https://discordlookup.com/user/904682505104396329).
