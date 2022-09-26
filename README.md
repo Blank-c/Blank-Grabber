@@ -87,7 +87,7 @@
 ## To-Do/Enhancements
 - [x] Grab saved WIFI passwords.
 - [x] Add an icon selector for builder.
-- [ ] Fake "Not Working" pop up.
+- [ ] ~Fake "Not Working" pop up.~
 
 ## Frequently Asked Questions
 - [What is the stub size after building?](#what-is-the-stub-size-after-building)
