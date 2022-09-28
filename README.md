@@ -41,9 +41,9 @@
     • Anti-VM.
     • Hide Itself.
     • Better Obfuscation.
-    • Anti-Unpacking Technique.
-    • Anti-UPX Detection by YARA.
-    • Anti-Pyinstaller Detection by YARA.
+    • Anti Unpacking Technique.
+    • Anti UPX-Detection by YARA.
+    • Anti Pyinstaller-Detection by YARA.
     • Grabs Discord Tokens.
     • Grabs Passwords from most browsers.
     • Grabs Chrome Cookies.
