@@ -14,11 +14,9 @@ title Installing dependencies... (6/8)
 python -m pip install --upgrade pywin32
 title Installing dependencies... (7/8)
 cd pyinstaller
-python setup.py install
+pip install -e .
 cd ..
 title Installing dependencies... (8/8)
 cd pyaes
-python setup.py install
+pip install -e .
 cd ..
-rmdir /S /Q pyinstaller
-rmdir /S /Q pyaes

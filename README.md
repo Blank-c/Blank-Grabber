@@ -90,7 +90,7 @@
 - [x] Grab saved WIFI passwords.
 - [x] Icon selector for stub.
 - [ ] ~Fake "Not Working" pop up.~
-- [ ] EXE Binder.
+- [x] EXE Binder.
 
 ## Frequently Asked Questions
 - [What is the stub size after building?](#what-is-the-stub-size-after-building)

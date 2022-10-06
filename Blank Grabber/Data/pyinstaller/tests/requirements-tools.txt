@@ -1,0 +1,46 @@
+# This is the pip requirements file for running the
+# PyInstaller test-suite.
+#
+# For extensive testing you will also need to install what is defined in
+# requirements-libraries.txt.
+#
+# Example (assuming current dir is PyInstaller's top-level source dir)::
+#
+#   python -m pip install -r tests/requirements-tools.txt
+#   python -m pip install -r tests/requirements-libraries.txt  # extensive
+
+# include PyInstaller's requirements
+-r ../requirements.txt
+
+# Work-around for a bug in execnet 1.4.1
+execnet >= 1.5.0
+
+# Testing framework.
+pytest >= 2.7.3
+
+# Plugin allowing running tests in parallel.
+pytest-xdist
+
+# Plugin to abort hanging tests.
+pytest-timeout >= 2.0.0
+# allows specifying order without duplicates
+pytest-drop-dup-tests
+# reruns failed flaky tests
+pytest-rerunfailures
+
+# Better subprocess alternative with implemented timeout.
+psutil
+
+# Check new flake8 violations on pull requests
+flake8
+
+# These are required by some of basic tests
+pywin32; sys_platform == 'win32'
+
+lxml
+
+# crypto support (`--key` option)
+tinyaes ~= 1.0
+
+# Ability to retry a failed test
+flaky

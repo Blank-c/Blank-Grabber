@@ -1,0 +1,75 @@
+# This is the pip requirements file for extensive
+# PyInstaller testing.
+#
+# Example (assuming current dir is PyInstaller's top-level source dir)::
+#
+#   python -m pip install -r tests/requirements-libraries.txt  # extensive
+
+# include requirements for base testing
+-r requirements-tools.txt
+
+# Backport of importlib.resources for python 3.8 and earlier.
+importlib_resources==5.9.0; python_version < '3.9'
+
+# Needs work
+# ----------
+# These packages, if updated, produce test failures. Work needs to be done on
+# these hooks. Any requirement in this list should be followed by the
+# `# pyup: ignore <https://pyup.io/docs/bot/filter/>`_ comment.
+#
+# - v. 2.2 and above fails.
+Django==2.1.8  # pyup: ignore
+# - v 21.1.0 fails; earlier versions not tested.
+
+
+# Working
+# -------
+# These packages work with no (known) issues.
+babel==2.10.3
+future==0.18.2
+gevent==21.12.0
+ipython==8.4.0; python_version >= '3.8'
+# keyring >= 23.1 requires python >= 3.8.7 on macOS 11 and later (with dyld shared cache support)
+keyring==23.0.1; sys_platform == 'darwin' and python_version < '3.8.7'  # pyup: ignore
+keyring==23.7.0; sys_platform != 'darwin' or python_version >= '3.8.7'
+matplotlib==3.5.2; python_version >= '3.8'
+pandas==1.4.3; python_version >= '3.8'
+pygments==2.12.0
+PyGObject==3.42.2; sys_platform == 'linux'
+pyside2==5.15.2.1
+# pyside6 6.2.2 wheel is incompatible with python < 3.8 on macOS
+# pyside6 6.3 wheels are incompatible with python < 3.8 on linux
+# see https://bugreports.qt.io/browse/PYSIDE-1797
+pyside6==6.2.1; sys_platform == 'darwin' and python_version < '3.8'  # pyup: ignore
+pyside6==6.2.4; sys_platform == 'linux' and python_version < '3.8'  # pyup: ignore
+pyside6==6.3.1; (sys_platform != 'darwin' and sys_platform != 'linux') or python_version >= '3.8'
+pyqt5==5.15.7; python_version < '3.10'
+pyqtwebengine==5.15.6; python_version < '3.10'
+pyqt6==6.3.1  # PyQt6 Qt6 bindings
+pyqt6-qt6==6.3.1  # Qt6 binaries (keep in sync with pyqt6 version!)
+pyqt6-webengine==6.3.1  # PyQt6 QtWebEngine bindings
+pyqt6-webengine-qt6==6.3.1  # Qt6 QtWebEngine binaries
+python-dateutil==2.8.2
+pytz==2022.1
+requests==2.28.1
+scipy==1.8.1; python_version >= '3.8'
+# simplejson is used for text_c_extension
+simplejson==3.17.6
+sphinx==5.0.2
+# Required for test_namespace_package
+sqlalchemy==1.4.39
+zope.interface==5.4.0
+Pillow==9.2.0
+
+
+# Python versions not supported / supported for older package versions
+# -------------------------------------------------------
+
+# numpy dropped support for python 3.7 as of 1.22
+numpy==1.23.1; python_version >= '3.8'
+numpy==1.21.5; python_version == '3.7'  # pyup: ignore
+
+
+# Install PyInstaller Hook Sample, to ensure that tests declared in
+# entry-points are discovered.
+https://github.com/pyinstaller/hooksample/archive/v4.0rc1.zip  # pyup: ignore
