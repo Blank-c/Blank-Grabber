@@ -40,6 +40,7 @@
     • Disables Windows Defender and Firewall.
     • Anti-VM.
     • Hide Itself.
+    • EXE Binder.
     • Better Obfuscation.
     • Anti Unpacking Technique.
     • Anti UPX-Detection by YARA.
