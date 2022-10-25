@@ -4,7 +4,7 @@ from urllib.request import urlopen, Request
 from socket import create_connection
 import json, os, subprocess, shutil, webbrowser, time, ctypes
 
-def ToggleConsole(choice): # I am not using .pyw extention because of some reason
+def ToggleConsole(choice):
 	if choice:
 		# Show Console
 		ctypes.windll.user32.ShowWindow(ctypes.windll.kernel32.GetConsoleWindow(), 4)
