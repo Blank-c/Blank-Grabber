@@ -73,13 +73,13 @@
 ## Requirements
 **To build the stub, you need:**
 - Windows 10/11 (untested).
-- Python 3.
+- Python 3.10.
 - An active internet connection.
 
 ## How to Build?
 *If you literally have no idea how to build it.*
 
-1. Download and install [Python 3](https://www.python.org/downloads/#event). (Make sure to enable the *Add to PATH* option.)
+1. Download and install [Python 3 (3.10)](https://www.python.org/downloads/release/python-3107/). (Make sure to enable the *Add to PATH* option.)
 2. Verify the installation by executing `python --version` in [CMD](https://www.howtogeek.com/235101/10-ways-to-open-the-command-prompt-in-windows-10/?).
 3. [Download Blank Grabber](#download).
 4. [Extract](https://www.pcworld.com/article/394871/how-to-unzip-files-in-windows-10.html#:~:text=Unzip%20all%20files%20in%20a%20ZIP%20file) the zip file.
