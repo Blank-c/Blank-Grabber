@@ -1,89 +1,126 @@
+# If you want to use this in your project (with or without modifications, please reference the below line)
 # https://github.com/Blank-c/BlankOBF
 
-import os, base64, argparse, codecs, random, string
+import random, string, base64, codecs, argparse, os, sys
 
-class Obfuscator:
-    def __init__(self, code, level):
-        self.code = code
-        if level < 1:
-            level = 1
-        for _ in range(level):
-            self.__obfuscate()
+from textwrap import wrap
+from zlib import compress
+from marshal import dumps
+
+class BlankOBF:
+    def __init__(self, code, outputpath):
+        self.code = code.encode()
+        self.outpath = outputpath
+        self.varlen = 3
+        self.xorkey = "".join(random.choices(string.digits + string.ascii_letters, k = 6)).encode()
+        self.vars = {}
+
+        self.marshal()
+        self.encrypt1()
+        self.encrypt2()
+        self.encrypt3()
+        self.finalize()
     
-    def __xorED(self, text, key = None):
-        newstring = ""
-        if key is None:
-            key = "".join(random.choices(string.digits + string.ascii_letters, k= random.randint(4, 8)))
-        if not key[0] == " ":
-            key = " " + key
-        for i in range(len(text)):
-            newstring += chr(ord(text[i]) ^ ord(key[(len(key) - 2) + 1]))
-        return (newstring, key)
+    def generate(self, name):
+        res = self.vars.get(name)
+        if res is None:
+            res = "_" + "".join(["_" for _ in range(self.varlen)])
+            self.varlen += 1
+            self.vars[name] = res
+        return res
+    
+    def encryptstring(self, string):
+        return f'__import__("base64").b64decode(bytes({list(base64.b64encode(string.encode()))})).decode()'
+    
+    def compress(self):
+        self.code = compress(self.code)
+    
+    def xorcrypt(self):
+        self.code = list(self.code)
+        for index, byte in enumerate(self.code):
+            self.code[index] = byte ^ self.xorkey[index % len(self.xorkey)]
+        self.code = bytes(self.code)
+    
+    def marshal(self):
+        self.code = dumps(compile(self.code, "<string>", "exec"))
+    
+    def encrypt1(self):
+        code = base64.b64encode(self.code).decode()
+        partlen = int(len(code)/4)
+        code = wrap(code, partlen)
+        var1 = self.generate("a")
+        var2 = self.generate("b")
+        var3 = self.generate("c")
+        var4 = self.generate("d")
+        init = [f'{var1}="{codecs.encode(code[0], "rot13")}"', f'{var2}="{code[1]}"', f'{var3}="{code[2][::-1]}"', f'{var4}="{code[3]}"']
 
-    def __encodestring(self, string):
-        newstring = ''
-        for i in string:
-            if random.choice([True, False]):
-                newstring += '\\x' + codecs.encode(i.encode(), 'hex').decode()
-            else:
-                newstring += '\\' + oct(ord(i))[2:]
-        return newstring
+        random.shuffle(init)
+        init = ";".join(init)
+        self.code = f'''
+# Obfuscated using https://github.com/Blank-c/BlankOBF
 
-    def __obfuscate(self):
-        xorcod = self.__xorED(self.code)
-        self.code = xorcod[0]
-        encoded_code = base64.b64encode(codecs.encode(codecs.encode(self.code.encode(), 'bz2'), 'uu')).decode()
-        encoded_code = [encoded_code[i:i + int(len(encoded_code) / 4)] for i in range(0, len(encoded_code), int(len(encoded_code) / 4))]
-        new_encoded_code = []
-        for i in range(4):
-            new_encoded_code.append(codecs.encode(encoded_code[0].encode(), 'uu').decode() + 'u')
-            new_encoded_code.append(codecs.encode(encoded_code[1], 'rot13') + 'r')
-            new_encoded_code.append(codecs.encode(encoded_code[2].encode(), 'hex').decode() + 'h')
-            new_encoded_code.append(base64.b85encode(codecs.encode(encoded_code[3].encode(), 'hex')).decode() + 'x')
-        self.code = f"""# Obfuscated with BlankOBF
-# https://github.com/Blank-c/BlankOBF
+{init};__import__({self.encryptstring("builtins")}).exec(__import__({self.encryptstring("marshal")}).loads(__import__({self.encryptstring("base64")}).b64decode(__import__({self.encryptstring("codecs")}).decode({var1}, __import__({self.encryptstring("base64")}).b64decode("{base64.b64encode(b'rot13').decode()}").decode())+{var2}+{var3}[::-1]+{var4})))
+'''.strip().encode()
+    
+    def encrypt2(self):
+        self.compress()
+        self.xorcrypt()
+        var1 = self.generate("e")
+        var2 = self.generate("f")
+        var3 = self.generate("g")
+        var4 = self.generate("h")
+        var5 = self.generate("i")
+        var6 = self.generate("j")
+        comments = list(["#____" + "".join(random.choices(string.ascii_letters + string.digits, k = len(self.xorkey))) for _ in range(29)]) + ["#____" + self.xorkey.decode()]
+        random.shuffle(comments)
+        comments = "# Obfuscated using https://github.com/Blank-c/BlankOBF\n\n" + "\n".join(comments)
+        
+        self.code = f'''
+{var5} = {self.code}
+{var6} = __import__({self.encryptstring("base64")}).b64decode({base64.b64encode(comments.encode())}).decode().splitlines()
+{var1} = [{var2}[5:].strip() for {var2} in {var6} if {var2}.startswith("#____")]
+if len({var1}) < 30 or any([len(x) != {len(self.xorkey)} for x in {var1}]):
+    __import__("os")._exit(0)
+for {var3} in {var1}:
+    {var6} = list({var5})
+    {var4} = {var3}
+    for {var2}, {var3} in enumerate({var5}):
+        {var6}[{var2}] = {var3} ^ {var4}.encode()[{var2} % len({var4})]
+    try:
+        __import__({self.encryptstring("builtins")}).exec(__import__({self.encryptstring("zlib")}).decompress(bytes({var6})))
+        __import__({self.encryptstring("os")})._exit(0)
+    except __import__({self.encryptstring("zlib")}).error:
+        pass
+'''.encode()
 
-_____=eval("{self.__encodestring('eval')}");_______=_____("{self.__encodestring('compile')}");______,____=_____(_______("{self.__encodestring("__import__('base64')")}","",_____.__name__)),_____(_______("{self.__encodestring("__import__('codecs')")}","",_____.__name__));____________________=_____("'{self.__encodestring(xorcod[True])}'");________,_________,__________,___________=_____(_______("{self.__encodestring('exec')}","",_____.__name__)),_____(_______("{self.__encodestring('str.encode')}","",_____.__name__)),_____(_______("{self.__encodestring('isinstance')}","",_____.__name__)),_____(_______("{self.__encodestring('bytes')}","",_____.__name__))
-def ___________________(__________, ___________):
-    __________=__________.decode()
-    _________=""
-    if not ___________[False]=="{self.__encodestring(' ')}":
-        ___________="{self.__encodestring(' ')}"+___________
-    for _ in range(_____("{self.__encodestring('len(__________)')}")):
-        _________+=_____("{self.__encodestring('chr(ord(__________[_])^ord(___________[(len(___________) - True*2) + True]))')}")
-    return (_________,___________)
-def ____________(_____________):
-    if(_____________[-True]!=_____(_______("'{self.__encodestring('c________________6s5________________6ardv8')}'[-True*4]","",_____.__name__))):_____________ = _________(_____________)
-    if not(__________(_____________, ___________)):_____________ = _____(_______("{self.__encodestring('____.decode(_____________[:-True]')},'{self.__encodestring('rot13')}')","",_____.__name__))
-    else:
-        if(_____________[-True]==_____(_______("b'{self.__encodestring('f5sfsdfauf85')}'[-True*4]","", _____.__name__))):
-            _____________=_____(_______("{self.__encodestring('____.decode(_____________[:-True]')},'{self.__encodestring('uu')}')","",_____.__name__))
-        elif (_____________[-True] ==_____(_______("b'{self.__encodestring('d5sfs1dffhsd8')}'[-True*4]","", _____.__name__))):_____________=_____(_______("{self.__encodestring('____.decode(_____________[:-True]')},'{self.__encodestring('hex')}')","",_____.__name__))
-        else:_____________=_____(_______("{self.__encodestring('______.b85decode(_____________[:-True])')}","",_____.__name__));_____________=_____(_______("{self.__encodestring('____.decode(_____________')}, '{self.__encodestring('hex')}')","",_____.__name__))
-        _____________=_____(_______("{self.__encodestring('___________.decode(_____________)')}","",_____.__name__))
-    return _____________
-_________________=_____(_______("{self.__encodestring('___________.decode')}({self.__encodestring(new_encoded_code[True*3]).encode()})","",_____.__name__));________________ = _____(_______("{self.__encodestring('___________.decode')}({self.__encodestring(new_encoded_code[1]).encode()})","",_____.__name__));__________________=_____(_______("{self.__encodestring('___________.decode')}({self.__encodestring(new_encoded_code[True*2]).encode()})","",_____.__name__));______________=_____(_______("{self.__encodestring('___________.decode')}({self.__encodestring(new_encoded_code[False]).encode()})","",_____.__name__));_______________=_____(_______("{self.__encodestring('str.join')}('', {self.__encodestring('[____________(x) for x in [______________,________________,__________________,_________________]]')})","", _____.__name__));________(___________________(____.decode(____.decode(______.b64decode(_________(_______________)), "{self.__encodestring("uu")}"),"{self.__encodestring("bz2")}"),____________________)[_____("{self.__encodestring('False')}")])"""
+    def encrypt3(self):
+        self.compress()
+        data = base64.b64encode(self.code)
+        self.code = f'import base64, zlib; exec(compile(zlib.decompress(base64.b64decode({data})), "<string>", "exec"))'.encode()
 
-def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('FILE', help='the target file', metavar= 'SOURCE')
-    parser.add_argument('-l', metavar='level', help='level of obfuscation', type=int, default=1)
-    parser.add_argument('-o', metavar='path', help='custom output file path')
+    def finalize(self):
+        if os.path.dirname(self.outpath).strip() != "":
+            os.makedirs(os.path.dirname(self.outpath), exist_ok= True)
+        with open(self.outpath, "w") as e:
+            e.write(self.code.decode())
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(prog= sys.argv[0], description= "Obfuscates python program to make it harder to read")
+    parser.add_argument("FILE", help= "Path to the file containing the python code")
+    parser.add_argument("-o", type= str, help= 'Output file path [Default: "Obfuscated_<FILE>.py"]', dest= "path")
     args = parser.parse_args()
-    if args.o is None:
-        args.o = f'obfuscated_{os.path.basename(args.FILE)}'
-    if not os.path.isfile(args.FILE):
-        print(f'File "{os.path.basename(args.FILE)}" is not found')
-        exit()
-    elif not 'py' in os.path.basename(args.FILE).split('.')[-1]:
-        print(f'''File "{os.path.basename(args.FILE)}" is not a '.py' file''')
-        exit()
-    with open(args.FILE, encoding='utf-8') as file:
-        CODE = file.read()
-    obfuscator = Obfuscator(CODE, args.l)
-    with open(args.o, 'w', encoding='utf-8') as output_file:
-        output_file.write(obfuscator.code)
-    print(f"Saved as '{os.path.abspath(f'{os.path.basename(args.o)}')}'")
 
-if __name__ == '__main__':
-    main()
+    if not os.path.isfile(sourcefile := args.FILE):
+        print(f'No such file: "{args.FILE}"')
+        os._exit(1)
+    elif not sourcefile.endswith((".py", ".pyw")):
+        print('The file does not have a valid python script extention!')
+        os._exit(1)
+    
+    if args.path is None:
+        args.path = "Obfuscated_" + os.path.basename(sourcefile)
+    
+    with open(sourcefile) as sourcefile:
+        code = sourcefile.read()
+    
+    BlankOBF(code, args.path)
