@@ -2,7 +2,7 @@ import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
 from urllib.request import urlopen, Request
 from socket import create_connection
-import json, os, subprocess, shutil, webbrowser, time, ctypes
+import json, os, subprocess, shutil, webbrowser, time, ctypes, sys
 
 def ToggleConsole(choice):
 	if choice:
@@ -221,7 +221,11 @@ class Builder:
 if __name__ == "__main__":
 	if os.name == "nt":
 		if not os.path.isdir(os.path.join(os.path.dirname(__file__), "Data")):
-			subprocess.run(f'mshta "javascript:var sh=new ActiveXObject(\'WScript.Shell\'); sh.Popup(\'Data folder cannot be found!\', 10, \'Error\', 64);close()"', capture_output= True, shell= True)
+			subprocess.Popen('mshta "javascript:var sh=new ActiveXObject(\'WScript.Shell\'); sh.Popup(\'Data folder cannot be found. Please redownload the files!\', 10, \'Error\', 64);close()"', shell= True, creationflags= subprocess.SW_HIDE | subprocess.CREATE_NEW_CONSOLE)
+			os._exit(1)
+		python_version = tuple([sys.version_info[x] for x in range(3)])
+		if python_version[0] > 3 or python_version[1] > 10:
+			subprocess.Popen(f'mshta "javascript:var sh=new ActiveXObject(\'WScript.Shell\'); sh.Popup(\'Your Python version is {python_version[0]}.{python_version[1]}.{python_version[2]} but version < 3.11 is required. Please downgrade it first!\', 10, \'Error\', 64);close()"', shell= True, creationflags= subprocess.SW_HIDE | subprocess.CREATE_NEW_CONSOLE)
 			os._exit(1)
 		ToggleConsole(False)
 		Builder()
