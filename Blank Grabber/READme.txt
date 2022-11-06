@@ -1,5 +1,5 @@
-Python must be installed! (Recommended: latest)
+Python must be installed! (Version < 3.11)
 Internet connection must be available!
-Disable any antivirus!
+Disable your antivirus/defender!
 
 Run "BUILD.vbs"
