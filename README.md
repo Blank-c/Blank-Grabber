@@ -38,7 +38,7 @@
     • Lightweight And Small Stub Size.
     • UAC Bypass.
     • Runs On Startup.
-    • Disables Windows Defender and Firewall.
+    • Disables Windows Defender.
     • Anti-VM.
     • Hide Itself.
     • EXE Binder.
