@@ -41,6 +41,7 @@
     • Disables Windows Defender.
     • Anti-VM.
     • Hide Itself.
+    • Custom Message Box.
     • EXE Binder.
     • Better Obfuscation.
     • Anti Unpacking Technique.
@@ -55,7 +56,7 @@
     • Grabs System Info.
     • Grabs Saved Wifi Passwords
     • Captures Screenshot.
-    • Captures Webcam Image (experimental).
+    • Captures Webcam Image.
     • Sends All Data Through Discord Webhooks.
     (...more)
 
@@ -67,6 +68,7 @@
 | **BSOD** | Triggers Blue Screen of Death when ran on Virtual Machine. |
 | **Startup** | Runs the stub on Windows starup. |
 | **Hide** | Hide the stub when someone runs it. |
+| **Message Box** | Create custom message box. |
 
 **Supports:** *Windows 10/11 (untested)*
 
@@ -91,7 +93,7 @@
 ## To-Do/Enhancements
 - [x] Grab saved WIFI passwords.
 - [x] Icon selector for stub.
-- [ ] Message Box.
+- [x] Message Box.
 - [x] EXE Binder.
 
 ## Crypter

