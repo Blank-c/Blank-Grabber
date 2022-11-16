@@ -91,7 +91,7 @@
 ## To-Do/Enhancements
 - [x] Grab saved WIFI passwords.
 - [x] Icon selector for stub.
-- [ ] ~Fake "Not Working" pop up.~
+- [ ] Message Box.
 - [x] EXE Binder.
 
 ## Crypter
