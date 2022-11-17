@@ -217,7 +217,7 @@ class Builder:
 		def onClose():
 			if not bool(self.MSGboxconf):
 				self.MSGbox.set(False)
-				newwindow.destroy()
+			newwindow.destroy()
 
 		newwindow["background"] = "black"
 		newwindow.grab_set()
