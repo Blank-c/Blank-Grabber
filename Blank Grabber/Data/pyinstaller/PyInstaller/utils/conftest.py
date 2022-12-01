@@ -35,7 +35,7 @@ sys.path.append(_ROOT_DIR)
 
 from PyInstaller import __main__ as pyi_main  # noqa: E402
 from PyInstaller import configure  # noqa: E402
-from PyInstaller.compat import architecture, is_darwin, is_linux, is_win, safe_repr  # noqa: E402
+from PyInstaller.compat import architecture, is_darwin, is_win  # noqa: E402
 from PyInstaller.depend.analysis import initialize_modgraph  # noqa: E402
 from PyInstaller.utils.cliutils import archive_viewer  # noqa: E402
 from PyInstaller.utils.tests import gen_sourcefile  # noqa: E402
@@ -47,6 +47,8 @@ _EXE_TIMEOUT = 3 * 60  # In sec.
 _MAX_RETRIES = 2
 # All currently supported platforms
 SUPPORTED_OSES = {"darwin", "linux", "win32"}
+# Have pyi_builder fixure clean-up the temporary directories of successful tests. Controlled by environment variable.
+_PYI_BUILDER_CLEANUP = os.environ.get("PYI_BUILDER_CLEANUP", "1") == "1"
 
 # Fixtures
 # --------
@@ -367,7 +369,7 @@ class AppBuilder:
             print('[' + str(process.pid) + '] ', *text)
 
         # Run executable. stderr is redirected to stdout.
-        _msg('RUNNING: ', safe_repr(exe_path), ', args: ', safe_repr(args))
+        _msg('RUNNING: ', repr(exe_path), ', args: ', repr(args))
         # 'psutil' allows to use timeout in waiting for a subprocess. If not timeout was specified then it is 'None' -
         # no timeout, just waiting. Runtime is useful mostly for interactive tests.
         try:
@@ -497,11 +499,10 @@ def pyi_builder(tmpdir, monkeypatch, request, pyi_modgraph):
 
     yield AppBuilder(tmpdir, request, request.param)
 
-    if is_darwin or is_linux:
-        if request.node.rep_setup.passed:
-            if request.node.rep_call.passed:
-                if tmpdir.exists():
-                    tmpdir.remove(rec=1, ignore_errors=True)
+    # Clean up the temporary directory of a successful test
+    if _PYI_BUILDER_CLEANUP and request.node.rep_setup.passed and request.node.rep_call.passed:
+        if tmpdir.exists():
+            tmpdir.remove(rec=1, ignore_errors=True)
 
 
 # Fixture for .spec based tests. With .spec it does not make sense to differentiate onefile/onedir mode.

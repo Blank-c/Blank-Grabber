@@ -11,6 +11,7 @@
 """
 Various classes and functions to provide some backwards-compatibility with previous versions of Python onward.
 """
+from __future__ import annotations
 
 import errno
 
@@ -27,7 +28,7 @@ from PyInstaller._shared_with_waf import _pyi_machine
 from PyInstaller.exceptions import ExecCommandFailed
 
 # Copied from https://docs.python.org/3/library/platform.html#cross-platform.
-is_64bits = sys.maxsize > 2**32
+is_64bits: bool = sys.maxsize > 2**32
 
 # Distinguish specific code for various Python versions. Variables 'is_pyXY' mean that Python X.Y and up is supported.
 # Keep even unsupported versions here to keep 3rd-party hooks working.
@@ -37,6 +38,7 @@ is_py37 = sys.version_info >= (3, 7)
 is_py38 = sys.version_info >= (3, 8)
 is_py39 = sys.version_info >= (3, 9)
 is_py310 = sys.version_info >= (3, 10)
+is_py311 = sys.version_info >= (3, 11)
 
 is_win = sys.platform.startswith('win')
 is_win_10 = is_win and (platform.win32_ver()[0] == '10')
@@ -72,8 +74,8 @@ _macos_ver = tuple(int(x) for x in platform.mac_ver()[0].split('.')) if is_darwi
 # disabling the compatibility mode and using python that does not properly support Big Sur still leaves find_library()
 # broken (which is a scenario that we ignore at the moment).
 # The same logic applies to macOS 12 (Monterey).
-is_macos_11_compat = _macos_ver and _macos_ver[0:2] == (10, 16)  # Big Sur or newer in compat mode
-is_macos_11_native = _macos_ver and _macos_ver[0:2] >= (11, 0)  # Big Sur or newer in native mode
+is_macos_11_compat = bool(_macos_ver) and _macos_ver[0:2] == (10, 16)  # Big Sur or newer in compat mode
+is_macos_11_native = bool(_macos_ver) and _macos_ver[0:2] >= (11, 0)  # Big Sur or newer in native mode
 is_macos_11 = is_macos_11_compat or is_macos_11_native  # Big Sur or newer
 
 # On different platforms is different file for dynamic python library.
@@ -130,23 +132,6 @@ elif is_unix:
 else:
     raise SystemExit('Your platform is not yet supported. Please define constant PYDYLIB_NAMES for your platform.')
 
-# Function with which to open files.
-open_file = open
-text_read_mode = 'r'
-
-# In Python 3 built-in function raw_input() was renamed to just 'input()'.
-stdin_input = input
-
-# Safe repr that always outputs ascii
-safe_repr = ascii
-
-# String types to replace `isinstance(foo, str)`. Obsolete since dropping support for Python 2.x.
-string_types = str
-
-# Correct extension ending: 'c' or 'o'
-
-PYCO = 'c'
-
 # In a virtual environment created by virtualenv (github.com/pypa/virtualenv) there exists sys.real_prefix with the path
 # to the base Python installation from which the virtual environment was created. This is true regardless of the version
 # of Python used to execute the virtualenv command.
@@ -157,7 +142,7 @@ PYCO = 'c'
 # The following code creates compat.is_venv and is.virtualenv that are True when running a virtual environment, and also
 # compat.base_prefix with the path to the base Python installation.
 
-base_prefix = os.path.abspath(getattr(sys, 'real_prefix', getattr(sys, 'base_prefix', sys.prefix)))
+base_prefix: str = os.path.abspath(getattr(sys, 'real_prefix', getattr(sys, 'base_prefix', sys.prefix)))
 # Ensure `base_prefix` is not containing any relative parts.
 is_venv = is_virtualenv = base_prefix != os.path.abspath(sys.prefix)
 
@@ -232,7 +217,7 @@ machine = _pyi_machine(platform.machine(), platform.system())
 
 
 # Wine detection and support
-def is_wine_dll(filename):
+def is_wine_dll(filename: str | os.PathLike):
     """
     Check if the given PE file is a Wine DLL (PE-converted built-in, or fake/placeholder one).
 
@@ -271,21 +256,21 @@ if is_win:
 # better to modify os.environ." (Same for unsetenv.)
 
 
-def getenv(name, default=None) -> str:
+def getenv(name: str, default: str | None = None):
     """
     Returns unicode string containing value of environment variable 'name'.
     """
     return os.environ.get(name, default)
 
 
-def setenv(name, value):
+def setenv(name: str, value: str):
     """
     Accepts unicode string and set it as environment variable 'name' containing value 'value'.
     """
     os.environ[name] = value
 
 
-def unsetenv(name):
+def unsetenv(name: str):
     """
     Delete the environment variable 'name'.
     """
@@ -298,7 +283,9 @@ def unsetenv(name):
 # Exec commands in subprocesses.
 
 
-def exec_command(*cmdargs: str, encoding: str = None, raise_enoent: bool = None, **kwargs):
+def exec_command(
+    *cmdargs: str, encoding: str | None = None, raise_enoent: bool | None = None, **kwargs: int | bool | list | None
+):
     """
     Run the command specified by the passed positional arguments, optionally configured by the passed keyword arguments.
 
@@ -377,7 +364,7 @@ def exec_command(*cmdargs: str, encoding: str = None, raise_enoent: bool = None,
     return out
 
 
-def exec_command_rc(*cmdargs: str, **kwargs) -> int:
+def exec_command_rc(*cmdargs: str, **kwargs: float | bool | list | None):
     """
     Return the exit code of the command specified by the passed positional arguments, optionally configured by the
     passed keyword arguments.
@@ -405,7 +392,9 @@ def exec_command_rc(*cmdargs: str, **kwargs) -> int:
     return subprocess.call(cmdargs, **kwargs)
 
 
-def exec_command_stdout(*command_args: str, encoding: str = None, **kwargs) -> str:
+def exec_command_stdout(
+    *command_args: str, encoding: str | None = None, **kwargs: float | str | bytes | bool | list | None
+):
     """
     Capture and return the standard output of the command specified by the passed positional arguments, optionally
     configured by the passed keyword arguments.
@@ -421,7 +410,7 @@ def exec_command_stdout(*command_args: str, encoding: str = None, **kwargs) -> s
 
     Parameters
     ----------
-    command_args : list[str]
+    command_args : List[str]
         Variadic list whose:
         1. Mandatory first element is the absolute path, relative path, or basename in the current `${PATH}` of the
            command to run.
@@ -451,7 +440,7 @@ def exec_command_stdout(*command_args: str, encoding: str = None, **kwargs) -> s
     return stdout if encoding is None else stdout.decode(encoding)
 
 
-def exec_command_all(*cmdargs: str, encoding: str = None, **kwargs):
+def exec_command_all(*cmdargs: str, encoding: str | None = None, **kwargs: int | bool | list | None):
     """
     Run the command specified by the passed positional arguments, optionally configured by the passed keyword arguments.
 
@@ -550,7 +539,7 @@ def __wrap_python(args, kwargs):
     return cmdargs, kwargs
 
 
-def exec_python(*args, **kwargs):
+def exec_python(*args: str, **kwargs: str | None):
     """
     Wrap running python script in a subprocess.
 
@@ -560,7 +549,7 @@ def exec_python(*args, **kwargs):
     return exec_command(*cmdargs, **kwargs)
 
 
-def exec_python_rc(*args, **kwargs):
+def exec_python_rc(*args: str, **kwargs: str | None):
     """
     Wrap running python script in a subprocess.
 
@@ -573,7 +562,7 @@ def exec_python_rc(*args, **kwargs):
 # Path handling.
 
 
-def expand_path(path):
+def expand_path(path: str | os.PathLike):
     """
     Replace initial tilde '~' in path with user's home directory, and also expand environment variables
     (i.e., ${VARNAME} on Unix, %VARNAME% on Windows).
@@ -582,7 +571,7 @@ def expand_path(path):
 
 
 # Site-packages functions - use native function if available.
-def getsitepackages(prefixes=None):
+def getsitepackages(prefixes: list | None = None):
     """
     Returns a list containing all global site-packages directories.
 
@@ -614,17 +603,18 @@ getsitepackages = getattr(site, 'getsitepackages', getsitepackages)
 
 
 # Wrapper to load a module from a Python source file. This function loads import hooks when processing them.
-def importlib_load_source(name, pathname):
+def importlib_load_source(name: str, pathname: str):
     # Import module from a file.
     mod_loader = importlib.machinery.SourceFileLoader(name, pathname)
     return mod_loader.load_module()
 
 
-# Patterns of module names that should be bundled into the base_library.zip.
+# Patterns of module names that should be bundled into the base_library.zip to be available during bootstrap.
+# These modules include direct or indirect dependencies of encodings.* modules. The encodings modules must be
+# recursively included to set the I/O encoding during python startup. Similarly, this list should include
+# modules used by PyInstaller's bootstrap scripts and modules (loader/pyi*.py)
 
 PY3_BASE_MODULES = {
-    # These modules are direct or indirect dependencies of encodings.* modules. encodings modules must be recursively
-    # included to set the I/O encoding during python startup.
     '_collections_abc',
     '_weakrefset',
     'abc',
@@ -633,21 +623,30 @@ PY3_BASE_MODULES = {
     'copyreg',
     'encodings',
     'enum',
+    'fnmatch',  # dependency of pathlib
     'functools',
-    'io',
+    'genericpath',  # dependency of os.path
+    'io',  # used by loader/pymod02_importers.py
     'heapq',
     'keyword',
     'linecache',
     'locale',
+    'ntpath',  # dependency of os.path
     'operator',
+    'os',
+    'pathlib',  # used by loader/pymod02_importers.py
+    'posixpath',  # dependency of os.path
     're',
     'reprlib',
     'sre_compile',
     'sre_constants',
     'sre_parse',
-    'tokenize',  # used by loader/pymod03_importers.py
+    'stat',  # dependency of os.path
+    'token',  # depdendency of tokenize
+    'tokenize',  # used by loader/pymod02_importers.py
     'traceback',  # for startup errors
     'types',
+    'urllib',  # dependency of pathlib
     'weakref',
     'warnings',
 }

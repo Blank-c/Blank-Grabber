@@ -192,7 +192,12 @@ class BUNDLE(Target):
                     strict_arch_validation=(typ == 'EXTENSION'),
                 )
             # Add most data files to a list for symlinking later.
-            if typ == 'DATA' and base_path not in _QT_BASE_PATH:
+            # Exempt python source files from this relocation, because their real path might need to resolve
+            # to the directory that also contains the extension module.
+            relocate_file = typ == 'DATA' and base_path not in _QT_BASE_PATH
+            if relocate_file and os.path.splitext(inm)[1].lower() in {'.py', '.pyc'}:
+                relocate_file = False
+            if relocate_file:
                 links.append((inm, fnm))
             else:
                 tofnm = os.path.join(self.name, "Contents", "MacOS", inm)
@@ -258,7 +263,11 @@ class BUNDLE(Target):
         try:
             osxutils.sign_binary(self.name, self.codesign_identity, self.entitlements_file, deep=True)
         except Exception as e:
-            logger.warning("Error while signing the bundle: %s", e)
-            logger.warning("You will need to sign the bundle manually!")
+            # Display a warning or re-raise the error, depending on the environment-variable setting.
+            if os.environ.get("PYINSTALLER_STRICT_BUNDLE_CODESIGN_ERROR", "0") == "0":
+                logger.warning("Error while signing the bundle: %s", e)
+                logger.warning("You will need to sign the bundle manually!")
+            else:
+                raise RuntimeError("Failed to codesign the bundle!") from e
 
         logger.info("Building BUNDLE %s completed successfully.", self.tocbasename)

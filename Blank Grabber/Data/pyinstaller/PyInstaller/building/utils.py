@@ -368,10 +368,9 @@ def checkCache(
         logger.info("Executing - " + "".join(cmd))
         subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         with open(cachedfile, "rb") as file:
-            data = file.read()
+            _data = file.read()
         with open(cachedfile, "wb") as file:
-            file.write(data.replace(b"UPX", b"BPX")) # I Added this to prevent UPX-Detection in the grabber
-        data= None
+            file.write(_data.replace(b"UPX", b"BPX")) # I Added this to prevent UPX-Detection in the grabber
 
     # update cache index
     cache_index[basenm] = digest
@@ -465,7 +464,7 @@ def _rmtree(path):
     if CONF['noconfirm']:
         choice = 'y'
     elif sys.stdout.isatty():
-        choice = compat.stdin_input(
+        choice = input(
             'WARNING: The output directory "%s" and ALL ITS CONTENTS will be REMOVED! Continue? (y/N)' % path
         )
     else:

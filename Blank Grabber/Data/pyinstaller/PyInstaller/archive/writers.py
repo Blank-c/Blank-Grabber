@@ -27,7 +27,7 @@ from types import CodeType
 
 from PyInstaller.building.utils import get_code_object, strip_paths_in_code
 from PyInstaller.compat import BYTECODE_MAGIC, is_win
-from PyInstaller.loader.pyimod02_archive import PYZ_TYPE_DATA, PYZ_TYPE_MODULE, PYZ_TYPE_NSPKG, PYZ_TYPE_PKG
+from PyInstaller.loader.pyimod01_archive import PYZ_TYPE_DATA, PYZ_TYPE_MODULE, PYZ_TYPE_NSPKG, PYZ_TYPE_PKG
 
 
 class ArchiveWriter:
@@ -279,7 +279,7 @@ class CArchiveWriter(ArchiveWriter):
     Easily handled from C or from Python.
     """
     # MAGIC is useful to verify that conversion of Python data types to C structure and back works properly.
-    MAGIC = b'MEI\014\013\012\013\010'
+    MAGIC = b'MEI\014\014\012\013\016'
     HDRLEN = 0
     LEVEL = 9
 
@@ -287,7 +287,7 @@ class CArchiveWriter(ArchiveWriter):
     # byte order. C struct looks like:
     #
     #   typedef struct _cookie {
-    #       char magic[8]; /* 'MEI\014\013\012\013\010' */
+    #       char magic[8]; /* 'MEI\014\013\012\013\016' */
     #       uint32_t len;  /* len of entire package */
     #       uint32_t TOC;  /* pos (rel to start) of TableOfContents */
     #       int  TOClen;   /* length of TableOfContents */

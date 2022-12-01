@@ -21,18 +21,19 @@ import re
 from types import CodeType
 from typing import Pattern
 
+from PyInstaller import compat
+
+# opcode name -> opcode map
+# Python 3.11 introduced specialized opcodes that are not covered by opcode.opmap (and equivalent dis.opmap), but dis
+# has a private map of all opcodes called _all_opmap. So use the latter, if available.
+opmap = getattr(dis, '_all_opmap', dis.opmap)
+
 
 def _instruction_to_regex(x: str):
     """
     Get a regex-escaped opcode byte from its human readable name.
     """
-    if x not in dis.opname:  # pragma: no cover
-        # These opcodes are available only in Python >=3.7. For our purposes, these aliases will do.
-        if x == "LOAD_METHOD":
-            x = "LOAD_ATTR"
-        elif x == "CALL_METHOD":
-            x = "CALL_FUNCTION"
-    return re.escape(bytes([dis.opmap[x]]))
+    return re.escape(bytes([opmap[x]]))
 
 
 def bytecode_regex(pattern: bytes, flags=re.VERBOSE | re.DOTALL):
@@ -57,13 +58,15 @@ def bytecode_regex(pattern: bytes, flags=re.VERBOSE | re.DOTALL):
     return re.compile(pattern, flags=flags)
 
 
-def finditer(pattern: Pattern, string):
+def finditer(pattern: Pattern, string: bytes):
     """
     Call ``pattern.finditer(string)``, but remove any matches beginning on an odd byte (i.e., matches where
     match.start() is not a multiple of 2).
 
     This should be used to avoid false positive matches where a bytecode pair's argument is mistaken for an opcode.
     """
+    assert isinstance(string, bytes)
+    string = _cleanup_bytecode_string(string)
     matches = pattern.finditer(string)
     while True:
         for match in matches:
@@ -81,28 +84,90 @@ def finditer(pattern: Pattern, string):
             break
 
 
+# Opcodes involved in function calls with constant arguments. The differences between python versions are handled by
+# variables below, which are then used to construct the _call_function_bytecode regex.
+# NOTE1: the _OPCODES_* entries are typically used in (non-capturing) groups that match the opcode plus an arbitrary
+# argument. But because the entries themselves may contain more than on opcode (with OR operator between them), they
+# themselves need to be enclosed in another (non-capturing) group. E.g., "(?:(?:_OPCODES_FUNCTION_GLOBAL).)".
+# NOTE2: _OPCODES_EXTENDED_ARG2 is an exception, as it is used as a list of opcodes to exclude, i.e.,
+# "[^_OPCODES_EXTENDED_ARG2]". Therefore, multiple opcodes are not separated by the OR operator.
+if not compat.is_py37:
+    _OPCODES_EXTENDED_ARG = rb"`EXTENDED_ARG`"
+    _OPCODES_EXTENDED_ARG2 = _OPCODES_EXTENDED_ARG
+    _OPCODES_FUNCTION_GLOBAL = rb"`LOAD_NAME`|`LOAD_GLOBAL`|`LOAD_FAST`"
+    _OPCODES_FUNCTION_LOAD = rb"`LOAD_ATTR`"
+    _OPCODES_FUNCTION_ARGS = rb"`LOAD_CONST`"
+    _OPCODES_FUNCTION_CALL = rb"`CALL_FUNCTION`|`CALL_FUNCTION_EX`"
+
+    def _cleanup_bytecode_string(bytecode):
+        return bytecode  # Nothing to do here
+elif not compat.is_py311:
+    # Python 3.7 introduced two new function-related opcodes, LOAD_METHOD and CALL_METHOD
+    _OPCODES_EXTENDED_ARG = rb"`EXTENDED_ARG`"
+    _OPCODES_EXTENDED_ARG2 = _OPCODES_EXTENDED_ARG
+    _OPCODES_FUNCTION_GLOBAL = rb"`LOAD_NAME`|`LOAD_GLOBAL`|`LOAD_FAST`"
+    _OPCODES_FUNCTION_LOAD = rb"`LOAD_ATTR`|`LOAD_METHOD`"
+    _OPCODES_FUNCTION_ARGS = rb"`LOAD_CONST`"
+    _OPCODES_FUNCTION_CALL = rb"`CALL_FUNCTION`|`CALL_METHOD`|`CALL_FUNCTION_EX`"
+
+    def _cleanup_bytecode_string(bytecode):
+        return bytecode  # Nothing to do here
+else:
+    # Python 3.11 removed CALL_FUNCTION and CALL_METHOD, and replaced them with PRECALL + CALL instruction sequence.
+    # As both PRECALL and CALL have the same parameter (the argument count), we need to match only up to the PRECALL.
+    # The CALL_FUNCTION_EX is still present.
+    # From Python 3.11b1 on, there is an EXTENDED_ARG_QUICK specialization opcode present.
+    _OPCODES_EXTENDED_ARG = rb"`EXTENDED_ARG`|`EXTENDED_ARG_QUICK`"
+    _OPCODES_EXTENDED_ARG2 = rb"`EXTENDED_ARG``EXTENDED_ARG_QUICK`"  # Special case; see note above the if/else block!
+    _OPCODES_FUNCTION_GLOBAL = rb"`LOAD_NAME`|`LOAD_GLOBAL`|`LOAD_FAST`"
+    _OPCODES_FUNCTION_LOAD = rb"`LOAD_ATTR`|`LOAD_METHOD`"
+    _OPCODES_FUNCTION_ARGS = rb"`LOAD_CONST`"
+    _OPCODES_FUNCTION_CALL = rb"`PRECALL`|`CALL_FUNCTION_EX`"
+
+    # Starting with python 3.11, the bytecode is peppered with CACHE instructions (which dis module conveniently hides
+    # unless show_caches=True is used). Dealing with these CACHE instructions in regex rules is going to render them
+    # unreadable, so instead we pre-process the bytecode and filter the offending opcodes out.
+    _cache_instruction_filter = bytecode_regex(rb"(`CACHE`.)|(..)")
+
+    def _cleanup_bytecode_string(bytecode):
+        return _cache_instruction_filter.sub(rb"\2", bytecode)
+
+
 # language=PythonVerboseRegExp
 _call_function_bytecode = bytecode_regex(
     rb"""
     # Matches `global_function('some', 'constant', 'arguments')`.
 
     # Load the global function. In code with >256 of names, this may require extended name references.
-    ((?:`EXTENDED_ARG`.)*
-     (?:`LOAD_NAME`|`LOAD_GLOBAL`|`LOAD_FAST`).)
+    (
+     (?:(?:""" + _OPCODES_EXTENDED_ARG + rb""").)*
+     (?:(?:""" + _OPCODES_FUNCTION_GLOBAL + rb""").)
+    )
 
-    # For foo.bar.whizz(), the above is the 'foo', below is the 'bar.whizz'.
-    ((?:(?:`EXTENDED_ARG`.)*
-     (?:`LOAD_METHOD`|`LOAD_ATTR`).)*)
+    # For foo.bar.whizz(), the above is the 'foo', below is the 'bar.whizz' (one opcode per name component, each
+    # possibly preceded by name reference extension).
+    (
+     (?:
+       (?:(?:""" + _OPCODES_EXTENDED_ARG + rb""").)*
+       (?:""" + _OPCODES_FUNCTION_LOAD + rb""").
+     )*
+    )
 
     # Load however many arguments it takes. These (for now) must all be constants.
     # Again, code with >256 constants may need extended enumeration.
-    ((?:(?:`EXTENDED_ARG`.)*
-     `LOAD_CONST`.)*)
+    (
+      (?:
+        (?:(?:""" + _OPCODES_EXTENDED_ARG + rb""").)*
+        (?:""" + _OPCODES_FUNCTION_ARGS + rb""").
+      )*
+    )
 
-    # Call the function. The parameter is the argument count (which may also be >256) if CALL_FUNCTION or CALL_METHOD
-    # are used. For CALL_FUNCTION_EX, the parameter are flags.
-    ((?:`EXTENDED_ARG`.)*
-     (?:`CALL_FUNCTION`|`CALL_METHOD`|`CALL_FUNCTION_EX`).)
+    # Call the function. If opcode is CALL_FUNCTION_EX, the parameter are flags. For other opcodes, the parameter
+    # is the argument count (which may be > 256).
+    (
+      (?:(?:""" + _OPCODES_EXTENDED_ARG + rb""").)*
+      (?:""" + _OPCODES_FUNCTION_CALL + rb""").
+    )
 """
 )
 
@@ -110,10 +175,10 @@ _call_function_bytecode = bytecode_regex(
 _extended_arg_bytecode = bytecode_regex(
     rb"""(
     # Arbitrary number of EXTENDED_ARG pairs.
-    (?:`EXTENDED_ARG`.)*
+    (?:(?:""" + _OPCODES_EXTENDED_ARG + rb""").)*
 
     # Followed by some other instruction (usually a LOAD).
-    [^`EXTENDED_ARG`].
+    [^""" + _OPCODES_EXTENDED_ARG2 + rb"""].
 )"""
 )
 
@@ -142,14 +207,17 @@ def load(raw: bytes, code: CodeType) -> str:
     # Work out what that enumeration was for (constant/local var/global var).
 
     # If the last instruction byte is a LOAD_FAST:
-    if raw[-2] == dis.opmap["LOAD_FAST"]:
+    if raw[-2] == opmap["LOAD_FAST"]:
         # Then this is a local variable.
         return code.co_varnames[index]
     # Or if it is a LOAD_CONST:
-    if raw[-2] == dis.opmap["LOAD_CONST"]:
+    if raw[-2] == opmap["LOAD_CONST"]:
         # Then this is a literal.
         return code.co_consts[index]
     # Otherwise, it is a global name.
+    if raw[-2] == opmap["LOAD_GLOBAL"] and compat.is_py311:
+        # In python 3.11, namei>>1 is pushed on stack...
+        return code.co_names[index >> 1]
     return code.co_names[index]
 
 
@@ -181,7 +249,7 @@ def function_calls(code: CodeType) -> list:
         function = ".".join([function_root] + methods)
 
         args = loads(args, code)
-        if function_call[0] == dis.opmap['CALL_FUNCTION_EX']:
+        if function_call[0] == opmap['CALL_FUNCTION_EX']:
             flags = extended_arguments(function_call)
             if flags != 0:
                 # Keyword arguments present. Unhandled at the moment.

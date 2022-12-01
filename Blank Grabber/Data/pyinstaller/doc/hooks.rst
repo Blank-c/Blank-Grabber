@@ -351,10 +351,10 @@ for example::
 
    from PyInstaller.compat import base_prefix, is_win
 
-.. py:data:: is_py36, is_py37, is_py38, is_py39, is_py310
+.. py:data:: is_py36, is_py37, is_py38, is_py39, is_py310 is_py311
 
     True when the current version of Python is at least 3.6, 3.7, 3.8, 3.9,
-    or 3.10, respectively.
+    or 3.10, 3.11 respectively.
 
 .. py:data::  is_win
 
@@ -434,6 +434,8 @@ hooks.
 .. autofunction:: copy_metadata
 .. autofunction:: collect_entry_point
 .. autofunction:: get_homebrew_path
+.. autofunction:: include_or_exclude_file
+.. autofunction:: collect_delvewheel_libs_directory
 
 
 Support for Conda
@@ -519,12 +521,6 @@ The ``hook_api`` object also offers the following methods:
    The ``names`` argument may be a single string or a list of strings
    giving the fully-qualified name(s) of modules to be imported.
    This has the same effect as adding the names to the ``hiddenimports`` global.
-
-``del_imports( *names )``:
-   The ``names`` argument may be a single string or a list of strings,
-   giving the fully-qualified name(s) of modules that are not
-   to be included if they are imported only by the hooked module.
-   This has the same effect as adding names to the ``excludedimports`` global.
 
 ``add_datas( tuple_list )``:
    The ``tuple_list`` argument has the format used with the ``datas`` global

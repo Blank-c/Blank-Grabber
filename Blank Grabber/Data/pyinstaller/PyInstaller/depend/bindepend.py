@@ -15,6 +15,7 @@ Find external dependencies of binary libraries.
 import collections
 import ctypes.util
 import os
+import pathlib
 import re
 import sys
 # Required for extracting eggs.
@@ -180,6 +181,79 @@ def matchDLLArch(filename):
     return match_arch
 
 
+def _get_paths_for_parent_directory_preservation():
+    """
+    Return list of paths that serve as prefixes for parent-directory preservation of collected binaries and/or
+    shared libraries. If a binary is collected from a location that starts with a path from this list, the relative
+    directory structure is preserved within the frozen application bundle; otherwise, the binary is collected to the
+    frozen application's top-level directory.
+    """
+
+    # Use only site-packages paths. We have no control over contents of `sys.path`, so using all paths from that may
+    # lead to unintended behavior in corner cases. For example, if `sys.path` contained the drive root (see #7028),
+    # all paths that do not match some other sub-path rooted in that drive will end up recognized as relative to the
+    # drive root. In such case, any DLL collected from `c:\Windows\system32` will be collected into `Windows\system32`
+    # sub-directory; ucrt DLLs collected from MSVC or Windows SDK installed in `c:\Program Files\...` will end up
+    # collected into `Program Files\...` subdirectory; etc.
+    #
+    # On the other hand, the DLL parent directory preservation is primarily aimed at packages installed via PyPI
+    # wheels, which are typically installed into site-packages. Therefore, limiting the directory preservation for
+    # shared libraries collected from site-packages should do the trick, and should be reasonably safe.
+    import site
+
+    orig_paths = site.getsitepackages()
+    orig_paths.append(site.getusersitepackages())
+
+    # Explicitly excluded paths. `site.getsitepackages` seems to include `sys.prefix`, which we need to exclude, to
+    # avoid issue swith DLLs in its sub-directories.
+    excluded_paths = {
+        pathlib.Path(sys.base_prefix).resolve(),
+        pathlib.Path(sys.prefix).resolve(),
+    }
+
+    paths = []
+    for path in orig_paths:
+        if not path:
+            continue
+        path = pathlib.Path(path).resolve()
+        # Filter out non-directories (e.g., /path/to/python3x.zip) or non-existent paths
+        if not path.is_dir():
+            continue
+        # Filter out explicitly excluded paths
+        if path in excluded_paths:
+            continue
+        paths.append(path)
+
+    # Sort by length (in term of path components) to ensure match against the longest common prefix (for example, match
+    # /path/to/venv/lib/site-packages instead of /path/to/venv when both paths are in site paths).
+    paths = sorted(paths, key=lambda x: len(x.parents), reverse=True)
+
+    return paths
+
+
+def _select_destination_directory(src_filename, parent_dir_preservation_paths):
+    # Special handling for pywin32 on Windows, because its .pyd extensions end up linking each other, but, due to
+    # sys.path modifications the packages perform, they all end up as top-modules and should be collected into
+    # top-level directory... i.e., we must NOT preserve the directory layout in this case.
+    if compat.is_win:
+        # match <...>/site-packages/pythonwin
+        # The caller might not have resolved the src_filename, so we need to explicitly lower-case the parent_dir.name
+        # before comparing it to account for case variations.
+        parent_dir = src_filename.parent
+        if parent_dir.name.lower() == "pythonwin" and parent_dir.parent in parent_dir_preservation_paths:
+            # Collect into top-level directory.
+            return src_filename.name
+
+    # Check parent directory preservation paths
+    for parent_dir_preservation_path in parent_dir_preservation_paths:
+        if parent_dir_preservation_path in src_filename.parents:
+            # Collect into corresponding sub-directory.
+            return src_filename.relative_to(parent_dir_preservation_path)
+
+    # Collect into top-level directory.
+    return src_filename.name
+
+
 def Dependencies(lTOC, xtrapath=None, manifest=None, redirects=None):
     """
     Expand LTOC to include all the closure of binary dependencies.
@@ -193,6 +267,14 @@ def Dependencies(lTOC, xtrapath=None, manifest=None, redirects=None):
     `redirects` may be a list. Any assembly redirects found via policy files will be added to the list as
     BindingRedirect objects so they can later be used to modify any manifests that reference the redirected assembly.
     """
+
+    # Get all path prefixes for binaries' parent-directory preservation. For binaries collected from packages in (for
+    # example) site-packages directory, we should try to preserve the parent directory structure. Currently, this
+    # behavior is active only on Windows. For macOS and linux, we need to implement symlink support first.
+    parent_dir_preservation_paths = []
+    if compat.is_win:
+        parent_dir_preservation_paths = _get_paths_for_parent_directory_preservation()
+
     # Extract all necessary binary modules from Python eggs to be included directly with PyInstaller.
     lTOC = _extract_from_egg(lTOC)
 
@@ -208,7 +290,14 @@ def Dependencies(lTOC, xtrapath=None, manifest=None, redirects=None):
             if lib.upper() in seen or npth.upper() in seen:
                 continue
             seen.add(npth.upper())
-            lTOC.append((lib, npth, 'BINARY'))
+
+            # Try to preserve parent directory structure, if applicable.
+            # NOTE: do not resolve the source path, because on macOS and linux, it may be a versioned .so (e.g.,
+            # libsomething.so.1, pointing at libsomething.so.1.2.3), and we need to collect it under original
+            # name!
+            src_path = pathlib.Path(npth)
+            dst_path = _select_destination_directory(src_path, parent_dir_preservation_paths)
+            lTOC.append((str(dst_path), npth, 'BINARY'))
 
     return lTOC
 

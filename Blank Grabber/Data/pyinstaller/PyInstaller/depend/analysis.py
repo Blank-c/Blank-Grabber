@@ -41,18 +41,18 @@ import traceback
 from collections import defaultdict
 from copy import deepcopy
 
-from PyInstaller import HOMEPATH, PACKAGEPATH, compat
+from PyInstaller import HOMEPATH, PACKAGEPATH
 from PyInstaller import log as logging
 from PyInstaller.building.datastruct import TOC
 from PyInstaller.compat import (
     BAD_MODULE_TYPES, BINARY_MODULE_TYPES, MODULE_TYPES_TO_TOC_DICT, PURE_PYTHON_MODULE_TYPES, PY3_BASE_MODULES,
-    VALID_MODULE_TYPES, importlib_load_source
+    VALID_MODULE_TYPES, importlib_load_source, is_win
 )
 from PyInstaller.depend import bytecode
 from PyInstaller.depend.imphook import AdditionalFilesCache, ModuleHookCache
 from PyInstaller.depend.imphookapi import (PreFindModulePathAPI, PreSafeImportModuleAPI)
 from PyInstaller.lib.modulegraph.find_modules import get_implies
-from PyInstaller.lib.modulegraph.modulegraph import ModuleGraph
+from PyInstaller.lib.modulegraph.modulegraph import ModuleGraph, DEFAULT_IMPORT_LEVEL
 from PyInstaller.log import DEBUG, INFO, TRACE
 from PyInstaller.utils.hooks import collect_submodules, is_package
 
@@ -153,7 +153,7 @@ class PyiModuleGraph(ModuleGraph):
         assert isinstance(rthooks, dict), 'The root element in %s must be a dict.' % uhd_path
         for module_name, python_file_name_list in rthooks.items():
             # Ensure the key is a string.
-            assert isinstance(module_name, compat.string_types), \
+            assert isinstance(module_name, str), \
                 '%s must be a dict whose keys are strings; %s is not a string.' % (uhd_path, module_name)
             # Ensure the value is a list.
             assert isinstance(python_file_name_list, list), \
@@ -168,7 +168,7 @@ class PyiModuleGraph(ModuleGraph):
             # Merge this with existing run-time hooks.
             for python_file_name in python_file_name_list:
                 # Ensure each item in the list is a string.
-                assert isinstance(python_file_name, compat.string_types), \
+                assert isinstance(python_file_name, str), \
                     '%s key %s, item %r must be a string.' % (uhd_path, module_name, python_file_name)
                 # Transform it into an absolute path.
                 abs_path = os.path.join(uhd, 'rthooks', python_file_name)
@@ -344,6 +344,41 @@ class PyiModuleGraph(ModuleGraph):
             # If no post-graph hooks were run, terminate iteration.
             if not hooked_module_names:
                 break
+
+    def _find_all_excluded_imports(self, module_name):
+        """
+        Collect excludedimports from the hooks of the specified module and all its parents.
+        """
+        excluded_imports = set()
+        while module_name:
+            # Gather excluded imports from hook(s) belonging to the module
+            for module_hook in self._hooks.get(module_name, []):
+                excluded_imports.update(module_hook.excludedimports)
+            # Change module name to the module's parent name
+            module_name = module_name.rpartition('.')[0]
+        return excluded_imports
+
+    def _safe_import_hook(
+        self, target_module_partname, source_module, target_attr_names, level=DEFAULT_IMPORT_LEVEL, edge_attr=None
+    ):
+        if source_module is not None:
+            # Gather all excluded imports for the referring modules, as well as its parents.
+            # For example, we want the excluded imports specified by hook for PIL to be also applied when the referring
+            # module is its submodule, PIL.Image.
+            excluded_imports = self._find_all_excluded_imports(source_module.identifier)
+            target_module_parts = target_module_partname.split('.')
+            # An excluded import that specifies a package needs to recursively applied to all that package's children.
+            for excluded_import in excluded_imports:
+                excluded_import_parts = excluded_import.split('.')
+                match = target_module_parts[:len(excluded_import_parts)] == excluded_import_parts
+                if match:
+                    logger.debug(
+                        "Suppressing import of %r from module %r due to excluded import %r specified in a hook for %r "
+                        "(or its parent package(s)).", target_module_partname, source_module.identifier,
+                        excluded_import, source_module.identifier
+                    )
+                    return []
+        return super()._safe_import_hook(target_module_partname, source_module, target_attr_names, level, edge_attr)
 
     def _safe_import_module(self, module_basename, module_name, parent_package):
         """
@@ -845,13 +880,16 @@ def get_bootstrap_modules():
                 # Divert extensions originating from python's lib-dynload directory, to match behavior of #5604.
                 mod_name = os.path.join('lib-dynload', mod_name)
             loader_mods.append((mod_name, mod_file, 'EXTENSION'))
-    # NOTE:These modules should be kept simple without any complicated dependencies.
+    loader_mods.append(('struct', os.path.abspath(mod_struct.__file__), 'PYMODULE'))
+    # Loader/bootstrap modules.
+    # NOTE: These modules should be kept simple without any complicated dependencies.
     loader_mods += [
-        ('struct', os.path.abspath(mod_struct.__file__), 'PYMODULE'),
-        ('pyimod01_os_path', os.path.join(loaderpath, 'pyimod01_os_path.py'), 'PYMODULE'),
-        ('pyimod02_archive', os.path.join(loaderpath, 'pyimod02_archive.py'), 'PYMODULE'),
-        ('pyimod03_importers', os.path.join(loaderpath, 'pyimod03_importers.py'), 'PYMODULE'),
-        ('pyimod04_ctypes', os.path.join(loaderpath, 'pyimod04_ctypes.py'), 'PYMODULE'),
-        ('pyiboot01_bootstrap', os.path.join(loaderpath, 'pyiboot01_bootstrap.py'), 'PYSOURCE'),
+        ('pyimod01_archive', os.path.join(loaderpath, 'pyimod01_archive.py'), 'PYMODULE'),
+        ('pyimod02_importers', os.path.join(loaderpath, 'pyimod02_importers.py'), 'PYMODULE'),
+        ('pyimod03_ctypes', os.path.join(loaderpath, 'pyimod03_ctypes.py'), 'PYMODULE'),
     ]
+    if is_win:
+        loader_mods.append(('pyimod04_pywin32', os.path.join(loaderpath, 'pyimod04_pywin32.py'), 'PYMODULE'))
+    # The bootstrap script
+    loader_mods.append(('pyiboot01_bootstrap', os.path.join(loaderpath, 'pyiboot01_bootstrap.py'), 'PYSOURCE'))
     return loader_mods

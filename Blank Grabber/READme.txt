@@ -1,4 +1,4 @@
-Python must be installed! (Version < 3.11)
+Python must be installed!
 Internet connection must be available!
 Disable your antivirus/defender!
 

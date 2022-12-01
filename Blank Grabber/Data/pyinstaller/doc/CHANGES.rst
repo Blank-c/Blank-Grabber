@@ -15,6 +15,287 @@ Changelog for PyInstaller
 
 .. towncrier release notes start
 
+5.6.2 (2022-10-31)
+-------------------
+
+Bugfix
+~~~~~~
+
+* (Linux, macOS) Fix the regression in shared library collection, where
+  the shared library would end up collected under its fully-versioned
+  .so name (e.g., ``libsomething.so.1.2.3``) instead of its originally
+  referenced name (e.g., ``libsomething.so.1``) due to accidental
+  symbolic link resolution. (:issue:`7189`)
+
+
+5.6.1 (2022-10-25)
+-------------------
+
+Bugfix
+~~~~~~
+
+* (macOS) Fix regression in macOS app bundle signing caused by a typo made
+  in :issue:`7180`. (:issue:`7184`)
+
+
+5.6 (2022-10-23)
+-----------------
+
+Features
+~~~~~~~~
+
+* Add official support for Python 3.11. (Note that PyInstaller v5.5 is also
+  expected to work but has only been tested with a pre-release of Python 3.11.)
+  (:issue:`6783`)
+* Implement a new hook utility function,
+  :func:`~PyInstaller.utils.hooks.collect_delvewheel_libs_directory`,
+  intended for dealing with external shared library in ``delvewheel``-enabled
+  PyPI
+  wheels for Windows. (:issue:`7170`)
+
+
+Bugfix
+~~~~~~
+
+* (macOS) Fix OpenCV (``cv2``) loader error in generated macOS .app
+  bundles, caused by the relocation of package's source .py files.
+  (:issue:`7180`)
+* (Windows) Improve compatibility with ``scipy`` 1.9.2, whose Windows wheels
+  switched to ``delvewheel``, and therefore have shared libraries located in
+  external .libs directory. (:issue:`7168`)
+
+* (Windows) Limit the DLL parent path preservation behavior from :issue:`7028`
+  to files collected from site-packages directories (as returned by
+  :func:`site.getsitepackages` and :func:`site.getusersitepackages`) instead of all
+  paths in :data:`sys.path`, to avoid unintended behavior in corner cases, such as
+  :data:`sys.path` containing the drive root or user's home directory.
+  (:issue:`7155`)
+
+* Fix compatibility with ``PySide6`` 6.4.0, where the deprecated
+  ``Qml2ImportsPath`` location key is not available anymore; use the
+  new ``QmlImportsPath`` key when it is available. (:issue:`7164`)
+* Prevent PyInstaller runtime hook for ``setuptools`` from attempting to
+  override ``distutils`` with ``setuptools``-provided version when
+  ``setuptools`` is collected and its version is lower than 60.0. This
+  both mimics the unfrozen behavior and prevents errors on versions
+  between 50.0 and 60.0, where we do not explicitly collect
+  ``setuptools._distutils``. (:issue:`7172`)
+
+
+Incompatible Changes
+~~~~~~~~~~~~~~~~~~~~
+
+* (macOS) In generated macOS .app bundles, the collected source .py files
+  are not relocated from ``Contents/MacOS`` to ``Contents/Resources``
+  anymore, to avoid issues when the path to a .py file is supposed to
+  resolve to the same directory as adjacent binary extensions. On the
+  other hand, this change might result in regressions w.r.t. bundle
+  signing and/or notarization. (:issue:`7180`)
+
+
+Bootloader
+~~~~~~~~~~
+
+* (Windows) Update the bundled ``zlib`` sources to v1.2.13. (:issue:`7166`)
+
+
+5.5 (2022-10-08)
+-----------------
+
+Features
+~~~~~~~~
+
+* (Windows) Support embedding multiple icons in the executable. (:issue:`7103`)
+
+
+Bugfix
+~~~~~~
+
+* (Windows) Fix a regression introduced in PyInstaller 5.4 (:issue:`#6925`),
+  where incorrect copy of ``python3.dll`` (and consequently an additional,
+  incorrect copy of ``python3X.dll`` from the same directory) is collected
+  when additional python installations are present in ``PATH``. (:issue:`7102`)
+* (Windows) Provide run-time override for ``ctypes.util.find_library`` that
+  searches ``sys._MEIPASS`` in addition to directories specified in ``PATH``.
+  (:issue:`7097`)
+* Fix the problem with ``pywin32`` DLLs not being found when importing
+  ``pywin32`` top-level extension modules, caused by the DLL directory
+  structure preservation behavior introduced in :issue:`7028`. Introduce
+  a new bootstrap/loader module that adds the ``pywin32_system32``
+  directory, if available, to both ``sys.path`` and the DLL search paths,
+  in lieu of having to provide a runtime hook script for every single
+  top-level extension module from ``pywin32``. (:issue:`7110`)
+
+
+Hooks
+~~~~~
+
+* Fix an error raised by the ``matplotlib.backends`` hook when trying to
+  specify the list of backends to collect via the hooks configuration.
+  (:issue:`7091`)
+
+
+5.4.1 (2022-09-11)
+-------------------
+
+Bugfix
+~~~~~~
+
+* (Windows) Fix run-time error raised by ``pyi_rth_win32comgenpy``, the
+  run-time
+  hook for ``win32com``. (:issue:`7079`)
+
+
+5.4 (2022-09-10)
+-----------------
+
+Features
+~~~~~~~~
+
+* (Windows) When collecting a DLL that was discovered via link-time
+  dependency analysis of a collected binary/extension, attempt to preserve
+  its parent directory structure instead of collecting it into application's
+  top-level directory. This aims to preserve the parent directory structure
+  of DLLs bundled with python packages in PyPI wheels, while the DLLs
+  collected from system directories (as well as from ``Library\bin``
+  directory of the Anaconda's environment) are still collected into
+  top-level application directory. (:issue:`7028`)
+* Add support for ``setuptools``-provided ``distutils``, available since
+  ``setuptools >= 60.0``. (:issue:`7075`)
+* Implement a generic file filtering decision function for use in hooks,
+  based on the source filename and optional inclusion and exclusion pattern
+  list (:func:`PyInstaller.utils.hooks.include_or_exclude_file`).
+  (:issue:`7040`)
+* Rework the module exclusion mechanism. The excluded module entries,
+  specified via ``excludedimports`` list in the hooks, are now used to
+  suppress module imports from corresponding nodes *during modulegraph
+  construction*, rather than to remove the nodes from the graph as a
+  post-processing step. This should make the module exclusion more robust,
+  but the main benefit is that we avoid running (potentially many and
+  potentially costly) hooks for modules that would end up excluded anyway.
+  (:issue:`7066`)
+
+
+Bugfix
+~~~~~~
+
+* (Windows) Attempt to extend DLL search paths with directories found in
+  the `PATH` environment variable and by tracking calls to the
+  `os.add_dll_directory` function during import of the packages in
+  the isolated sub-process that performs the binary dependency scanning.
+  (:issue:`6924`)
+* (Windows) Ensure that ANGLE DLLs (``libEGL.dll`` and ``libGLESv2.dll``)
+  are collected when using Anaconda-installed ``PyQt5`` and ``Qt5``.
+  (:issue:`7029`)
+* Fix :class:`AssertionError` during build when analysing a ``.pyc`` file
+  containing more that 255 variable names followed by an import statement all
+  in
+  the same namespace. (:issue:`7055`)
+
+
+Incompatible Changes
+~~~~~~~~~~~~~~~~~~~~
+
+* (Windows) PyInstaller now attempts to preserve parent directory structure
+  of DLLs that are collected from python packages (e.g., bundled with
+  packages in PyPI wheels) instead of collecting them to the top-level
+  application directory. This behavior might be incompatible with 3rd
+  party hooks that assume the old behavior, and may result in duplication
+  of DLL files or missing DLLs in hook-provided runtime search paths.
+  (:issue:`7028`)
+
+
+Hooks
+~~~~~
+
+* Implement new ``gstreamer`` hook configuration group with
+  ``include_plugins`` and ``exclude_plugins`` options that enable control
+  over GStreamer plugins collected by the ``gi.repository.Gst`` hook.
+  (:issue:`7040`)
+* Provide hooks for additional ``gstreamer`` modules provided via
+  GObject introspection (``gi``) bindings: ``gi.repository.GstAllocators``,
+  ``gi.repository.GstApp``, ``gi.repository.GstBadAudio``,
+  ``gi.repository.GstCheck``,
+  ``gi.repository.GstCodecs``, ``gi.repository.GstController``,
+  ``gi.repository.GstGL``,
+  ``gi.repository.GstGLEGL``, ``gi.repository.GstGLWayland``,
+  ``gi.repository.GstGLX11``,
+  ``gi.repository.GstInsertBin``, ``gi.repository.GstMpegts``,
+  ``gi.repository.GstNet``,
+  ``gi.repository.GstPlay``, ``gi.repository.GstPlayer``,
+  ``gi.repository.GstRtp``,
+  ``gi.repository.GstRtsp``, ``gi.repository.GstRtspServer``,
+  ``gi.repository.GstSdp``,
+  ``gi.repository.GstTranscoder``, ``gi.repository.GstVulkan``,
+  ``gi.repository.GstVulkanWayland``,
+  ``gi.repository.GstVulkanXCB``, and ``gi.repository.GstWebRTC``.
+  (:issue:`7074`)
+
+
+5.3 (2022-07-30)
+-----------------
+
+Features
+~~~~~~~~
+
+* (Windows) Implement handling of console control signals in the ``onefile``
+  bootloader parent process. The implemented handler suppresses the
+  ``CTRL_C_EVENT`` and ``CTRL_BREAK_EVENT`` to let the child process
+  deal with them as they see it fit. In the case of ``CTRL_CLOSE_EVENT``,
+  ``CTRL_LOGOFF_EVENT``, or ``CTRL_SHUTDOWN_EVENT``, the handler attempts
+  to delay the termination of the parent process in order to buy time for
+  the child process to exit and for the main thread of the parent process
+  to clean up the temporary directory before exiting itself. This should
+  prevent the temporary directory of a ``onefile`` frozen application
+  being left behind when the user closes the console window. (:issue:`6591`)
+* Implement a mechanism for controlling the collection mode of modules and
+  packages, with granularity ranging from top-level packages to individual
+  sub-modules. Therefore, the hooks can now specify whether the hooked
+  package should be collected as byte-compiled .pyc modules into embedded
+  PYZ archive (the default behavior), or as source .py files collected as
+  external data files (without corresponding modules in the PYZ archive).
+  (:issue:`6945`)
+
+
+Bugfix
+~~~~~~
+
+* (non-Windows) Avoid generating debug messages in POSIX signal handlers,
+  as the functions involved are generally not signal-safe. Should also
+  fix the endless spam of ``SIGPIPE`` that ocurrs under certain conditions
+  when shutting down the frozen application on linux. (:issue:`5270`)
+* (non-Windows) If the child process of a ``onefile`` frozen application
+  is terminated by a signal, delay re-raising of the signal in the parent
+  process until after the clean up has been performed. This prevents
+  ``onefile`` frozen applications from leaving behind their unpacked
+  temporary directories when either the parent or the child process is
+  sent the ``SIGTERM`` signal. (:issue:`2379`)
+* When building with ``noarchive=True`` (e.g., ``--debug noarchive`` or
+  ``--debug all``), PyInstaller no longer pollutes user-writable source
+  locations with its ``.pyc`` or ``.pyo`` files written next to the
+  corresponding source files. (:issue:`6591`)
+* When building with ``noarchive=True`` (e.g., ``--debug noarchive`` or
+  ``--debug all``), the source paths are now stripped from the collected
+  .pyc modules, same as if PYZ archive was used. (:issue:`6591`)
+
+
+Hooks
+~~~~~
+
+* Add PyGObject hook for ``gi.repository.freetype2``. Remove warning for
+  hidden import not found for gi._gobject with PyGObject 3.25.1+.
+  (:issue:`6951`)
+* Remove ``pkg_resources`` hidden imports that aren't available including
+  ``py2_warn``, ``markers``, and ``_vendor.pyparsing.diagram``. (:issue:`6952`)
+
+
+Documentation
+~~~~~~~~~~~~~
+
+* Document the signal handling behavior Windows and various quirks related
+  to the frozen application shutdown via the Task Manager. (:issue:`6935`)
+
+
 5.2 (2022-07-08)
 -----------------
 

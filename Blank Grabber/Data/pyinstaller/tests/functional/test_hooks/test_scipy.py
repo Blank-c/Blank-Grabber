@@ -16,12 +16,18 @@ from PyInstaller.utils.tests import importorskip
 
 
 @importorskip('scipy')
+def test_scipy_toplevel(pyi_builder):
+    pyi_builder.test_source("""
+        import scipy
+    """)
+
+
+@importorskip('scipy')
 def test_scipy(pyi_builder):
     pyi_builder.test_source(
         """
         # Test top-level SciPy importability.
         import scipy
-        from scipy import *
 
         # Test hooked SciPy modules.
         import scipy.io.matlab

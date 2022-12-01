@@ -14,10 +14,10 @@
 
 import sys
 
-import pyimod03_importers
+import pyimod02_importers
 
 # Extend Python import machinery by adding PEP302 importers to sys.meta_path.
-pyimod03_importers.install()
+pyimod02_importers.install()
 
 #-- Bootstrap process is complete.
 # We can use other python modules (e.g. os)
@@ -101,9 +101,14 @@ if sys.warnoptions:
     import warnings  # noqa: F401
 
 # Install the hooks for ctypes
-import pyimod04_ctypes  # noqa: E402
+import pyimod03_ctypes  # noqa: E402
 
-pyimod04_ctypes.install()
+pyimod03_ctypes.install()
+
+# Install the hooks for pywin32 (Windows only)
+if sys.platform.startswith('win'):
+    import pyimod04_pywin32
+    pyimod04_pywin32.install()
 
 # Make .eggs and zipfiles available at runtime
 d = "eggs"
