@@ -94,6 +94,9 @@
 - [x] Icon selector for stub.
 - [x] Message Box.
 - [x] EXE Binder.
+- [ ] Remove some features because they cause bugs.
+- [ ] Discord JS Injection.
+- [ ] Importable Cookies.
 
 <!--## Crypter
    Use Blankrypt to reduce VirusTotal detection.
