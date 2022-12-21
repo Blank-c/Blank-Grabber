@@ -1,0 +1,5 @@
+pyaes.zip
+urllib3
+pillow
+pywin32
+pyinstaller

