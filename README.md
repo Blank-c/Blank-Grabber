@@ -46,8 +46,10 @@
     • Anti UPX-Detection by YARA.
     • Anti Pyinstaller-Detection by YARA (Removed due to bugs).
     • Grabs Discord Tokens.
+    • Injects javascript in discord client's files.
     • Grabs Chrome Passwords.
-    • Grabs Chrome Cookies.
+    • Grabs Chrome Cookies (Netscape).
+    • Grabs Chrome History.
     • Grabs Minecraft Session.
     • Grabs Roblox Cookies.
     • Grabs IP Information.
