@@ -56,7 +56,8 @@ class system:
     
     @staticmethod
     def isInStartup() -> bool:
-        return os.path.basename(MEIPASS).lower() == 'startup'
+        path = os.path.dirname(system.getSelf()[0])
+        return os.path.basename(path).lower() == 'startup'
     
     @staticmethod
     def isConnected() -> bool:
