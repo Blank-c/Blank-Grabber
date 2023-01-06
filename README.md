@@ -32,6 +32,8 @@
 
 **Note:** This tool is for "educational" purpose only, and I am not responsible for any damage caused by it in any way!
 
+**Another Note:** If the grabber didn't work when you run it, then rebuild it with VMPROTECT option turned off.
+
 ## Features
     • GUI Builder.
     • UAC Bypass.
