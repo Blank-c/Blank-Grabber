@@ -47,8 +47,8 @@
     • Anti Pyinstaller-Detection by YARA (Removed due to bugs).
     • Grabs Discord Tokens.
     • Injects javascript in discord client's files.
-    • Grabs Chrome Passwords.
-    • Grabs Chrome Cookies (Netscape).
+    • Grabs Passwords from many browsers (Internet Explorer, Mozilla Firefox, Google Chrome, Safari, and Opera.).
+    • Grabs Chrome Cookies (Netscape format, Importable).
     • Grabs Chrome History.
     • Grabs Minecraft Session.
     • Grabs Roblox Cookies.
