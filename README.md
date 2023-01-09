@@ -56,7 +56,7 @@
     • Grabs System Info.
     • Grabs Saved Wifi Passwords.
     • Captures Screenshot.
-    • Captures Webcam Image.
+    • Captures Webcam Image (Causes bugs, check main.py file to use).
     • Sends All Data Through Discord Webhooks.
     (...more)
 

