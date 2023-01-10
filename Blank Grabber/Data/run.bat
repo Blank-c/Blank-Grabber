@@ -18,7 +18,7 @@ title Obfuscating...
 python process.py
 title Converting to exe...
 if exist bound.exe (
-    set bound=--add-data bound.exe;.
+    set bound=--add-binary bound.exe;.
 ) else (
     set bound= 
 )
