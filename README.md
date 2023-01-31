@@ -40,7 +40,7 @@
     • Runs On Startup.
     • Disables Windows Defender.
     • Anti-VM.
-    • Hide Itself.
+    • Hides/Deletes Itself.
     • Custom Message Box.
     • EXE Binder.
     • Better Obfuscation.
@@ -69,7 +69,7 @@
 | **VM Protect** | Does its best to prevent running in Virtual Machine. |
 | **BSOD** | Triggers Blue Screen of Death when ran on Virtual Machine. |
 | **Startup** | Runs the stub on Windows starup. |
-| **Hide** | Hide the stub when someone runs it. |
+| **Delete self** | Deletes the grabber after use. |
 | **Message Box** | Create custom message box. |
 
 **Supports:** *Windows 10/11 (untested)*

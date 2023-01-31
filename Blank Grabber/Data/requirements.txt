@@ -1,3 +1,4 @@
+wheel
 pyaes.zip
 urllib3
 pillow
