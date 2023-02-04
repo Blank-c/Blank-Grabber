@@ -69,7 +69,7 @@
 | **VM Protect** | Does its best to prevent running in Virtual Machine. |
 | **BSOD** | Triggers Blue Screen of Death when ran on Virtual Machine. |
 | **Startup** | Runs the stub on Windows starup. |
-| **Delete self** | Deletes the grabber after use. |
+| **Delete Self** | Deletes the grabber after use. |
 | **Message Box** | Create custom message box. |
 
 **Supports:** *Windows 10/11 (untested)*
@@ -100,6 +100,7 @@
 - [x] Remove some features because they cause bugs.
 - [x] Discord JS Injection.
 - [x] Importable Cookies.
+- [] Malware Scanning Website(s) Blocker
 
 <!--## Crypter
    Use Blankrypt to reduce VirusTotal detection.
