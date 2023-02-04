@@ -45,10 +45,10 @@
     • EXE Binder.
     • Better Obfuscation.
     • Anti Unpacking Technique (Removed due to bugs).
-    • Anti UPX-Detection by YARA.
+    • Anti UPX-Detection by YARA (Removed due to bugs).
     • Anti Pyinstaller-Detection by YARA (Removed due to bugs).
     • Grabs Discord Tokens.
-    • Injects javascript in discord client's files.
+    • Injects javascript in Discord client's files.
     • Grabs Passwords from many browsers (Internet Explorer, Mozilla Firefox, Google Chrome, Safari, and Opera.).
     • Grabs Chrome Cookies (Netscape format, Importable).
     • Grabs Chrome History.
@@ -58,7 +58,7 @@
     • Grabs System Info.
     • Grabs Saved Wifi Passwords.
     • Captures Screenshot.
-    • Captures Webcam Image (Disabled due to bugs, check main.py file to enable).
+    • Captures Webcam Image (Disabled due to bugs, can be enabled explicitly).
     • Sends All Data Through Discord Webhooks.
     (...more)
 
@@ -100,7 +100,7 @@
 - [x] Remove some features because they cause bugs.
 - [x] Discord JS Injection.
 - [x] Importable Cookies.
-- [] Malware Scanning Website(s) Blocker
+- [ ] Block Virustotal and other sites.
 
 <!--## Crypter
    Use Blankrypt to reduce VirusTotal detection.
