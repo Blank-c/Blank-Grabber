@@ -71,14 +71,14 @@
 | **BSOD** | Triggers Blue Screen of Death when ran on Virtual Machine. |
 | **Startup** | Runs the stub on Windows starup. |
 | **Delete Self** | Deletes the grabber after use. |
-| **Block AV Sites** | Blocks AV related sites. [Unblock](https://github.com/Blank-c/Blank-Grabber/issues/117) |
+| **Block AV Sites** | Blocks AV related sites ([Unblock](https://github.com/Blank-c/Blank-Grabber/issues/117)). |
 | **Message Box** | Create custom message box. |
 
-**Supports:** *Windows 10/11 (untested)*
+**Supports:** *Windows 8 (untested)/10/11 (untested)*
 
 ## Requirements
 **To build the stub, you need:**
-- Windows 10/11 (untested).
+- Windows 8 (untested)/10/11 (untested).
 - Python 3.
 - An active internet connection.
 
@@ -110,4 +110,4 @@
    [![Blankrypt](https://img.shields.io/badge/Crypt-it-green?style=for-the-badge&logo=appveyor)](https://github.com/Blank-c/Blankrypt)
 -->
 ## Contact me
-You can contact me via [Discord](https://discordlookup.com/user/904682505104396329) (Only contact me if you need to ask something).
+You can contact me via [Discord](https://discordlookup.com/user/904682505104396329) (ONLY contact me if you need to ask something).
