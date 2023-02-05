@@ -40,6 +40,7 @@
     • Runs On Startup.
     • Disables Windows Defender.
     • Anti-VM.
+    • Blocks AV-Related Sites
     • Hides/Deletes Itself.
     • Custom Message Box.
     • EXE Binder.
@@ -101,7 +102,7 @@
 - [x] Remove some features because they cause bugs.
 - [x] Discord JS Injection.
 - [x] Importable Cookies.
-- [x] Block AV Sites.
+- [x] Block AV Related Sites.
 
 <!--## Crypter
    Use Blankrypt to reduce VirusTotal detection.
