@@ -71,6 +71,7 @@
 | **BSOD** | Triggers Blue Screen of Death when ran on Virtual Machine. |
 | **Startup** | Runs the stub on Windows starup. |
 | **Delete Self** | Deletes the grabber after use. |
+| **Discord Injection** | Adds malicious Javascript code to the Discord client for persistence. |
 | **Block AV Sites** | Blocks AV related sites ([Unblock](https://github.com/Blank-c/Blank-Grabber/issues/117)). |
 | **Message Box** | Create custom message box. |
 

