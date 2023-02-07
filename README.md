@@ -75,11 +75,11 @@
 | **Block AV Sites** | Blocks AV related sites ([Unblock](https://github.com/Blank-c/Blank-Grabber/issues/117)). |
 | **Message Box** | Create custom message box. |
 
-**Supports:** *Windows 8 (untested)/10/11 (untested)*
+**Supports:** *Windows OS (Tested on Windows 10).*
 
 ## Requirements
 **To build the stub, you need:**
-- Windows 8 (untested)/10/11 (untested).
+- Windows 10.
 - Python 3.
 - An active internet connection.
 
@@ -105,10 +105,5 @@
 - [x] Importable Cookies.
 - [x] Block AV Related Sites.
 
-<!--## Crypter
-   Use Blankrypt to reduce VirusTotal detection.
-
-   [![Blankrypt](https://img.shields.io/badge/Crypt-it-green?style=for-the-badge&logo=appveyor)](https://github.com/Blank-c/Blankrypt)
--->
 ## Contact me
 You can contact me via [Discord](https://discordlookup.com/user/904682505104396329) (ONLY contact me if you need to ask something).
