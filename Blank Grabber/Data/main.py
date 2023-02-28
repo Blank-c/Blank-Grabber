@@ -673,7 +673,7 @@ class Discord:
                     for i in r:
                         if isinstance(i, dict):
                             code = i.get('code')
-                            if i.get('promotion') is None:
+                            if i.get('promotion') is None or not isinstance(i['promotion'], dict):
                                 continue
                             title = i['promotion'].get('outbound_title')
                             if code and title:
