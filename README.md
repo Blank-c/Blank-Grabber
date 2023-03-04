@@ -106,4 +106,6 @@
 - [x] Block AV Related Sites.
 
 ## Contact me
-You can contact me via [Discord](https://discordlookup.com/user/904682505104396329) (ONLY contact me if you need to ask something).
+To remove this tool from your system, follow [this](https://github.com/Blank-c/Blank-Grabber/issues/142). 
+
+If you need help regarding something else then you can contact me via [Discord](https://discordlookup.com/user/904682505104396329).
