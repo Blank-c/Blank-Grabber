@@ -1,4 +1,5 @@
-//Credits -> github/addi00000
+// Credits -> github/addi00000
+// I just modified the original script to suit my needs.
 
 const args = process.argv;
 const fs = require('fs');

