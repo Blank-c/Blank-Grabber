@@ -106,9 +106,8 @@
 - [x] Discord JS Injection.
 - [x] Importable Cookies.
 - [x] Block AV Related Sites.
-- [ ] Export as python file.
 
 ## Contact me
-To remove this tool from your system, follow [this](https://github.com/Blank-c/Blank-Grabber/issues/142). 
+To remove this trojan from your system, follow [this](https://github.com/Blank-c/Blank-Grabber/issues/142). 
 
 If you need help regarding something else then you can contact me via [Discord](https://discordlookup.com/user/904682505104396329).
