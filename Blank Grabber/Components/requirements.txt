@@ -1,0 +1,5 @@
+pyinstaller
+pyaesm
+pywin32
+pillow
+urllib3

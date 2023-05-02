@@ -118,7 +118,7 @@ except {encryptstring('__import__("lzma").LZMAError', func= True)}:...
             os.makedirs(os.path.dirname(self.outpath), exist_ok= True)
         with open(self.outpath, "w") as e:
             e.write(self.code.decode())
-        print("Saved as --> " + os.path.realpath(self.outpath))
+        # print("Saved as --> " + os.path.realpath(self.outpath))
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(prog= sys.argv[0], description= "Obfuscates python program to make it harder to read")
