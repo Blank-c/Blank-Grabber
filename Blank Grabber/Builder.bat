@@ -16,6 +16,12 @@ if %errorlevel% neq 0 (
     pip install customtkinter
 )
 
+pip show pillow > nul 2>&1
+if %errorlevel% neq 0 (
+    title Installing missing libraries...
+    pip install pillow
+)
+
 cls
 :: Run the builder
 title Starting builder...
