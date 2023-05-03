@@ -239,7 +239,7 @@ class BuilderOptionsFrame(ctk.CTkFrame):
     		}
 		}
 
-		configData = json.dumps(config)
+		configData = json.dumps(config, indent= 4)
 
 		self.master.Build(configData, self.iconBytes, self.boundExePath)
 			

