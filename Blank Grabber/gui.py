@@ -211,6 +211,7 @@ class BuilderOptionsFrame(ctk.CTkFrame):
 		
 		elif not (self.captureWebcamVar.get() or self.capturePasswordsVar.get() or self.captureCookiesVar.get() or self.captureHistoryVar.get() or self.captureDiscordTokensVar.get() or self.captureMinecraftVar.get() or self.captureRobloxCookiesVar.get() or self.captureWifiPasswordsVar.get() or self.captureSystemInfoVar.get() or self.captureScreenshotVar.get()):
 			messagebox.showwarning("Warning", "You must select at least one of the stealer modules!")
+			return
 		
 		config= {
     		"settings" : {
