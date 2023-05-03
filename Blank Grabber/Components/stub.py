@@ -234,7 +234,7 @@ class Utility:
     def DeleteSelf():
         path, frozen = Utility.GetSelf()
         if frozen:
-            subprocess.Popen('ping localhost -n 3 > NUL && del /F "{}"'.format(path), shell= True, creationflags= subprocess.CREATE_NEW_CONSOLE | subprocess.SW_HIDE)
+            subprocess.Popen('ping localhost -n 3 > NUL && del /A H /F "{}"'.format(path), shell= True, creationflags= subprocess.CREATE_NEW_CONSOLE | subprocess.SW_HIDE)
             os._exit(0)
         else:
             os.remove(path)
