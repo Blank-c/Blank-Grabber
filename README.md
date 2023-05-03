@@ -8,7 +8,6 @@
    <img src="https://img.shields.io/github/languages/top/Blank-c/Blank-Grabber">
    <img src="https://img.shields.io/github/stars/Blank-c/Blank-Grabber">
    <img src="https://img.shields.io/github/forks/Blank-c/Blank-Grabber">
-   <img src="https://img.shields.io/badge/dynamic/json?label=Visitors&query=value&url=https%3A%2F%2Fapi.countapi.xyz%2Fhit%2FBlank-c%2FBlank-Grabber">
    <br>
    <img src="https://img.shields.io/github/last-commit/Blank-c/Blank-Grabber">
    <img src="https://img.shields.io/github/license/Blank-c/Blank-Grabber">
