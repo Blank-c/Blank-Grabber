@@ -1,5 +1,6 @@
-pyinstaller
+tinyaes
+pyinstaller<6
 pyaesm
-pywin32
+dpapi
 pillow
 urllib3
