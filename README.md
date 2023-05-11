@@ -33,7 +33,7 @@
 
 **Disclaimer:** This program is provided for educational and research purposes only. The creator of this program does not condone or support any illegal or malicious activity, and will not be held responsible for any such actions taken by others who may use this program. By downloading or using this program, you acknowledge that you are solely responsible for any consequences that may result from the use of this program.
 
-**Note:** If you didn't get any data when testing the grabber on yourself, you may try to turn off Anti VM as the grabber might have detected your system as a virtual machine.
+**Note:** If the grabber doesn't work, then try to build it again without the "Anti VM" option.
 
 ## Features
     • GUI Builder.
@@ -62,7 +62,7 @@
     • Grabs System Info.
     • Grabs Saved Wifi Passwords.
     • Captures Screenshot.
-    • Captures Webcam Image (Buggy).
+    • Captures Webcam Image.
     • Sends All Data Through Discord Webhooks.
     (...more)
 
