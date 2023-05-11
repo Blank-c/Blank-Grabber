@@ -56,6 +56,7 @@
     • Grabs Cookies From Many Browsers.
     • Grabs History From Many Browsers.
     • Grabs Minecraft Session Files.
+    • Grabs Telegram Session Files.
     • Grabs Roblox Cookies.
     • Grabs IP Information.
     • Grabs System Info.

