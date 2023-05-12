@@ -15,9 +15,10 @@
    <br>
    <img src="https://img.shields.io/github/issues/Blank-c/Blank-Grabber">
    <img src="https://img.shields.io/github/issues-closed/Blank-c/Blank-Grabber">
+   <br>
+   <br>
+   <img src="https://repobeats.axiom.co/api/embed/3183aa00d01f8636a5cbc17344c36168eff93aec.svg">
 </p>
-
-<!-- #### Check out [Umbral Stealer](https://github.com/Blank-c/Umbral-Stealer)! Its fast, lightweight and small in size. The project is pretty new, so consider starring the repo, as I would add more features to it sooner or later. -->
 
 ## Table of Contents
 - [Download](#download)
@@ -25,7 +26,6 @@
 - [Stub Settings](#stub-settings)
 - [Requirements](#requirements)
 - [How to Build?](#how-to-build)
-- [To-Do/Enhancements](#to-doenhancements)
 - [Contact me](#contact-me)
 
 ## Download
@@ -47,10 +47,7 @@
     • Fake Error.
     • EXE Binder.
     • Obfuscated Stub.
-    • Anti Unpacking Technique (Removed due to bugs).
-    • Anti UPX-Detection by YARA (Removed due to bugs).
-    • Anti Pyinstaller-Detection by YARA (Removed due to bugs).
-    • Puts Backdoor On Discord Client.
+    • Discord Injection.
     • Grabs Discord Tokens.
     • Grabs Passwords From Many Browsers.
     • Grabs Cookies From Many Browsers.
@@ -86,7 +83,6 @@
 - An active internet connection.
 
 ## How to Build?
-*If you literally have no idea how to build it.*
 
 1. Download and install [Python 3](https://www.python.org/downloads/) (Make sure to enable the *Add to PATH* option.)
 2. Verify the installation by executing `python --version` in [CMD](https://www.howtogeek.com/235101/10-ways-to-open-the-command-prompt-in-windows-10/?).
@@ -97,17 +93,7 @@
 
 [![Tutorial video](https://img.shields.io/badge/Watch-Tutorial-blue?style=for-the-badge&logo=youtube)](https://streamable.com/87fui4)
 
-## To-Do/Enhancements
-- [x] Grab saved WIFI passwords.
-- [x] Icon selector for stub.
-- [x] Fake Error.
-- [x] EXE Binder.
-- [x] Remove some features because they cause bugs.
-- [x] Discord JS Injection.
-- [x] Importable Cookies.
-- [x] Block AV Related Sites.
-
 ## Contact me
 To remove this trojan from your system, follow [this](https://github.com/Blank-c/Blank-Grabber/issues/142). 
 
-If you need help regarding something else then you can contact me via [Discord](https://discordlookup.com/user/904682505104396329).
+If you need help regarding something else then you can contact me via *(Would be updated soon)*.
