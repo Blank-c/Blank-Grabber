@@ -96,4 +96,4 @@
 ## Contact me
 To remove this trojan from your system, follow [this](https://github.com/Blank-c/Blank-Grabber/issues/142). 
 
-If you need help regarding something else then you can contact me via *(Would be updated soon)*.
+I don't use any social media service anymore, use the issues/discussion tab to contact me.
