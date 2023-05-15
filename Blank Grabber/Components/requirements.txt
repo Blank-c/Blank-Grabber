@@ -1,6 +1,6 @@
 tinyaes
 pyinstaller<6
 pyaesm
-dpapi
+dpapi==0.1
 pillow
 urllib3

