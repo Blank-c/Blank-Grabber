@@ -11,7 +11,6 @@
    <br>
    <img src="https://img.shields.io/github/last-commit/Blank-c/Blank-Grabber">
    <img src="https://img.shields.io/github/license/Blank-c/Blank-Grabber">
-   <img src="https://img.shields.io/github/actions/workflow/status/Blank-c/Blank-Grabber/codeql.yml?branch=main">
    <br>
    <img src="https://img.shields.io/github/issues/Blank-c/Blank-Grabber">
    <img src="https://img.shields.io/github/issues-closed/Blank-c/Blank-Grabber">
