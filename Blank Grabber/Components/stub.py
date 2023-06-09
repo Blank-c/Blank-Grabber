@@ -764,8 +764,6 @@ class Discord:
             if check:
                 check = False
                 yield path
-            else:
-                yield None
 
 class BlankGrabber:
 
