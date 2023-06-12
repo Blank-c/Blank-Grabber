@@ -16,8 +16,12 @@ from tkinter import messagebox
 from urllib.request import urlopen, Request
 from PIL import Image
 from io import BytesIO
+from configparser import ConfigParser
 
 class Utility:
+
+	UpdatesCheck: bool = True
+	Password: str = "blank"
 
 	@staticmethod
 	def ToggleConsole(choice: bool) -> None:
@@ -49,19 +53,77 @@ class Utility:
 	
 	@staticmethod
 	def CheckForUpdates() -> bool:
-		hashFilePath = os.path.join(os.path.dirname(__file__), "Extras", "hash")
-		if os.path.isfile(hashFilePath):
-			with open(hashFilePath, "r") as f:
-				content = f.read()
+		if Utility.UpdatesCheck:
+			print("Checking for updates...")
+			hashFilePath = os.path.join(os.path.dirname(__file__), "Extras", "hash")
+			if os.path.isfile(hashFilePath):
+				with open(hashFilePath, "r") as f:
+					content = f.read()
 			
-			try:
-				_hash = json.loads(content)["hash"]
-				newhash = json.loads(urlopen("https://raw.githubusercontent.com/Blank-c/Blank-Grabber/main/Blank%20Grabber/Extras/hash", timeout= 5).read().decode())["hash"]
+				try:
+					_hash = json.loads(content)["hash"]
+					newhash = json.loads(urlopen("https://raw.githubusercontent.com/Blank-c/Blank-Grabber/main/Blank%20Grabber/Extras/hash", timeout= 5).read().decode())["hash"]
 
-				return _hash != newhash # New update available
-			except Exception:
-				pass
+					os.system("cls")
+					return _hash != newhash # New update available
+				except Exception:
+					pass
+			os.system("cls")
 		return False
+	
+	@staticmethod
+	def CheckConfiguration() -> None:
+		configFile = os.path.join(os.path.dirname(__file__), "config.ini")
+		modified = False
+		password = "blank"
+		updatesCheck = True
+
+		config = ConfigParser()
+
+		if os.path.isfile(configFile):
+			config.read(configFile)
+		else:
+			print("Do you regularly want to check for updates whenever you start this application? : [Y (default)/N]")
+			updatesCheck = input("--> ").strip().lower().startswith("y") or updatesCheck
+
+			print("Set a password (without whitespaces) for the archive for security reasons. (default: %r)" % password)
+			password = "_".join(input("--> ").strip().split()) or password
+
+			os.system("cls")
+			
+			config["Settings"] = {
+				"CheckForUpdates" : updatesCheck,
+				"PasswordForArchives" : password
+			}
+		
+		if config.has_section("Settings"):
+			Settings = config["Settings"]
+			_updatesCheck = Settings.get("CheckForUpdates")
+			if not isinstance(_updatesCheck, bool):
+				modified = True
+			else:
+				updatesCheck = _updatesCheck
+
+			_password = Settings.get("PasswordForArchives")
+			if not isinstance(_password, str) or not _password:
+				modified = True
+			else:
+				password = _password
+		else:
+			modified = True
+		
+		if modified:
+			newconfig = ConfigParser()
+			newconfig["Settings"] = {
+				"CheckForUpdates" : updatesCheck,
+				"PasswordForArchives" : password
+			}
+
+			with open(configFile, "w") as file:
+				newconfig.write(file)
+		
+		Utility.UpdatesCheck = updatesCheck
+		Utility.Password = password
 
 class BuilderOptionsFrame(ctk.CTkFrame):
 
@@ -254,7 +316,8 @@ class BuilderOptionsFrame(ctk.CTkFrame):
         		"pingme" : self.pingMeVar.get(),
         		"vmprotect" : self.vmProtectVar.get(),
         		"startup" : self.startupVar.get(),
-        		"melt" : self.meltVar.get()
+        		"melt" : self.meltVar.get(),
+				"archivePassword" : Utility.Password
     		},
     
     		"modules" : {
@@ -551,19 +614,20 @@ if __name__ == "__main__":
 		if "windowsapps" in sys.executable.lower():
 			subprocess.Popen('mshta "javascript:var sh=new ActiveXObject(\'WScript.Shell\'); sh.Popup(\'It looks like you installed Python from Windows Store instead of using the official website https://python.org. Please disable/uninstall it and reinstall from the website.\', 10, \'Error\', 16);close()"', shell= True, creationflags= subprocess.SW_HIDE | subprocess.CREATE_NEW_CONSOLE)
 			exit(1)
-	
-		Utility.ToggleConsole(False)
-
-		
-		if not Utility.IsAdmin():
-			ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, " ".join(sys.argv), None, 1)
-			exit(0)
 		
 		if Utility.CheckForUpdates():
 			response = messagebox.askyesno("Update Checker", "A new version of the application is available. It is recommended that you update it to the latest version.\n\nDo you want to update the app? (you would be directed to the official github repository)")
 			if response:
 				webbrowser.open_new_tab("https://github.com/Blank-c/Blank-Grabber")
 				exit(0)
+		
+		Utility.CheckConfiguration()
+	
+		Utility.ToggleConsole(False)
+		
+		if not Utility.IsAdmin():
+			ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, " ".join(sys.argv), None, 1)
+			exit(0)
 		
 		Builder().mainloop()
 

