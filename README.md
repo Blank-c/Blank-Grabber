@@ -49,6 +49,7 @@
     • Discord Injection.
     • Grabs Discord Tokens.
     • Grabs Steam Session.
+    • Grabs Epic Sessions.
     • Grabs Passwords From Many Browsers.
     • Grabs Cookies From Many Browsers.
     • Grabs History From Many Browsers.
