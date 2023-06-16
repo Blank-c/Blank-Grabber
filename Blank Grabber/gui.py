@@ -539,7 +539,7 @@ class Builder(ctk.CTk):
 		except Exception: 
 			pass
 
-		code = "# pip install pyaesm dpapi==0.1 pillow urllib3\n\n" + code
+		code = "# pip install pyaesm pillow urllib3\n\n" + code
 
 		with open(outPath, "w") as file:
 			file.write(code)
