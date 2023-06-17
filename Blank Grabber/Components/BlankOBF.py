@@ -20,7 +20,7 @@ class BlankOBF:
         self.marshal()
         self.encrypt1()
         self.encrypt2()
-        #self.encrypt3()
+        # self.encrypt3() # This one increases detections
         self.finalize()
     
     def generate(self, name):

