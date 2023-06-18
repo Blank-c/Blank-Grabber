@@ -6,6 +6,8 @@ def RemovePyinstallerStrings(path: str):
         data = file.read()
         
     data = data.replace(b"PyInstaller:", b"PyInstallem:")
+    data = data.replace(b"pyi-runtime-tmpdir", b"bye-runtime-tmpdir")
+    data = data.replace(b"pyi-windows-manifest-filename", b"bye-windows-manifest-filename")
     
     with open(path, "wb") as file:
         file.write(data)
