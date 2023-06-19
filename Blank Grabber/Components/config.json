@@ -6,7 +6,8 @@
         "startup" : true,
         "melt" : false,
         "archivePassword" : "blank",
-        "hideconsole" : true
+        "consoleMode" : 0,
+        "debug" : false
     },
     
     "modules" : {

@@ -2,7 +2,7 @@ import os, subprocess, ctypes, sys, getpass
 
 if subprocess.run("net session", shell= True, capture_output= True).returncode != 0:
     ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, " ".join(sys.argv), None, 1)
-    exit()
+    exit(0)
 
 hostfilepath = os.path.join(os.getenv('systemroot'), os.sep.join(subprocess.run('REG QUERY HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters /V DataBasePath', shell= True, capture_output= True).stdout.decode(errors= 'ignore').strip().splitlines()[-1].split()[-1].split(os.sep)[1:]), 'hosts')
 with open(hostfilepath) as file:

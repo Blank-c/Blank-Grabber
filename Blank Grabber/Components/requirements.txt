@@ -1,5 +1,4 @@
 tinyaes
 pyinstaller<6
 pyaesm
-pillow
 urllib3
