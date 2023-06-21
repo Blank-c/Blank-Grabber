@@ -10,15 +10,15 @@ def RemoveMetaData(path: str):
     data = data.replace(b"pyi-runtime-tmpdir", b"bye-runtime-tmpdir")
     data = data.replace(b"pyi-windows-manifest-filename", b"bye-windows-manifest-filename")
 
-    # Remove linker information
-    start_index = data.find(b"$") + 1
-    end_index = data.find(b"PE\x00\x00", start_index) - 1
-    data = data[:start_index] + bytes([0] * (end_index - start_index))  + data[end_index:]
+    # # Remove linker information
+    # start_index = data.find(b"$") + 1
+    # end_index = data.find(b"PE\x00\x00", start_index) - 1
+    # data = data[:start_index] + bytes([0] * (end_index - start_index))  + data[end_index:]
 
-    # Remove compilation timestamp
-    start_index = data.find(b"PE\x00\x00") + 8
-    end_index = start_index + 4
-    data = data[:start_index] + bytes([0] * (end_index - start_index))  + data[end_index:]
+    # # Remove compilation timestamp
+    # start_index = data.find(b"PE\x00\x00") + 8
+    # end_index = start_index + 4
+    # data = data[:start_index] + bytes([0] * (end_index - start_index))  + data[end_index:]
     
     with open(path, "wb") as file:
         file.write(data)

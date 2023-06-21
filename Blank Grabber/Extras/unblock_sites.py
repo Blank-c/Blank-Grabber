@@ -18,7 +18,9 @@ for i in data:
         newdata.append(i)
 
 newdata = '\n'.join(newdata).replace('\n\n', '\n')
+subprocess.run("attrib -r {}".format(hostfilepath), shell= True, capture_output= True)
 with open(hostfilepath, 'w') as file:
     file.write(newdata)
 print("Unblocked sites!")
+subprocess.run("attrib +r {}".format(hostfilepath), shell= True, capture_output= True)
 getpass.getpass("")
