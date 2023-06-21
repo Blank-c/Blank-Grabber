@@ -9,18 +9,32 @@ if %errorlevel% neq 0 (
 )
 
 title Checking libraries...
-echo Checking 'customtkinter' (1/2)
+echo Checking 'customtkinter' (1/4)
 python -c "import customtkinter" > nul 2>&1
 if %errorlevel% neq 0 (
-    title Installing customtkinter...
+    echo Installing customtkinter...
     pip install customtkinter > nul
 )
 
-echo Checking 'pillow' (2/2)
+echo Checking 'pillow' (2/4)
 python -c "import PIL" > nul 2>&1
 if %errorlevel% neq 0 (
-    title Installing pillow...
+    echo Installing pillow...
     pip install pillow > nul
+)
+
+echo Checking 'pyaes' (3/4)
+python -c "import pyaes" > nul 2>&1
+if %errorlevel% neq 0 (
+    echo Installing pyaes...
+    pip install pyaesm > nul
+)
+
+echo Checking 'urllib3' (4/4)
+python -c "import urllib3" > nul 2>&1
+if %errorlevel% neq 0 (
+    echo Installing urllib3...
+    pip install urllib3 > nul
 )
 
 cls

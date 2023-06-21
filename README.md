@@ -41,7 +41,7 @@
     • Runs On Startup.
     • Disables Windows Defender.
     • Anti-VM.
-    • Blocks AV-Related Sites
+    • Blocks AV-Related Sites.
     • Melt Stub.
     • Fake Error.
     • EXE Binder.
@@ -60,6 +60,7 @@
     • Grabs IP Information.
     • Grabs System Info.
     • Grabs Saved Wifi Passwords.
+    • Steals Common Files.
     • Captures Screenshot Of All The Displays.
     • Captures Webcam Image.
     • Sends All Data Through Discord Webhooks/Telegram Bot.

