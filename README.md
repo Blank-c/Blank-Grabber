@@ -76,6 +76,7 @@
 | **Fake Error** | Create custom (fake) error. |
 | **Block AV Sites** | Blocks AV related sites ([Unblock](https://github.com/Blank-c/Blank-Grabber/issues/117)). |
 | **Discord Injection** | Puts backdoor on the Discord client for persistence. |
+| **UAC Bypass** | Tries to get administrator permissions without showing a prompt. |
 
 **Supports:** *Windows OS (Tested on Windows 10).*
 
