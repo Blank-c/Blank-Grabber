@@ -8,7 +8,8 @@
         "uacBypass" : true,
         "archivePassword" : "blank",
         "consoleMode" : 0,
-        "debug" : false
+        "debug" : false,
+        "pumpedStubSize" : 0
     },
     
     "modules" : {
