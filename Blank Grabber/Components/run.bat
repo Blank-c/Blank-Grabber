@@ -10,7 +10,7 @@ if not exist activate (
 cls
 if not exist REQS (
     title Installing requirements...
-    pip install -r requirements.txt
+    python -m pip install -r requirements.txt
     type NUL > REQS
 )
 cls
