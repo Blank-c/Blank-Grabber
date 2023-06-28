@@ -346,7 +346,6 @@ class BuilderOptionsFrame(ctk.CTkFrame):
 		PYMODE = "Output:   PY File"
 
 		exeOnlyChecboxControls = (
-			(self.captureWebcamCheckboxControl, self.captureWebcamVar),
 			(self.fakeErrorCheckboxControl, self.fakeErrorVar),
 			(self.startupCheckboxControl, self.startupVar),
 			(self.uacBypassCheckboxControl, self.uacBypassVar),
