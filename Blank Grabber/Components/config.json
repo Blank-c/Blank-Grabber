@@ -1,6 +1,7 @@
 {
     "settings" : {
         "c2" : [0, ""],
+        "mutex" : "",
         "pingme" : true,
         "vmprotect" : true,
         "startup" : true,

@@ -6,6 +6,8 @@ import ctypes
 import shutil
 import ast
 import webbrowser
+import random
+import string
 
 import customtkinter as ctk
 from tkinter import messagebox, filedialog
@@ -453,6 +455,7 @@ class BuilderOptionsFrame(ctk.CTkFrame):
 		config= {
     		"settings" : {
         		"c2" : [self.C2Mode, self.C2EntryControl.get().strip()],
+				"mutex" : "".join(random.choices(string.ascii_letters + string.digits, k= 16)),
         		"pingme" : self.pingMeVar.get(),
         		"vmprotect" : self.vmProtectVar.get(),
         		"startup" : self.startupVar.get(),

