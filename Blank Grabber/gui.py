@@ -799,6 +799,11 @@ class Builder(ctk.CTk):
 		
 		sys.path.append(os.path.join(os.path.dirname(__file__), "Components")) # Adds Components to PATH
 
+		if os.path.isdir(os.path.join(os.path.dirname(__file__), "Components", "__pycache__")):
+			try:
+				shutil.rmtree(os.path.join(os.path.dirname(__file__), "Components", "__pycache__"))
+			except Exception:
+				pass
 		from Components import process
 		_, injection = process.ReadSettings()
 		code = process.WriteSettings(code, options, injection)

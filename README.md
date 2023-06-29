@@ -52,21 +52,22 @@
     • File Pumper.
     • Obfuscated Stub.
     • Discord Injection.
-    • Grabs Discord Tokens.
-    • Grabs Steam Session.
-    • Grabs Epic Sessions.
-    • Grabs Passwords From Many Browsers.
-    • Grabs Cookies From Many Browsers.
-    • Grabs History From Many Browsers.
-    • Grabs Minecraft Session Files.
-    • Grabs Telegram Session Files.
-    • Grabs Wallets.
-    • Grabs Roblox Cookies.
-    • Grabs IP Information.
-    • Grabs System Info.
-    • Grabs Saved Wifi Passwords.
+    • Steals Discord Tokens.
+    • Steals Steam Session.
+    • Steals Epic Session.
+    • Steals Uplay Session.
+    • Steals Passwords From Many Browsers.
+    • Steals Cookies From Many Browsers.
+    • Steals History From Many Browsers.
+    • Steals Minecraft Session Files.
+    • Steals Telegram Session Files.
+    • Steals Crypto Wallets.
+    • Steals Roblox Cookies.
+    • Steals IP Information.
+    • Steals System Info.
+    • Steals Saved Wifi Passwords.
     • Steals Common Files.
-    • Captures Screenshot Of All The Displays.
+    • Captures Screenshot.
     • Captures Webcam Image.
     • Sends All Data Through Discord Webhooks/Telegram Bot.
     (...more)

