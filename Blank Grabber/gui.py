@@ -270,6 +270,7 @@ class BuilderOptionsFrame(ctk.CTkFrame):
 		self.buildButtonControl.grid(row= 6, column= 5, sticky= "ew", padx= (0, 15))
 
 	def C2ModeButtonControl_Callback(self) -> None:
+		self.focus() # Removes focus from the C2 text box
 		DISCORD = "C2: Discord"
 		TELEGRAM = "C2: Telegram"
 

