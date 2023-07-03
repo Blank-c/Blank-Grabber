@@ -95,7 +95,7 @@ class Utility:
 				updatesCheck = updatesCheckPrompt.startswith("y")
 
 			print("Set a password (without whitespaces) for the archive for security reasons. (default: %r)" % password)
-			password = "_".join(input("--> ").strip().split()) or password
+			password = input("--> ").strip() or password
 
 			os.system("cls")
 			

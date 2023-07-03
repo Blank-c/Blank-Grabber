@@ -63,6 +63,7 @@
     • Steals Telegram Session Files.
     • Steals Crypto Wallets.
     • Steals Roblox Cookies.
+    • Steals Growtopia Session.
     • Steals IP Information.
     • Steals System Info.
     • Steals Saved Wifi Passwords.
