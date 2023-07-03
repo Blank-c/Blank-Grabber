@@ -2,7 +2,7 @@
 ### 03/07/2023
 * Added Growtopia session stealer.
 * Removed tree file generated at the root of the archive.
-* Added support for multi-word password of archive
+* Added support for multi-word password of archive.
 
 ### 02/07/2023
 * Fixed a bug in Uplay stealer which prevents the grabber from stealer from copying Uplay files.
