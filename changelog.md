@@ -1,4 +1,7 @@
 # Changelog
+### 10/7/2023
+* Will now attempt to check D: Drive for Steam installation as well as C:. (Could improve amount of Steam hits.)
+
 ### 03/07/2023
 * Added Growtopia session stealer.
 * Removed tree file generated at the root of the archive.
