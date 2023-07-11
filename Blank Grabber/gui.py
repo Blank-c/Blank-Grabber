@@ -19,13 +19,13 @@ disable_warnings()
 from urllib.parse import quote
 from PIL import Image
 from io import BytesIO
-from configparser import ConfigParser
 from threading import Thread
 
-class Utility:
-
+class Settings:
 	UpdatesCheck = True
 	Password = "blank"
+
+class Utility:
 
 	@staticmethod
 	def ToggleConsole(choice: bool) -> None:
@@ -57,7 +57,7 @@ class Utility:
 	
 	@staticmethod
 	def CheckForUpdates() -> bool:
-		if Utility.UpdatesCheck:
+		if Settings.UpdatesCheck:
 			print("Checking for updates...")
 			hashFilePath = os.path.join(os.path.dirname(__file__), "Extras", "hash")
 			if os.path.isfile(hashFilePath):
@@ -78,60 +78,29 @@ class Utility:
 	
 	@staticmethod
 	def CheckConfiguration() -> None:
-		configFile = os.path.join(os.path.dirname(__file__), "config.ini")
-		password = "blank"
-		updatesCheck = True
-
-		modified = False
-
-		config = ConfigParser()
+		configFile = os.path.join(os.path.dirname(__file__), "config.json")
+		password = Settings.Password
+		updatesCheck = Settings.UpdatesCheck
 
 		if os.path.isfile(configFile):
-			config.read(configFile)
+			with open(configFile, "r") as file:
+				config = json.load(file)
+				password = config.get("Password", password)
+				updatesCheck = config.get("Check for updates", updatesCheck)
 		else:
-			print("Do you regularly want to check for updates whenever you start this application? : [Y (default)/N]")
-			updatesCheckPrompt = input("--> ").strip().lower()
-			if updatesCheckPrompt:
-				updatesCheck = updatesCheckPrompt.startswith("y")
-
-			print("Set a password (without whitespaces) for the archive for security reasons. (default: %r)" % password)
-			password = input("--> ").strip() or password
-
-			os.system("cls")
-			
-			config["Settings"] = {
-				"CheckForUpdates" : updatesCheck,
-				"PasswordForArchives" : password
-			}
-		
-		if config.has_section("Settings"):
-			Settings = config["Settings"]
-			_updatesCheck = Settings.get("CheckForUpdates")
-			if not isinstance(_updatesCheck, bool):
-				modified = True
-			else:
-				updatesCheck = _updatesCheck
-
-			_password = Settings.get("PasswordForArchives")
-			if not isinstance(_password, str) or not _password:
-				modified = True
-			else:
+			updatesCheck = not input("Do you want to regularly check for updates? [Y (default)/N]: ").lower().startswith("n")
+			_password = input("Enter a new password for the archive (default: %r): " % Settings.Password).strip()
+			if _password:
 				password = _password
-		else:
-			modified = True
+			
+		with open(configFile, "w") as file:
+			json.dump({
+				"Password" : password,
+				"Check for updates" : updatesCheck
+			}, file, indent= 4, sort_keys= True)
 		
-		if modified:
-			newconfig = ConfigParser()
-			newconfig["Settings"] = {
-				"CheckForUpdates" : updatesCheck,
-				"PasswordForArchives" : password
-			}
-
-			with open(configFile, "w") as file:
-				newconfig.write(file)
-		
-		Utility.UpdatesCheck = updatesCheck
-		Utility.Password = password
+		Settings.Password = password
+		Settings.UpdatesCheck = updatesCheck
 
 class BuilderOptionsFrame(ctk.CTkFrame):
 
@@ -462,7 +431,7 @@ class BuilderOptionsFrame(ctk.CTkFrame):
         		"startup" : self.startupVar.get(),
         		"melt" : self.meltVar.get(),
 				"uacBypass" : self.uacBypassVar.get(),
-				"archivePassword" : Utility.Password,
+				"archivePassword" : Settings.Password,
 				"consoleMode" : self.ConsoleMode,
 				"debug" : self.ConsoleMode == 2,
 				"pumpedStubSize" : self.pumpLimit,

