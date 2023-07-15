@@ -1,5 +1,10 @@
 # Changelog
-###
+### 15/07/2023
+* Now encrypts the bound executable.
+* Now checks if defender blocked the file in case of UAC bypass.
+* Readded the certificate and version file.
+
+### 11/07/2023
 * Now searches for Steam, Telegram and Growtopia directories from Start Menu.
 * Changed configuration file from 'config.ini' to 'config.json'.
 * Removed certificate and version file to reduce detections.
