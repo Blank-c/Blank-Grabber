@@ -1,4 +1,9 @@
 # Changelog
+### 16/07/2023
+* Fixed GoFile uploader.
+* Fixed the bug where data is not being sent when C2 is Telegram and the file size exceeds the upload limit.
+* Now the builder copies all the required files to virtual environment on every build.
+
 ### 15/07/2023
 * Now encrypts the bound executable.
 * Now checks if defender blocked the file in case of UAC bypass.

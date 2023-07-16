@@ -820,12 +820,12 @@ class Builder(ctk.CTk):
 					print('Error while creating virtual environment ("python -m venv env"): {}'.format(res.stderr.decode(errors= "ignore")))
 					Exit(1)
 
-			print(format("\u001b[33;1mINFO", "Copying assets to virtual environment..."))
-			for i in os.listdir(datadir := os.path.join(os.path.dirname(__file__), "Components")):
-				if os.path.isfile(fileloc := os.path.join(datadir, i)):
-					shutil.copyfile(fileloc, os.path.join(os.path.dirname(__file__), "env", "Scripts", i))
-				else:
-					shutil.copytree(fileloc, os.path.join(os.path.dirname(__file__), "env", "Scripts", i))
+		print(format("\u001b[33;1mINFO", "Copying assets to virtual environment..."))
+		for i in os.listdir(datadir := os.path.join(os.path.dirname(__file__), "Components")):
+			if os.path.isfile(fileloc := os.path.join(datadir, i)):
+				shutil.copyfile(fileloc, os.path.join(os.path.dirname(__file__), "env", "Scripts", i))
+			else:
+				shutil.copytree(fileloc, os.path.join(os.path.dirname(__file__), "env", "Scripts", i))
 
 		with open(os.path.join(os.path.dirname(__file__), "env", "Scripts", "config.json"), "w", encoding= "utf-8", errors= "ignore") as file:
 			file.write(config)
