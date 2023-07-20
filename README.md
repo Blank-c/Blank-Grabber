@@ -56,6 +56,7 @@
     • Steals Steam Session.
     • Steals Epic Session.
     • Steals Uplay Session.
+    • Steals Battle.Net
     • Steals Passwords From Many Browsers.
     • Steals Cookies From Many Browsers.
     • Steals History From Many Browsers.
