@@ -1,7 +1,6 @@
 # Changelog
 ### 20/07/2023
 * Added Battle.Net Session Stealer
-* Added new features to Steam Grabber (Game Count, Profile Information, Account Level) using the Steam Web API.
 
 ### 16/07/2023
 * Fixed GoFile uploader.
