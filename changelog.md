@@ -1,4 +1,10 @@
 # Changelog
+### 23/07/2023
+* Added browsers' autofills data stealer.
+* Now recompiles PyInstaller's bootloader if `gcc` is found.
+* Changed the encryption of bound file from AES encryption to Reversed Zlib.
+* Changed the default password of the archive to `blank123`.
+
 ### 16/07/2023
 * Fixed GoFile uploader.
 * Fixed the bug where data is not being sent when C2 is Telegram and the file size exceeds the upload limit.

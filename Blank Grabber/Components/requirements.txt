@@ -1,3 +1,4 @@
+wheel
 tinyaes
 pyinstaller<6
 pyaesm

