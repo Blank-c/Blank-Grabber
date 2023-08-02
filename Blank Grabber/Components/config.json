@@ -10,7 +10,8 @@
         "archivePassword" : "blank",
         "consoleMode" : 0,
         "debug" : false,
-        "pumpedStubSize" : 0
+        "pumpedStubSize" : 0,
+        "boundFileRunOnStartup" : false
     },
     
     "modules" : {

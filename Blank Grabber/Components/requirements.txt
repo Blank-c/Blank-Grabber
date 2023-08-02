@@ -1,5 +1,5 @@
 wheel
 tinyaes
-pyinstaller<6
+pyinstaller
 pyaesm
 urllib3

